@@ -6,11 +6,11 @@ Este é o frontend do projeto **ConfectioneryEase**, responsável pela interface
 
 O projeto utiliza as seguintes tecnologias e bibliotecas no frontend:
 
-- **[React 18](https://react.dev/)** (`react`, `react-dom`): Biblioteca principal para a construção da interface do usuário.
+- **[React 19](https://react.dev/)** (`react`, `react-dom`): Biblioteca principal para a construção da interface do usuário.
 - **[TypeScript](https://www.typescriptlang.org/)**: Superset do JavaScript que adiciona tipagem estática ao código.
 - **[Vite](https://vitejs.dev/)**: Ferramenta de build extremamente rápida e moderna, utilizada como empacotador e servidor de desenvolvimento.
 - **[Tailwind CSS](https://tailwindcss.com/)**: Framework de CSS utilitário "utility-first" para estilização rápida, consistente e responsiva.
-- **[React Router DOM](https://reactrouter.com/)** (`v6`): Gerenciamento de rotas e navegação no lado do cliente (SPA).
+- **[React Router](https://reactrouter.com/)** (`v8`): Gerenciamento de rotas e navegação no lado do cliente (SPA).
 - **[TanStack Query](https://tanstack.com/query/latest)** (`v5`): Gerenciamento robusto de estado do servidor, abrangendo data fetching, caching, sincronização e atualizações (mutations).
 - **[Axios](https://axios-http.com/)**: Cliente HTTP baseado em Promises focado na comunicação com a API RESTful do backend (Spring Boot).
 - **[Lucide React](https://lucide.dev/)**: Biblioteca moderna e consistente de ícones SVG.
