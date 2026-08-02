@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html>
+<body>
+<input type="date" id="test" />
+<script>
+  const el = document.getElementById('test');
+  try { el.value = "undefined"; } catch(e) { console.error(e); }
+</script>
+</body>
+</html>
