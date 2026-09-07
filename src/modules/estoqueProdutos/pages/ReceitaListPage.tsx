@@ -7,22 +7,16 @@ import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal'
 import { useReceitas, useDeleteReceita } from '../hooks/useReceitas'
 import { useDebounce } from '../../../hooks/useDebounce'
 
-const TABLE_HEADERS = ['ID', 'Nome', 'Produto ID', 'Categoria ID', 'Ingredientes', 'Criado por', 'Ações']
+const TABLE_HEADERS = ['ID', 'Nome', 'Produto ID', 'Ingredientes', 'Criado por', 'Ações']
 
 export default function ReceitaListPage() {
   const navigate = useNavigate()
   const [page, setPage] = useState(0)
-  const [filters, setFilters] = useState({ nome: '', categoriaReceitaId: '' })
+  const [filters, setFilters] = useState({ nome: '' })
   const [showFilters, setShowFilters] = useState(false)
   const debouncedFilters = useDebounce(filters)
 
-  const activeFilters =
-    debouncedFilters.nome || debouncedFilters.categoriaReceitaId
-      ? {
-          ...(debouncedFilters.nome ? { nome: debouncedFilters.nome } : {}),
-          ...(debouncedFilters.categoriaReceitaId ? { categoriaReceitaId: Number(debouncedFilters.categoriaReceitaId) } : {}),
-        }
-      : undefined
+  const activeFilters = debouncedFilters.nome ? { nome: debouncedFilters.nome } : undefined
 
   const { data, isLoading } = useReceitas(page, 20, activeFilters)
   const deleteMutation = useDeleteReceita()
@@ -38,7 +32,7 @@ export default function ReceitaListPage() {
   }
 
   function clearFilters() {
-    setFilters({ nome: '', categoriaReceitaId: '' })
+    setFilters({ nome: '' })
     setPage(0)
   }
 
@@ -47,7 +41,7 @@ export default function ReceitaListPage() {
     deleteMutation.mutate(deleteTarget.id, { onSettled: () => setDeleteTarget(null) })
   }
 
-  const hasFilters = filters.nome || filters.categoriaReceitaId
+  const hasFilters = !!filters.nome
 
   return (
     <div>
@@ -73,35 +67,21 @@ export default function ReceitaListPage() {
           <Search size={15} />
           Filtros
           {hasFilters && (
-            <span className="px-1.5 py-0.5 text-xs bg-amber-500 text-white rounded-full leading-none">
-              {[filters.nome, filters.categoriaReceitaId].filter(Boolean).length}
-            </span>
+            <span className="px-1.5 py-0.5 text-xs bg-amber-500 text-white rounded-full leading-none">1</span>
           )}
         </button>
 
         {showFilters && (
           <div className="mt-3 p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
-                <input
-                  type="text"
-                  value={filters.nome}
-                  onChange={(e) => handleFilterChange('nome', e.target.value)}
-                  placeholder="Buscar por nome..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Categoria ID</label>
-                <input
-                  type="number"
-                  value={filters.categoriaReceitaId}
-                  onChange={(e) => handleFilterChange('categoriaReceitaId', e.target.value)}
-                  placeholder="ID da categoria..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
+              <input
+                type="text"
+                value={filters.nome}
+                onChange={(e) => handleFilterChange('nome', e.target.value)}
+                placeholder="Buscar por nome..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              />
             </div>
             {hasFilters && (
               <button
@@ -129,7 +109,6 @@ export default function ReceitaListPage() {
             <td className="px-4 py-3 text-gray-500 text-sm">{r.id}</td>
             <td className="px-4 py-3 font-medium text-gray-900">{r.nome}</td>
             <td className="px-4 py-3 text-gray-600">{r.produtoId}</td>
-            <td className="px-4 py-3 text-gray-600">{r.categoriaReceitaId}</td>
             <td className="px-4 py-3 text-gray-600">{r.ingredientes?.length ?? 0} ingredientes</td>
             <td className="px-4 py-3 text-gray-600">{r.createdBy}</td>
             <td className="px-4 py-3">

@@ -1,7 +1,5 @@
-export interface Produto {
+export interface CategoriaProduto {
   id: number
-  categoriaProdutoId: number
-  categoriaProdutoNome: string
   nome: string
   descricao?: string
   createdBy: string
@@ -10,15 +8,13 @@ export interface Produto {
   updatedOn?: string
 }
 
-export interface ProdutoInsertForm {
-  categoriaProdutoId: number
+export interface CategoriaProdutoInsertForm {
   nome: string
   descricao?: string
   createdBy: string
 }
 
-export interface ProdutoUpdateForm {
-  categoriaProdutoId: number
+export interface CategoriaProdutoUpdateForm {
   nome: string
   descricao?: string
   updatedBy: string

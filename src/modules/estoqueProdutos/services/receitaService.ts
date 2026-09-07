@@ -1,9 +1,9 @@
 import api from '../../../lib/axios'
 import { Receita, ReceitaInsertForm, ReceitaUpdateForm } from '../types/receita'
-import { PageResponse } from './categoriaReceitaService'
+import { PageResponse } from './produtoService'
 
 const receitaService = {
-  getAll(page = 0, size = 20, filters?: { nome?: string; categoriaReceitaId?: number }): Promise<PageResponse<Receita>> {
+  getAll(page = 0, size = 20, filters?: { nome?: string }): Promise<PageResponse<Receita>> {
     return api.get('/receita', { params: { page, size, ...filters } }).then((r) => r.data)
   },
   getById(id: number): Promise<Receita> {

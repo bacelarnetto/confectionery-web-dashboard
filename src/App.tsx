@@ -20,8 +20,8 @@ import UsuarioFormPage from './modules/shared/pages/UsuarioFormPage'
 import AlertaListPage from './modules/estoqueInsumos/pages/AlertaListPage'
 import ParametrizacaoAlertaListPage from './modules/estoqueInsumos/pages/ParametrizacaoAlertaListPage'
 import ParametrizacaoAlertaFormPage from './modules/estoqueInsumos/pages/ParametrizacaoAlertaFormPage'
-import CategoriaReceitaListPage from './modules/estoqueProdutos/pages/CategoriaReceitaListPage'
-import CategoriaReceitaFormPage from './modules/estoqueProdutos/pages/CategoriaReceitaFormPage'
+import CategoriaProdutoListPage from './modules/estoqueProdutos/pages/CategoriaProdutoListPage'
+import CategoriaProdutoFormPage from './modules/estoqueProdutos/pages/CategoriaProdutoFormPage'
 import ProdutoListPage from './modules/estoqueProdutos/pages/ProdutoListPage'
 import ProdutoFormPage from './modules/estoqueProdutos/pages/ProdutoFormPage'
 import ReceitaListPage from './modules/estoqueProdutos/pages/ReceitaListPage'
@@ -77,9 +77,9 @@ export default function App() {
         <Route path="/estoque-insumos/parametrizacao-alertas/:id/editar" element={<ParametrizacaoAlertaFormPage />} />
 
         {/* Estoque de Produtos */}
-        <Route path="/estoque-produtos/categorias" element={<CategoriaReceitaListPage />} />
-        <Route path="/estoque-produtos/categorias/novo" element={<CategoriaReceitaFormPage />} />
-        <Route path="/estoque-produtos/categorias/:id/editar" element={<CategoriaReceitaFormPage />} />
+        <Route path="/estoque-produtos/categorias" element={<CategoriaProdutoListPage />} />
+        <Route path="/estoque-produtos/categorias/novo" element={<CategoriaProdutoFormPage />} />
+        <Route path="/estoque-produtos/categorias/:id/editar" element={<CategoriaProdutoFormPage />} />
         <Route path="/estoque-produtos/produtos" element={<ProdutoListPage />} />
         <Route path="/estoque-produtos/produtos/novo" element={<ProdutoFormPage />} />
         <Route path="/estoque-produtos/produtos/:id/editar" element={<ProdutoFormPage />} />

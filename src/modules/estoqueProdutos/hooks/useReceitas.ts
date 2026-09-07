@@ -5,7 +5,7 @@ import { ReceitaInsertForm, ReceitaUpdateForm } from '../types/receita'
 
 const QUERY_KEY = ['receitas']
 
-export function useReceitas(page = 0, size = 20, filters?: { nome?: string; categoriaReceitaId?: number }) {
+export function useReceitas(page = 0, size = 20, filters?: { nome?: string }) {
   return useQuery({
     queryKey: [...QUERY_KEY, page, size, filters],
     queryFn: () => receitaService.getAll(page, size, filters),

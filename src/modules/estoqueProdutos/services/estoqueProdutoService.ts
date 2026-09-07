@@ -1,6 +1,6 @@
 import api from '../../../lib/axios'
 import { EstoqueProduto } from '../types/estoqueProduto'
-import { PageResponse } from './categoriaReceitaService'
+import { PageResponse } from './produtoService'
 
 const estoqueProdutoService = {
   getAll(page = 0, size = 20, produtoId?: number): Promise<PageResponse<EstoqueProduto>> {

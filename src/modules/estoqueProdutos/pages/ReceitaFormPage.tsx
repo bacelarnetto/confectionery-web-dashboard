@@ -3,27 +3,33 @@ import { useNavigate, useParams } from 'react-router'
 import { Plus, Trash2 } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
 import Button from '../../../components/ui/Button'
-import { useReceita, useCreateReceita, useUpdateReceita } from '../hooks/useReceitas'
-import { useCategoriasReceita } from '../hooks/useCategoriasReceita'
-import { useProdutos } from '../hooks/useProdutos'
-import { Ingrediente } from '../types/receita'
+import { useReceita, useReceitas, useCreateReceita, useUpdateReceita } from '../hooks/useReceitas'
+import { useProdutos, useProduto } from '../hooks/useProdutos'
+import { useCategoriasProduto } from '../hooks/useCategoriasProduto'
+import { Ingrediente, ProdutoRefForm } from '../types/receita'
 
 interface FormState {
-  nome: string
-  categoriaReceitaId: string
-  produtoId: string
   modoPreparo: string
   tempoPreparo: string
 }
 
+interface NovoProdutoState {
+  nome: string
+  descricao: string
+}
+
+interface NovaCategoriaState {
+  nome: string
+  descricao: string
+}
+
 const emptyForm: FormState = {
-  nome: '',
-  categoriaReceitaId: '',
-  produtoId: '',
   modoPreparo: '',
   tempoPreparo: '',
 }
 
+const emptyNovoProduto: NovoProdutoState = { nome: '', descricao: '' }
+const emptyNovaCategoria: NovaCategoriaState = { nome: '', descricao: '' }
 const emptyIngrediente: Ingrediente = { insumoId: 0, quantidade: 0, observacao: '' }
 
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
@@ -38,6 +44,36 @@ function Field({ label, required, children }: { label: string; required?: boolea
   )
 }
 
+function RadioToggle({
+  name,
+  value,
+  onChange,
+  options,
+}: {
+  name: string
+  value: string
+  onChange: (value: string) => void
+  options: { value: string; label: string }[]
+}) {
+  return (
+    <div className="flex items-center gap-4">
+      {options.map((opt) => (
+        <label key={opt.value} className="inline-flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">
+          <input
+            type="radio"
+            name={name}
+            value={opt.value}
+            checked={value === opt.value}
+            onChange={() => onChange(opt.value)}
+            className="text-amber-500 focus:ring-amber-400"
+          />
+          {opt.label}
+        </label>
+      ))}
+    </div>
+  )
+}
+
 const inputClass =
   'w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent placeholder:text-gray-400'
 
@@ -48,20 +84,26 @@ export default function ReceitaFormPage() {
   const numericId = Number(id ?? 0)
 
   const { data: receita, isLoading } = useReceita(numericId)
-  const { data: categoriasData } = useCategoriasReceita(0, 100)
+  const { data: produtoAtual } = useProduto(receita?.produtoId ?? 0)
   const { data: produtosData } = useProdutos(0, 100)
+  const { data: categoriasData } = useCategoriasProduto(0, 100)
+  const { data: receitasData } = useReceitas(0, 100)
   const createMutation = useCreateReceita()
   const updateMutation = useUpdateReceita()
 
   const [form, setForm] = useState<FormState>(emptyForm)
   const [ingredientes, setIngredientes] = useState<Ingrediente[]>([{ ...emptyIngrediente }])
 
+  const [produtoMode, setProdutoMode] = useState<'existente' | 'novo'>('existente')
+  const [produtoId, setProdutoId] = useState('')
+  const [novoProduto, setNovoProduto] = useState<NovoProdutoState>(emptyNovoProduto)
+  const [categoriaMode, setCategoriaMode] = useState<'existente' | 'novo'>('existente')
+  const [categoriaProdutoId, setCategoriaProdutoId] = useState('')
+  const [novaCategoria, setNovaCategoria] = useState<NovaCategoriaState>(emptyNovaCategoria)
+
   useEffect(() => {
     if (receita) {
       setForm({
-        nome: receita.nome ?? '',
-        categoriaReceitaId: String(receita.categoriaReceitaId ?? ''),
-        produtoId: String(receita.produtoId ?? ''),
         modoPreparo: receita.modoPreparo ?? '',
         tempoPreparo: receita.tempoPreparo ?? '',
       })
@@ -69,7 +111,7 @@ export default function ReceitaFormPage() {
     }
   }, [receita])
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
+  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
@@ -102,8 +144,6 @@ export default function ReceitaFormPage() {
         {
           id: numericId,
           data: {
-            nome: form.nome,
-            categoriaReceitaId: Number(form.categoriaReceitaId),
             modoPreparo: form.modoPreparo || undefined,
             tempoPreparo: form.tempoPreparo || undefined,
             ingredientes: validIngredientes,
@@ -113,11 +153,23 @@ export default function ReceitaFormPage() {
         { onSuccess: () => navigate('/estoque-produtos/receitas') },
       )
     } else {
+      const produto: ProdutoRefForm =
+        produtoMode === 'existente'
+          ? { produtoId: Number(produtoId) }
+          : {
+              nome: novoProduto.nome,
+              descricao: novoProduto.descricao || undefined,
+              ...(categoriaMode === 'existente'
+                ? { categoriaProdutoId: Number(categoriaProdutoId) }
+                : {
+                    categoriaProdutoNome: novaCategoria.nome,
+                    categoriaProdutoDescricao: novaCategoria.descricao || undefined,
+                  }),
+            }
+
       createMutation.mutate(
         {
-          nome: form.nome,
-          categoriaReceitaId: Number(form.categoriaReceitaId),
-          produtoId: Number(form.produtoId),
+          produto,
           modoPreparo: form.modoPreparo || undefined,
           tempoPreparo: form.tempoPreparo || undefined,
           ingredientes: validIngredientes,
@@ -130,7 +182,8 @@ export default function ReceitaFormPage() {
 
   const isPending = createMutation.isPending || updateMutation.isPending
   const categorias = categoriasData?.content ?? []
-  const produtos = produtosData?.content ?? []
+  const produtosComReceita = new Set((receitasData?.content ?? []).map((r) => r.produtoId))
+  const produtos = (produtosData?.content ?? []).filter((p) => !produtosComReceita.has(p.id))
 
   if (isEditing && isLoading) {
     return <div className="flex items-center justify-center h-48 text-gray-400 text-sm">Carregando...</div>
@@ -144,66 +197,140 @@ export default function ReceitaFormPage() {
       />
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {isEditing ? (
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-2">Produto</h3>
+            <p className="text-sm text-gray-600">
+              {produtoAtual?.nome ?? `Produto #${receita?.produtoId}`}
+              {produtoAtual?.categoriaProdutoNome ? ` — ${produtoAtual.categoriaProdutoNome}` : ''}
+            </p>
+            <p className="text-xs text-gray-400 mt-1">O produto de uma receita não pode ser alterado depois de criada.</p>
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Produto</h3>
+              <RadioToggle
+                name="produtoMode"
+                value={produtoMode}
+                onChange={(v) => setProdutoMode(v as 'existente' | 'novo')}
+                options={[
+                  { value: 'existente', label: 'Usar produto existente' },
+                  { value: 'novo', label: 'Criar produto novo' },
+                ]}
+              />
+            </div>
+
+            {produtoMode === 'existente' ? (
+              <Field label="Produto" required>
+                <select
+                  value={produtoId}
+                  onChange={(e) => setProdutoId(e.target.value)}
+                  required
+                  className={inputClass}
+                >
+                  <option value="">Selecione um produto...</option>
+                  {produtos.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.nome} ({p.categoriaProdutoNome})
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-400 mt-1">
+                  Produtos que já têm uma receita cadastrada não aparecem aqui (cada produto só pode ter uma receita).
+                </p>
+              </Field>
+            ) : (
+              <div className="space-y-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <Field label="Nome do Produto" required>
+                    <input
+                      value={novoProduto.nome}
+                      onChange={(e) => setNovoProduto((prev) => ({ ...prev, nome: e.target.value }))}
+                      required
+                      className={inputClass}
+                      placeholder="Nome do novo produto"
+                    />
+                  </Field>
+                  <Field label="Descrição do Produto">
+                    <input
+                      value={novoProduto.descricao}
+                      onChange={(e) => setNovoProduto((prev) => ({ ...prev, descricao: e.target.value }))}
+                      className={inputClass}
+                      placeholder="Descrição do novo produto"
+                    />
+                  </Field>
+                </div>
+
+                <div className="pl-4 border-l-2 border-amber-100 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Categoria do Produto</h4>
+                    <RadioToggle
+                      name="categoriaMode"
+                      value={categoriaMode}
+                      onChange={(v) => setCategoriaMode(v as 'existente' | 'novo')}
+                      options={[
+                        { value: 'existente', label: 'Usar categoria existente' },
+                        { value: 'novo', label: 'Criar categoria nova' },
+                      ]}
+                    />
+                  </div>
+
+                  {categoriaMode === 'existente' ? (
+                    <Field label="Categoria" required>
+                      <select
+                        value={categoriaProdutoId}
+                        onChange={(e) => setCategoriaProdutoId(e.target.value)}
+                        required
+                        className={inputClass}
+                      >
+                        <option value="">Selecione uma categoria...</option>
+                        {categorias.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.nome}
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      <Field label="Nome da Categoria" required>
+                        <input
+                          value={novaCategoria.nome}
+                          onChange={(e) => setNovaCategoria((prev) => ({ ...prev, nome: e.target.value }))}
+                          required
+                          className={inputClass}
+                          placeholder="Nome da nova categoria"
+                        />
+                      </Field>
+                      <Field label="Descrição da Categoria">
+                        <input
+                          value={novaCategoria.descricao}
+                          onChange={(e) => setNovaCategoria((prev) => ({ ...prev, descricao: e.target.value }))}
+                          className={inputClass}
+                          placeholder="Descrição da nova categoria"
+                        />
+                      </Field>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-5">
           <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Dados da Receita</h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <Field label="Nome" required>
-              <input
-                name="nome"
-                value={form.nome}
-                onChange={handleChange}
-                required
-                className={inputClass}
-                placeholder="Nome da receita"
-              />
-            </Field>
-
-            <Field label="Produto" required>
-              <select
-                name="produtoId"
-                value={form.produtoId}
-                onChange={handleChange}
-                required
-                disabled={isEditing}
-                className={inputClass + (isEditing ? ' bg-gray-50 text-gray-500' : '')}
-              >
-                <option value="">Selecione um produto...</option>
-                {produtos.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.nome}
-                  </option>
-                ))}
-              </select>
-            </Field>
-
-            <Field label="Categoria" required>
-              <select
-                name="categoriaReceitaId"
-                value={form.categoriaReceitaId}
-                onChange={handleChange}
-                required
-                className={inputClass}
-              >
-                <option value="">Selecione uma categoria...</option>
-                {categorias.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.nome}
-                  </option>
-                ))}
-              </select>
-            </Field>
-
-            <Field label="Tempo de Preparo">
-              <input
-                name="tempoPreparo"
-                value={form.tempoPreparo}
-                onChange={handleChange}
-                className={inputClass}
-                placeholder="Ex: 45 minutos"
-              />
-            </Field>
-          </div>
+          <Field label="Tempo de Preparo">
+            <input
+              name="tempoPreparo"
+              value={form.tempoPreparo}
+              onChange={handleChange}
+              className={inputClass}
+              placeholder="Ex: 45 minutos"
+            />
+          </Field>
 
           <Field label="Modo de Preparo">
             <textarea

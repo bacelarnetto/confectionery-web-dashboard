@@ -5,11 +5,24 @@ export interface Ingrediente {
   observacao?: string
 }
 
+/**
+ * Referência a um Produto dentro do cadastro de Receita: ou aponta pra um produto existente
+ * (`produtoId`, com prioridade se ambos vierem preenchidos), ou traz os dados pra criar um novo
+ * (`nome` + categoria existente ou nova).
+ */
+export interface ProdutoRefForm {
+  produtoId?: number
+  nome?: string
+  descricao?: string
+  categoriaProdutoId?: number
+  categoriaProdutoNome?: string
+  categoriaProdutoDescricao?: string
+}
+
 export interface Receita {
   id: number
-  nome: string
-  categoriaReceitaId: number
   produtoId: number
+  nome: string
   modoPreparo?: string
   tempoPreparo?: string
   ingredientes: Ingrediente[]
@@ -20,9 +33,7 @@ export interface Receita {
 }
 
 export interface ReceitaInsertForm {
-  nome: string
-  categoriaReceitaId: number
-  produtoId: number
+  produto: ProdutoRefForm
   modoPreparo?: string
   tempoPreparo?: string
   ingredientes: Ingrediente[]
@@ -30,10 +41,8 @@ export interface ReceitaInsertForm {
 }
 
 export interface ReceitaUpdateForm {
-  nome?: string
-  categoriaReceitaId?: number
   modoPreparo?: string
   tempoPreparo?: string
-  ingredientes?: Ingrediente[]
+  ingredientes: Ingrediente[]
   updatedBy: string
 }

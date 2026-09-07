@@ -4,8 +4,10 @@ import PageHeader from '../../../components/ui/PageHeader'
 import Button from '../../../components/ui/Button'
 import { useProduto, useCreateProduto, useUpdateProduto } from '../hooks/useProdutos'
 import { usePrecificacaoVigente, useCreatePrecificacao } from '../hooks/usePrecificacoes'
+import { useCategoriasProduto } from '../hooks/useCategoriasProduto'
 
 interface ProdutoFormState {
+  categoriaProdutoId: string
   nome: string
   descricao: string
 }
@@ -17,7 +19,7 @@ interface PrecificacaoFormState {
   valorVenda: string
 }
 
-const emptyProduto: ProdutoFormState = { nome: '', descricao: '' }
+const emptyProduto: ProdutoFormState = { categoriaProdutoId: '', nome: '', descricao: '' }
 const emptyPreco: PrecificacaoFormState = { valorCustoIngrediente: '', valorCustoFixo: '', margemLucro: '', valorVenda: '' }
 
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
@@ -43,6 +45,7 @@ export default function ProdutoFormPage() {
 
   const { data: produto, isLoading: loadingProduto } = useProduto(numericId)
   const { data: precificacao } = usePrecificacaoVigente(numericId)
+  const { data: categoriasData } = useCategoriasProduto(0, 100)
   const createProduto = useCreateProduto()
   const updateProduto = useUpdateProduto()
   const createPrecificacao = useCreatePrecificacao()
@@ -50,9 +53,15 @@ export default function ProdutoFormPage() {
   const [produtoForm, setProdutoForm] = useState<ProdutoFormState>(emptyProduto)
   const [precoForm, setPrecoForm] = useState<PrecificacaoFormState>(emptyPreco)
 
+  const categorias = categoriasData?.content ?? []
+
   useEffect(() => {
     if (produto) {
-      setProdutoForm({ nome: produto.nome ?? '', descricao: produto.descricao ?? '' })
+      setProdutoForm({
+        categoriaProdutoId: String(produto.categoriaProdutoId ?? ''),
+        nome: produto.nome ?? '',
+        descricao: produto.descricao ?? '',
+      })
     }
   }, [produto])
 
@@ -67,7 +76,7 @@ export default function ProdutoFormPage() {
     }
   }, [precificacao])
 
-  function handleProdutoChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
+  function handleProdutoChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
     setProdutoForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
@@ -101,6 +110,7 @@ export default function ProdutoFormPage() {
         {
           id: numericId,
           data: {
+            categoriaProdutoId: Number(produtoForm.categoriaProdutoId),
             nome: produtoForm.nome,
             descricao: produtoForm.descricao || undefined,
             updatedBy: 'netto',
@@ -110,7 +120,12 @@ export default function ProdutoFormPage() {
       )
     } else {
       createProduto.mutate(
-        { nome: produtoForm.nome, descricao: produtoForm.descricao || undefined, createdBy: 'netto' },
+        {
+          categoriaProdutoId: Number(produtoForm.categoriaProdutoId),
+          nome: produtoForm.nome,
+          descricao: produtoForm.descricao || undefined,
+          createdBy: 'netto',
+        },
         {
           onSuccess: (created) => savePreco(created.id),
         },
@@ -134,6 +149,23 @@ export default function ProdutoFormPage() {
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-5">
           <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Dados do Produto</h3>
+
+          <Field label="Categoria" required>
+            <select
+              name="categoriaProdutoId"
+              value={produtoForm.categoriaProdutoId}
+              onChange={handleProdutoChange}
+              required
+              className={inputClass}
+            >
+              <option value="">Selecione uma categoria...</option>
+              {categorias.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nome}
+                </option>
+              ))}
+            </select>
+          </Field>
 
           <Field label="Nome" required>
             <input

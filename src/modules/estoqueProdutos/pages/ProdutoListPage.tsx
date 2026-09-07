@@ -7,7 +7,7 @@ import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal'
 import { useProdutos, useDeleteProduto } from '../hooks/useProdutos'
 import { useDebounce } from '../../../hooks/useDebounce'
 
-const TABLE_HEADERS = ['ID', 'Nome', 'Descrição', 'Criado por', 'Ações']
+const TABLE_HEADERS = ['ID', 'Nome', 'Categoria', 'Descrição', 'Criado por', 'Ações']
 
 export default function ProdutoListPage() {
   const navigate = useNavigate()
@@ -106,6 +106,7 @@ export default function ProdutoListPage() {
           <tr key={p.id} className="hover:bg-gray-50 transition-colors">
             <td className="px-4 py-3 text-gray-500 text-sm">{p.id}</td>
             <td className="px-4 py-3 font-medium text-gray-900">{p.nome}</td>
+            <td className="px-4 py-3 text-gray-600">{p.categoriaProdutoNome}</td>
             <td className="px-4 py-3 text-gray-600">{p.descricao ?? '—'}</td>
             <td className="px-4 py-3 text-gray-600">{p.createdBy}</td>
             <td className="px-4 py-3">
