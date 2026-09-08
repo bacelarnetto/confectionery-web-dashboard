@@ -10,8 +10,15 @@ const parametrizacaoAlertaService = {
     return api.get<ParametrizacaoAlerta>(`/parametrizacao-alerta/${id}`).then((res) => res.data)
   },
 
-  getByInsumoId(insumoId: number): Promise<ParametrizacaoAlerta> {
-    return api.get<ParametrizacaoAlerta>(`/parametrizacao-alerta/insumo/${insumoId}`).then((res) => res.data)
+  getByInsumoId(insumoId: number): Promise<ParametrizacaoAlerta | null> {
+    // 404 aqui é o estado normal (insumo ainda sem parametrização cadastrada) — não é erro.
+    return api
+      .get<ParametrizacaoAlerta>(`/parametrizacao-alerta/insumo/${insumoId}`, { skipErrorToast: true })
+      .then((res) => res.data)
+      .catch((err) => {
+        if (err?.response?.status === 404) return null
+        throw err
+      })
   },
 
   create(data: ParametrizacaoAlertaInsertForm): Promise<ParametrizacaoAlerta> {

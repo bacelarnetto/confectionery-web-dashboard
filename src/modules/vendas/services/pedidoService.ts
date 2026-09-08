@@ -26,10 +26,10 @@ const pedidoService = {
     return api.get(`/pedido/${id}`).then((r) => r.data)
   },
   create(data: PedidoInsertForm): Promise<Pedido> {
-    return api.post('/pedido', data).then((r) => r.data)
+    return api.post('/pedido', data, { skipErrorToast: true }).then((r) => r.data)
   },
   update(id: number, data: PedidoUpdateForm): Promise<Pedido> {
-    return api.put(`/pedido/${id}`, data).then((r) => r.data)
+    return api.put(`/pedido/${id}`, data, { skipErrorToast: true }).then((r) => r.data)
   },
   updateStatus(id: number, status: string): Promise<Pedido> {
     return api

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { NavLink, useLocation } from 'react-router'
-import { Truck, ShoppingCart, Cookie, Package, ArrowDownToLine, ArrowUpFromLine, Archive, Activity, LayoutDashboard, Users, Bell, Settings, ChevronDown, Store, UtensilsCrossed, FlaskConical, Layers, KanbanSquare, CalendarClock, BookOpen } from 'lucide-react'
+import { Truck, ShoppingCart, Cookie, Package, ArrowDownToLine, ArrowUpFromLine, Archive, Activity, LayoutDashboard, Users, Bell, Settings, ChevronDown, Store, UtensilsCrossed, FlaskConical, Layers, KanbanSquare, CalendarClock, BookOpen, TrendingUp, PiggyBank } from 'lucide-react'
 import { useAlertasCountAtivos } from '../../modules/estoqueInsumos/hooks/useAlertas'
 import { useCountAlertasPedidoAtivos } from '../../modules/vendas/hooks/useAlertasPedido'
 import { useAlertasProdutoCountAtivos } from '../../modules/estoqueProdutos/hooks/useAlertasProduto'
@@ -100,6 +100,15 @@ const navigation: NavSection[] = [
       { label: 'Pedidos', to: '/vendas/pedidos', icon: <Store size={18} /> },
       { label: 'Mural da Semana', to: '/vendas/mural', icon: <KanbanSquare size={18} /> },
       { label: 'Alertas de Pedidos', to: '/alertas-pedido', icon: <CalendarClock size={18} />, badge: () => <AlertaPedidoBadge /> },
+    ],
+  },
+  {
+    title: 'Relatórios',
+    key: 'relatorios',
+    items: [
+      { label: 'Faturamento Mensal', to: '/relatorios/faturamento-mensal', icon: <TrendingUp size={18} /> },
+      { label: 'Custo de Produção', to: '/relatorios/custo-producao', icon: <PiggyBank size={18} /> },
+      { label: 'Movimentação de Estoque', to: '/relatorios/movimentacao-estoque', icon: <Activity size={18} /> },
     ],
   },
   {

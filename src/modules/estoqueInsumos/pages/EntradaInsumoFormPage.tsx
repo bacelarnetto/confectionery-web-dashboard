@@ -1,12 +1,31 @@
 import { useState, useEffect, FormEvent } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, AlertCircle } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
 import Button from '../../../components/ui/Button'
 import { useEntradaInsumo, useCreateEntradaInsumo, useUpdateEntradaInsumo } from '../hooks/useEntradasInsumo'
 import { useInsumos } from '../hooks/useInsumos'
 import { ItemEntradaInsumo } from '../types/entradaInsumo'
 import { Insumo } from '../types/insumo'
+import { parseApiError } from '../../../lib/apiError'
+
+type CampoItem = 'quantidade' | 'dataValidade' | 'lote'
+
+/**
+ * O backend não devolve erro estruturado por campo — só uma frase livre com "(insumoId=X)"
+ * embutido (ver EntradaInsumoService.kt). Mapeamos essa frase pro item/campo certo com base
+ * nos 3 textos exatos que o backend usa hoje; qualquer mensagem fora desse padrão vira o
+ * banner genérico em vez de arriscar um mapeamento errado.
+ */
+function mapearErroParaItem(mensagem: string): { insumoId: number; campo: CampoItem } | null {
+  const match = mensagem.match(/insumoId=(\d+)/)
+  if (!match) return null
+  const insumoId = Number(match[1])
+  if (mensagem.includes('Quantidade')) return { insumoId, campo: 'quantidade' }
+  if (mensagem.includes('Data de validade')) return { insumoId, campo: 'dataValidade' }
+  if (mensagem.includes('Lote')) return { insumoId, campo: 'lote' }
+  return null
+}
 
 interface FormState {
   compraId: string
@@ -67,6 +86,8 @@ export default function EntradaInsumoFormPage() {
     compraId: prefilledCompraId ? String(prefilledCompraId) : '',
   })
   const [itens, setItens] = useState<Omit<ItemEntradaInsumo, 'id' | 'createdBy' | 'updatedBy'>[]>([])
+  const [erroGeral, setErroGeral] = useState<string | null>(null)
+  const [itemErros, setItemErros] = useState<Record<number, { campo: CampoItem; mensagem: string }>>({})
 
   useEffect(() => {
     if (entrada) {
@@ -126,10 +147,34 @@ export default function EntradaInsumoFormPage() {
       }
       return updated
     })
+    setItemErros((prev) => {
+      if (!(index in prev)) return prev
+      const { [index]: _removed, ...rest } = prev
+      return rest
+    })
+  }
+
+  function tratarErro(err: unknown) {
+    const { status, mensagem } = parseApiError(err)
+    if (status && status >= 500) {
+      // 5xx/rede: nada pra "explicar" no formulário, mantém o alerta genérico
+      return
+    }
+    const mapeado = mapearErroParaItem(mensagem)
+    if (mapeado) {
+      const index = itens.findIndex((it) => it.insumoId === mapeado.insumoId)
+      if (index >= 0) {
+        setItemErros((prev) => ({ ...prev, [index]: { campo: mapeado.campo, mensagem } }))
+        return
+      }
+    }
+    setErroGeral(mensagem)
   }
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
+    setErroGeral(null)
+    setItemErros({})
 
     const optional = {
       compraId: form.compraId ? Number(form.compraId) : undefined,
@@ -153,7 +198,7 @@ export default function EntradaInsumoFormPage() {
             })) ?? itens,
           },
         },
-        { onSuccess: () => navigate('/estoque-insumos/entradas') },
+        { onSuccess: () => navigate('/estoque-insumos/entradas'), onError: tratarErro },
       )
     } else {
       createMutation.mutate(
@@ -164,7 +209,7 @@ export default function EntradaInsumoFormPage() {
           createdBy: 'netto',
           itens,
         },
-        { onSuccess: () => navigate('/estoque-insumos/entradas') },
+        { onSuccess: () => navigate('/estoque-insumos/entradas'), onError: tratarErro },
       )
     }
   }
@@ -190,6 +235,13 @@ export default function EntradaInsumoFormPage() {
         title={isEditing ? 'Editar Entrada' : 'Nova Entrada'}
         subtitle={isEditing ? 'Atualize os dados da entrada' : 'Cadastre uma nova entrada de insumo'}
       />
+
+      {erroGeral && (
+        <div className="mb-4 flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
+          <p>{erroGeral}</p>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit}>
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-5">
@@ -287,6 +339,7 @@ export default function EntradaInsumoFormPage() {
                 {itens.map((item, index) => {
                   const insumo = getInsumo(item.insumoId)
                   const perecivel = insumo?.perecivel ?? false
+                  const itemErro = itemErros[index]
                   return (
                   <div
                     key={index}
@@ -305,15 +358,21 @@ export default function EntradaInsumoFormPage() {
                           </option>
                         ))}
                       </select>
-                      <input
-                        type="number"
-                        step="0.01"
-                        placeholder="Qtd *"
-                        value={item.quantidade || ''}
-                        onChange={(e) => updateItem(index, 'quantidade', Number(e.target.value))}
-                        required
-                        className={inputClass}
-                      />
+                      <div>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0.01"
+                          placeholder="Qtd *"
+                          value={item.quantidade || ''}
+                          onChange={(e) => updateItem(index, 'quantidade', Number(e.target.value))}
+                          required
+                          className={`${inputClass} ${itemErro?.campo === 'quantidade' ? 'border-red-400' : ''}`}
+                        />
+                        {itemErro?.campo === 'quantidade' && (
+                          <p className="text-xs text-red-600 mt-1">{itemErro.mensagem}</p>
+                        )}
+                      </div>
                       <div>
                         <input
                           type="text"
@@ -321,8 +380,11 @@ export default function EntradaInsumoFormPage() {
                           value={item.lote ?? ''}
                           onChange={(e) => updateItem(index, 'lote', e.target.value)}
                           required={perecivel}
-                          className={`${inputClass} ${perecivel && !item.lote ? 'border-amber-400' : ''}`}
+                          className={`${inputClass} ${(perecivel && !item.lote) || itemErro?.campo === 'lote' ? 'border-red-400' : ''}`}
                         />
+                        {itemErro?.campo === 'lote' && (
+                          <p className="text-xs text-red-600 mt-1">{itemErro.mensagem}</p>
+                        )}
                       </div>
                       <div>
                         <input
@@ -330,9 +392,12 @@ export default function EntradaInsumoFormPage() {
                           value={item.dataValidade?.split('T')[0] || ''}
                           onChange={(e) => updateItem(index, 'dataValidade', e.target.value)}
                           required={perecivel}
-                          className={`${inputClass} ${perecivel && !item.dataValidade ? 'border-amber-400' : ''}`}
+                          className={`${inputClass} ${(perecivel && !item.dataValidade) || itemErro?.campo === 'dataValidade' ? 'border-red-400' : ''}`}
                           title={perecivel ? 'Data de validade obrigatória para insumos perecíveis' : undefined}
                         />
+                        {itemErro?.campo === 'dataValidade' && (
+                          <p className="text-xs text-red-600 mt-1">{itemErro.mensagem}</p>
+                        )}
                       </div>
                       <input
                         type="number"

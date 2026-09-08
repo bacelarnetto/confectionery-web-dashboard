@@ -22,11 +22,11 @@ const entradaInsumoService = {
   },
 
   create(data: EntradaInsumoInsertForm): Promise<EntradaInsumo> {
-    return api.post<EntradaInsumo>('/entrada-insumo', data).then((res) => res.data)
+    return api.post<EntradaInsumo>('/entrada-insumo', data, { skipErrorToast: true }).then((res) => res.data)
   },
 
   update(id: number, data: EntradaInsumoUpdateForm): Promise<EntradaInsumo> {
-    return api.put<EntradaInsumo>(`/entrada-insumo/${id}`, data).then((res) => res.data)
+    return api.put<EntradaInsumo>(`/entrada-insumo/${id}`, data, { skipErrorToast: true }).then((res) => res.data)
   },
 
   remove(id: number): Promise<void> {

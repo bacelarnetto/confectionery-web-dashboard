@@ -15,7 +15,7 @@ const precificacaoProdutoService = {
     return api.get(`/precificacao-produto/vigente/${produtoId}`).then((r) => r.data).catch(() => null)
   },
   create(data: PrecificacaoProdutoInsertForm): Promise<PrecificacaoProduto> {
-    return api.post('/precificacao-produto', data).then((r) => r.data)
+    return api.post('/precificacao-produto', data, { skipErrorToast: true }).then((r) => r.data)
   },
   simular(data: PrecificacaoProdutoSimularForm): Promise<PrecificacaoProdutoSimulacao> {
     return api.post('/precificacao-produto/simular', data).then((r) => r.data)

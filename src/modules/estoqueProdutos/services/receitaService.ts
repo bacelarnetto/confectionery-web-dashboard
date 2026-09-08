@@ -10,10 +10,10 @@ const receitaService = {
     return api.get(`/receita/${id}`).then((r) => r.data)
   },
   create(data: ReceitaInsertForm): Promise<Receita> {
-    return api.post('/receita', data).then((r) => r.data)
+    return api.post('/receita', data, { skipErrorToast: true }).then((r) => r.data)
   },
   update(id: number, data: ReceitaUpdateForm): Promise<Receita> {
-    return api.put(`/receita/${id}`, data).then((r) => r.data)
+    return api.put(`/receita/${id}`, data, { skipErrorToast: true }).then((r) => r.data)
   },
   remove(id: number): Promise<void> {
     return api.delete(`/receita/${id}`, { headers: { usuario: 'netto' } }).then(() => undefined)

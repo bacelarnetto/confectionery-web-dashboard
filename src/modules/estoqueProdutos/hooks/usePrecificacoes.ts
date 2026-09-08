@@ -36,7 +36,6 @@ export function usePrecificacaoSimulada(input: PrecificacaoProdutoSimularForm, e
     queryFn: () => precificacaoProdutoService.simular(debounced),
     enabled: enabled && debounced.produtoId > 0,
     retry: false,
-    staleTime: 0,
   })
 
   return {

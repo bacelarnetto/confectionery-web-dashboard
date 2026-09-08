@@ -16,6 +16,9 @@ const routeNames: Record<string, { section: string; title: string }> = {
   '/estoque-insumos/movimentacoes': { section: 'Estoque', title: 'Movimentações' },
   '/estoque-insumos/alertas': { section: 'Estoque', title: 'Alertas' },
   '/estoque-insumos/parametrizacao-alertas': { section: 'Estoque', title: 'Parâmetros de Alerta' },
+  '/relatorios/faturamento-mensal': { section: 'Relatórios', title: 'Faturamento Mensal' },
+  '/relatorios/custo-producao': { section: 'Relatórios', title: 'Custo de Produção' },
+  '/relatorios/movimentacao-estoque': { section: 'Relatórios', title: 'Movimentação de Estoque' },
   '/guia': { section: 'Ajuda', title: 'Guia do Usuário' },
   '/usuarios': { section: 'Configurações', title: 'Usuários' },
 }

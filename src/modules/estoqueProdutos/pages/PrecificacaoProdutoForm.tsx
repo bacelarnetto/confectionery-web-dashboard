@@ -1,8 +1,10 @@
 import { useEffect, useState, FormEvent } from 'react'
+import { AlertCircle } from 'lucide-react'
 import Button from '../../../components/ui/Button'
 import RadioToggle from '../../../components/ui/RadioToggle'
 import { usePrecificacaoVigente, useCreatePrecificacao, usePrecificacaoSimulada } from '../hooks/usePrecificacoes'
 import { PrecificacaoProdutoInsertForm } from '../types/precificacaoProduto'
+import { parseApiError } from '../../../lib/apiError'
 
 interface Props {
   produtoId: number
@@ -38,6 +40,7 @@ export default function PrecificacaoProdutoForm({ produtoId }: Props) {
   const [margemLucro, setMargemLucro] = useState('')
   const [valorVendaFinal, setValorVendaFinal] = useState('')
   const [valorVendaFinalDirty, setValorVendaFinalDirty] = useState(false)
+  const [erroGeral, setErroGeral] = useState<string | null>(null)
 
   // Pré-preenche com a precificação vigente, se houver, como ponto de partida pro ajuste. O modo
   // ("receita" vs "manual") não vem daqui -- fica sempre otimista em "receita" e é o probe ao vivo
@@ -83,6 +86,7 @@ export default function PrecificacaoProdutoForm({ produtoId }: Props) {
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
     if (!dado) return
+    setErroGeral(null)
 
     const data: PrecificacaoProdutoInsertForm = {
       produtoId,
@@ -102,6 +106,11 @@ export default function PrecificacaoProdutoForm({ produtoId }: Props) {
 
     createMutation.mutate(data, {
       onSuccess: () => setValorVendaFinalDirty(false),
+      onError: (err) => {
+        const { status, mensagem } = parseApiError(err)
+        if (status && status >= 500) return // 5xx/rede: toast genérico já cobre
+        setErroGeral(mensagem)
+      },
     })
   }
 
@@ -122,6 +131,13 @@ export default function PrecificacaoProdutoForm({ produtoId }: Props) {
             : 'Defina o preço de venda inicial deste produto.'}
         </p>
       </div>
+
+      {erroGeral && (
+        <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
+          <p>{erroGeral}</p>
+        </div>
+      )}
 
       {vigente && (
         <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">

@@ -1,6 +1,6 @@
 import { useState, useEffect, FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, AlertCircle } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
 import Button from '../../../components/ui/Button'
 import RadioToggle from '../../../components/ui/RadioToggle'
@@ -8,6 +8,19 @@ import { useReceita, useReceitas, useCreateReceita, useUpdateReceita } from '../
 import { useProdutos, useProduto } from '../hooks/useProdutos'
 import { useCategoriasProduto } from '../hooks/useCategoriasProduto'
 import { Ingrediente, ProdutoRefForm } from '../types/receita'
+import { parseApiError } from '../../../lib/apiError'
+
+/**
+ * O backend não estrutura erro por campo — mapeamos os 3 textos exatos que
+ * `ReceitaService.kt` lança hoje (ver cadastrarComProduto/resolverProdutoId/resolverCategoriaProdutoId).
+ * Qualquer mensagem fora desse padrão cai no banner genérico em vez de arriscar mapeamento errado.
+ */
+function mapearErroReceita(mensagem: string): 'produto' | 'categoria' | null {
+  if (mensagem.includes('receita cadastrada para o produto')) return 'produto'
+  if (mensagem.includes('Informe produtoId')) return 'produto'
+  if (mensagem.includes('Informe categoriaProdutoId')) return 'categoria'
+  return null
+}
 
 interface FormState {
   modoPreparo: string
@@ -71,6 +84,9 @@ export default function ReceitaFormPage() {
   const [categoriaMode, setCategoriaMode] = useState<'existente' | 'novo'>('existente')
   const [categoriaProdutoId, setCategoriaProdutoId] = useState('')
   const [novaCategoria, setNovaCategoria] = useState<NovaCategoriaState>(emptyNovaCategoria)
+  const [erroGeral, setErroGeral] = useState<string | null>(null)
+  const [erroProduto, setErroProduto] = useState<string | null>(null)
+  const [erroCategoria, setErroCategoria] = useState<string | null>(null)
 
   useEffect(() => {
     if (receita) {
@@ -105,8 +121,27 @@ export default function ReceitaFormPage() {
     setIngredientes((prev) => prev.filter((_, i) => i !== index))
   }
 
+  function tratarErro(err: unknown) {
+    const { status, mensagem } = parseApiError(err)
+    if (status && status >= 500) return // 5xx/rede: toast genérico já cobre
+
+    switch (mapearErroReceita(mensagem)) {
+      case 'produto':
+        setErroProduto(mensagem)
+        break
+      case 'categoria':
+        setErroCategoria(mensagem)
+        break
+      default:
+        setErroGeral(mensagem)
+    }
+  }
+
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
+    setErroGeral(null)
+    setErroProduto(null)
+    setErroCategoria(null)
 
     const validIngredientes = ingredientes.filter((ing) => ing.insumoId > 0 && ing.quantidade > 0)
 
@@ -121,7 +156,7 @@ export default function ReceitaFormPage() {
             updatedBy: 'netto',
           },
         },
-        { onSuccess: () => navigate('/estoque-produtos/receitas') },
+        { onSuccess: () => navigate('/estoque-produtos/receitas'), onError: tratarErro },
       )
     } else {
       const produto: ProdutoRefForm =
@@ -146,7 +181,7 @@ export default function ReceitaFormPage() {
           ingredientes: validIngredientes,
           createdBy: 'netto',
         },
-        { onSuccess: () => navigate('/estoque-produtos/receitas') },
+        { onSuccess: () => navigate('/estoque-produtos/receitas'), onError: tratarErro },
       )
     }
   }
@@ -166,6 +201,13 @@ export default function ReceitaFormPage() {
         title={isEditing ? 'Editar Receita' : 'Nova Receita'}
         subtitle={isEditing ? 'Atualize os dados da receita' : 'Cadastre uma nova receita'}
       />
+
+      {erroGeral && (
+        <div className="mb-4 flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
+          <p>{erroGeral}</p>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {isEditing ? (
@@ -191,6 +233,13 @@ export default function ReceitaFormPage() {
                 ]}
               />
             </div>
+
+            {erroProduto && (
+              <p className="flex items-center gap-1.5 text-sm text-red-600">
+                <AlertCircle size={14} className="flex-shrink-0" />
+                {erroProduto}
+              </p>
+            )}
 
             {produtoMode === 'existente' ? (
               <Field label="Produto" required>
@@ -246,6 +295,13 @@ export default function ReceitaFormPage() {
                       ]}
                     />
                   </div>
+
+                  {erroCategoria && (
+                    <p className="flex items-center gap-1.5 text-sm text-red-600">
+                      <AlertCircle size={14} className="flex-shrink-0" />
+                      {erroCategoria}
+                    </p>
+                  )}
 
                   {categoriaMode === 'existente' ? (
                     <Field label="Categoria" required>

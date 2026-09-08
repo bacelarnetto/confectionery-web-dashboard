@@ -1,12 +1,24 @@
 import { useState, useEffect, FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, AlertCircle } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
 import Button from '../../../components/ui/Button'
 import { usePedido, useCreatePedido, useUpdatePedido } from '../hooks/usePedidos'
 import { useClientes } from '../hooks/useClientes'
 import { useProdutos } from '../../estoqueProdutos/hooks/useProdutos'
 import precificacaoProdutoService from '../../estoqueProdutos/services/precificacaoProdutoService'
+import { parseApiError } from '../../../lib/apiError'
+
+/**
+ * O backend não estrutura erro por campo. O único padrão confiável e reconhecível na base
+ * inteira é o `NoSuchElementException` de referência inválida: "<Entidade> não encontrado(a)
+ * com o ID <id>". Usamos isso só pra apontar qual item do pedido referencia um produto que já
+ * não existe mais (ex: cache desatualizado) — qualquer outra mensagem cai no banner genérico.
+ */
+function extrairProdutoIdInvalido(mensagem: string): number | null {
+  const match = mensagem.match(/Produto[a-zA-Zçã]* não encontrad[oa] com o ID (\d+)/)
+  return match ? Number(match[1]) : null
+}
 
 interface ItemForm {
   produtoId: string
@@ -57,6 +69,8 @@ export default function PedidoFormPage() {
 
   const [form, setForm] = useState<FormState>(emptyForm)
   const [itens, setItens] = useState<ItemForm[]>([{ ...emptyItem }])
+  const [erroGeral, setErroGeral] = useState<string | null>(null)
+  const [itemErroIndex, setItemErroIndex] = useState<number | null>(null)
 
   const clientes = clientesData?.content ?? []
   const produtos = produtosData?.content ?? []
@@ -107,6 +121,7 @@ export default function PedidoFormPage() {
       updated[index] = { ...updated[index], [field]: value }
       return updated
     })
+    if (itemErroIndex === index) setItemErroIndex(null)
   }
 
   function addItem() {
@@ -132,8 +147,26 @@ export default function PedidoFormPage() {
       }))
   }
 
+  function tratarErro(err: unknown) {
+    const { status, mensagem } = parseApiError(err)
+    if (status && status >= 500) return // 5xx/rede: toast genérico já cobre
+
+    const produtoIdInvalido = extrairProdutoIdInvalido(mensagem)
+    if (produtoIdInvalido != null) {
+      const index = itens.findIndex((it) => Number(it.produtoId) === produtoIdInvalido)
+      if (index >= 0) {
+        setItemErroIndex(index)
+        setErroGeral(mensagem)
+        return
+      }
+    }
+    setErroGeral(mensagem)
+  }
+
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
+    setErroGeral(null)
+    setItemErroIndex(null)
     const base = {
       retirar: form.retirar,
       dataEntrega: form.dataEntrega ? new Date(form.dataEntrega).toISOString() : undefined,
@@ -143,12 +176,12 @@ export default function PedidoFormPage() {
     if (isEditing) {
       updateMutation.mutate(
         { id: numericId, data: { ...base, enderecoId: form.enderecoId ? Number(form.enderecoId) : undefined, updatedBy: 'netto' } },
-        { onSuccess: () => navigate('/vendas/pedidos') },
+        { onSuccess: () => navigate('/vendas/pedidos'), onError: tratarErro },
       )
     } else {
       createMutation.mutate(
         { clienteId: Number(form.clienteId), enderecoId: form.enderecoId ? Number(form.enderecoId) : undefined, ...base, createdBy: 'netto' },
-        { onSuccess: () => navigate('/vendas/pedidos') },
+        { onSuccess: () => navigate('/vendas/pedidos'), onError: tratarErro },
       )
     }
   }
@@ -165,6 +198,13 @@ export default function PedidoFormPage() {
         title={isEditing ? 'Editar Pedido' : 'Novo Pedido'}
         subtitle={isEditing ? 'Atualize os dados do pedido' : 'Registre um novo pedido'}
       />
+
+      {erroGeral && (
+        <div className="mb-4 flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
+          <p>{erroGeral}</p>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-5">
@@ -265,7 +305,10 @@ export default function PedidoFormPage() {
 
           <div className="space-y-4">
             {itens.map((item, index) => (
-              <div key={index} className="border border-gray-200 rounded-lg p-4">
+              <div
+                key={index}
+                className={`border rounded-lg p-4 ${itemErroIndex === index ? 'border-red-400 bg-red-50' : 'border-gray-200'}`}
+              >
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm font-medium text-gray-600">Item {index + 1}</span>
                   {itens.length > 1 && (
