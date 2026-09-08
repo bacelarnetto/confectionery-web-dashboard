@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { NavLink, useLocation } from 'react-router'
-import { Truck, ShoppingCart, Cookie, Package, ArrowDownToLine, ArrowUpFromLine, Archive, Activity, LayoutDashboard, Users, Bell, Settings, ChevronDown, Store, UtensilsCrossed, FlaskConical, Layers, KanbanSquare, CalendarClock } from 'lucide-react'
+import { Truck, ShoppingCart, Cookie, Package, ArrowDownToLine, ArrowUpFromLine, Archive, Activity, LayoutDashboard, Users, Bell, Settings, ChevronDown, Store, UtensilsCrossed, FlaskConical, Layers, KanbanSquare, CalendarClock, BookOpen } from 'lucide-react'
 import { useAlertasCountAtivos } from '../../modules/estoqueInsumos/hooks/useAlertas'
 import { useCountAlertasPedidoAtivos } from '../../modules/vendas/hooks/useAlertasPedido'
 import { useAlertasProdutoCountAtivos } from '../../modules/estoqueProdutos/hooks/useAlertasProduto'
@@ -107,6 +107,13 @@ const navigation: NavSection[] = [
     key: 'admin',
     items: [
       { label: 'Usuários', to: '/usuarios', icon: <Users size={18} /> },
+    ],
+  },
+  {
+    title: 'Ajuda',
+    key: 'ajuda',
+    items: [
+      { label: 'Guia do Usuário', to: '/guia', icon: <BookOpen size={18} /> },
     ],
   },
 ]

@@ -40,6 +40,7 @@ import PedidoListPage from './modules/vendas/pages/PedidoListPage'
 import PedidoFormPage from './modules/vendas/pages/PedidoFormPage'
 import AlertaPedidoListPage from './modules/vendas/pages/AlertaPedidoListPage'
 import PedidoMuralPage from './modules/vendas/pages/PedidoMuralPage'
+import GuiaPage from './modules/guia/pages/GuiaPage'
 
 export default function App() {
   return (
@@ -111,6 +112,10 @@ export default function App() {
         <Route path="/usuarios" element={<UsuarioListPage />} />
         <Route path="/usuarios/novo" element={<UsuarioFormPage />} />
         <Route path="/usuarios/:id/editar" element={<UsuarioFormPage />} />
+
+        {/* Guia do Usuário */}
+        <Route path="/guia" element={<GuiaPage />} />
+        <Route path="/guia/:secao" element={<GuiaPage />} />
       </Route>
     </Routes>
   )

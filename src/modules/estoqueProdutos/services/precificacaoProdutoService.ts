@@ -1,5 +1,10 @@
 import api from '../../../lib/axios'
-import { PrecificacaoProduto, PrecificacaoProdutoInsertForm } from '../types/precificacaoProduto'
+import {
+  PrecificacaoProduto,
+  PrecificacaoProdutoInsertForm,
+  PrecificacaoProdutoSimularForm,
+  PrecificacaoProdutoSimulacao,
+} from '../types/precificacaoProduto'
 import { PageResponse } from './produtoService'
 
 const precificacaoProdutoService = {
@@ -11,6 +16,9 @@ const precificacaoProdutoService = {
   },
   create(data: PrecificacaoProdutoInsertForm): Promise<PrecificacaoProduto> {
     return api.post('/precificacao-produto', data).then((r) => r.data)
+  },
+  simular(data: PrecificacaoProdutoSimularForm): Promise<PrecificacaoProdutoSimulacao> {
+    return api.post('/precificacao-produto/simular', data).then((r) => r.data)
   },
 }
 
