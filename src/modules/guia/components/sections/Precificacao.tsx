@@ -73,7 +73,16 @@ export default function Precificacao() {
       </div>
 
       <GuiaCard step={1} title="Informe os custos e a margem">
-        <p>Na tela de precificação do produto, informe o custo fixo/variável e a margem de lucro que você deseja.</p>
+        <p>
+          Vá em <span className="font-medium text-gray-800">Estoque de Produtos → Produtos</span>, abra a edição do
+          produto que você quer precificar e role até a seção “Precificação”, logo abaixo dos dados do produto.
+          <GuiaTooltip text="A precificação só aparece depois que o produto já existe — por isso ela fica na tela de edição, não na de cadastro inicial." />
+        </p>
+        <p>
+          Acabou de cadastrar o produto agora? Você nem precisa procurar essa tela: ao salvar um produto novo, o sistema
+          já te leva direto pra edição dele — a seção de Precificação já aparece ali embaixo, pronta pra usar.
+        </p>
+        <p>Ali, informe o custo fixo/variável e a margem de lucro que você deseja.</p>
         <p>
           O custo dos ingredientes pode vir automaticamente da sua receita
           <GuiaTooltip text="Quando o custo vem da receita, o sistema soma o valor fotografado de cada ingrediente — você não precisa digitar nada." />,
@@ -98,10 +107,10 @@ export default function Precificacao() {
       </GuiaCard>
 
       <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl text-sm text-emerald-800">
-        <p className="font-medium">O sistema guarda os dois valores</p>
+        <p className="font-medium">Quem decide o preço final é sempre você</p>
         <p className="mt-1">
-          O preço sugerido pela fórmula e o preço final que você praticou ficam salvos no histórico. Se um dia alguém perguntar
-          por que o bolo passou a custar R$ 35,00, a resposta está documentada.
+          A fórmula sugere um número justo com base no que você informou — mas a palavra final sobre quanto cobrar é sua.
+          O sistema só garante que a conta esteja certa; a decisão comercial continua sendo sua.
         </p>
       </div>
     </GuiaSection>

@@ -1,19 +1,8 @@
-import { useEffect, useState, ComponentType } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { BookOpen } from 'lucide-react'
 import GuiaNav from '../components/GuiaNav'
-import PrimeirosPassos from '../components/sections/PrimeirosPassos'
-import GestaoCustos from '../components/sections/GestaoCustos'
-import Precificacao from '../components/sections/Precificacao'
-import Historico from '../components/sections/Historico'
 import { guiaSections } from '../guiaSections'
-
-const sections: Array<{ id: string; Component: ComponentType }> = [
-  { id: 'primeiros-passos', Component: PrimeirosPassos },
-  { id: 'gestao-custos', Component: GestaoCustos },
-  { id: 'precificacao', Component: Precificacao },
-  { id: 'historico', Component: Historico },
-]
 
 const validIds = new Set(guiaSections.map((s) => s.id))
 
@@ -42,7 +31,7 @@ export default function GuiaPage() {
       { rootMargin: '-20% 0px -70% 0px', threshold: 0 },
     )
 
-    sections.forEach((s) => {
+    guiaSections.forEach((s) => {
       const el = document.getElementById(s.id)
       if (el) observer.observe(el)
     })
@@ -77,7 +66,7 @@ export default function GuiaPage() {
         <GuiaNav activeId={activeId} onSelect={handleSelect} />
 
         <div className="flex-1 min-w-0 space-y-12 pt-4 md:pt-0">
-          {sections.map(({ id, Component }) => (
+          {guiaSections.map(({ id, Component }) => (
             <Component key={id} />
           ))}
         </div>

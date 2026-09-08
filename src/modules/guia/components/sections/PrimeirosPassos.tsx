@@ -24,8 +24,8 @@ export default function PrimeirosPassos() {
           <GuiaTooltip text="Pense assim: se o preço do leite subir e o sistema continuar com o valor antigo, a conta final sai errada." />
         </p>
         <p>
-          No <span className="font-medium text-gray-800">Estoque de Insumos → Entradas</span> você registra os lotes que
-          chegaram, com data de validade e valor de compra — é de lá que o sistema passa a saber o que está no seu estoque.
+          Este cadastro é só o ponto de partida — o passo a passo completo de comprar e repor o estoque tem uma seção só
+          para ele, logo a seguir.
         </p>
       </GuiaCard>
 
@@ -33,6 +33,12 @@ export default function PrimeirosPassos() {
         <p>
           Uma receita é o “DNA” de custo de um produto. Vá em <span className="font-medium text-gray-800">Estoque de Produtos → Receitas</span>,
           clique em “Nova receita”, escolha ou crie o produto e liste os ingredientes com as quantidades usadas.
+        </p>
+        <p>
+          Todo produto pertence a uma <span className="font-medium text-gray-800">Categoria</span> (ex: “bolos redondos”,
+          “doces”, “sobremesas”) — é o que organiza o seu cardápio nas telas de venda. Se o produto for novo, você escolhe
+          uma categoria já existente ou cria uma na hora, sem sair da tela de receita. Elas também podem ser geridas em{' '}
+          <span className="font-medium text-gray-800">Estoque de Produtos → Categorias</span>.
         </p>
         <p>Cada produto só pode ter uma receita — é por isso que o custo dele é confiável e não vira um chute.</p>
         <p>
@@ -55,7 +61,7 @@ export default function PrimeirosPassos() {
       <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl text-sm text-emerald-800">
         <p className="font-medium">E agora?</p>
         <p className="mt-1">
-          Com insumos e receitas no sistema, o próximo passo é entender os dois tipos de custo. É mais simples do que parece.
+          Com insumos e receitas no sistema, o próximo passo é ver como comprar e repor o estoque no dia a dia.
         </p>
       </div>
     </GuiaSection>

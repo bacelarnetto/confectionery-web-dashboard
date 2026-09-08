@@ -23,11 +23,13 @@ export default function Historico() {
         </p>
       </GuiaCard>
 
-      <GuiaCard step={3} title="O preço dos ingredientes no dia da receita">
-        <p>Quando você salva uma receita (e novamente a cada produção), o sistema fotografa o preço dos ingredientes daquele dia.</p>
+      <GuiaCard step={3} title="A foto da receita nunca é substituída, só renovada">
         <p>
-          É como tirar uma foto do seu caderno de receitas: o que estava escrito naquele dia continua provando o custo real,
-          mesmo que o açúcar suba amanhã.
+          Você já viu em Primeiros Passos que cada receita guarda a foto do preço dos ingredientes no dia em que foi salva.
+        </p>
+        <p>
+          Aqui é onde essa foto prova o seu valor: mesmo que o preço de um insumo suba amanhã, o custo registrado daquele
+          dia continua exatamente como estava — nada é reescrito por trás, silenciosamente.
         </p>
       </GuiaCard>
 

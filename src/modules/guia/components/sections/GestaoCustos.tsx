@@ -13,10 +13,6 @@ export default function GestaoCustos() {
           É a soma de tudo que entra na receita: farinha, açúcar, ovos, manteiga. Quanto custa, em ingredientes, produzir uma
           unidade do seu produto.
         </p>
-        <p>
-          Na hora de precificar, você pode deixar o sistema calcular esse valor a partir da receita cadastrada, ou informar
-          manualmente quando o produto ainda não tiver receita.
-        </p>
       </GuiaCard>
 
       <GuiaCard step={2} title="O custo fixo/variável — o que envolve a produção">

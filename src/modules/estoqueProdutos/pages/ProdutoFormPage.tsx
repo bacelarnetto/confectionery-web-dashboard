@@ -1,5 +1,6 @@
 import { useState, useEffect, FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router'
+import { Sparkles } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
 import Button from '../../../components/ui/Button'
 import { useProduto, useCreateProduto, useUpdateProduto } from '../hooks/useProdutos'
@@ -164,9 +165,16 @@ export default function ProdutoFormPage() {
           <PrecificacaoProdutoForm produtoId={numericId} />
         </div>
       ) : (
-        <p className="mt-6 text-sm text-gray-400">
-          Depois de cadastrar o produto você poderá definir o preço de venda.
-        </p>
+        <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex gap-3">
+          <Sparkles size={18} className="text-amber-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-medium text-amber-900">Falta um passo para o preço de venda</p>
+            <p className="text-sm text-amber-800 mt-0.5">
+              Ao salvar, você cai direto na tela de edição deste produto — é lá, logo abaixo dos dados dele, que a
+              seção de Precificação aparece.
+            </p>
+          </div>
+        </div>
       )}
     </div>
   )
