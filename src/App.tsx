@@ -39,6 +39,8 @@ import ComplementoListPage from './modules/vendas/pages/ComplementoListPage'
 import ComplementoFormPage from './modules/vendas/pages/ComplementoFormPage'
 import PedidoListPage from './modules/vendas/pages/PedidoListPage'
 import PedidoFormPage from './modules/vendas/pages/PedidoFormPage'
+import OrcamentoListPage from './modules/vendas/pages/OrcamentoListPage'
+import OrcamentoFormPage from './modules/vendas/pages/OrcamentoFormPage'
 import AlertaPedidoListPage from './modules/vendas/pages/AlertaPedidoListPage'
 import PedidoMuralPage from './modules/vendas/pages/PedidoMuralPage'
 import GuiaPage from './modules/guia/pages/GuiaPage'
@@ -109,6 +111,9 @@ export default function App() {
         <Route path="/vendas/pedidos" element={<PedidoListPage />} />
         <Route path="/vendas/pedidos/novo" element={<PedidoFormPage />} />
         <Route path="/vendas/pedidos/:id/editar" element={<PedidoFormPage />} />
+        <Route path="/vendas/orcamentos" element={<OrcamentoListPage />} />
+        <Route path="/vendas/orcamentos/novo" element={<OrcamentoFormPage />} />
+        <Route path="/vendas/orcamentos/:id/editar" element={<OrcamentoFormPage />} />
         <Route path="/vendas/mural" element={<PedidoMuralPage />} />
         <Route path="/alertas-pedido" element={<AlertaPedidoListPage />} />
 

@@ -5,6 +5,7 @@ import PageHeader from '../../../components/ui/PageHeader'
 import Button from '../../../components/ui/Button'
 import { usePedido, useCreatePedido, useUpdatePedido } from '../hooks/usePedidos'
 import { useClientes } from '../hooks/useClientes'
+import EnderecoClienteField from '../components/EnderecoClienteField'
 import { useProdutos } from '../../estoqueProdutos/hooks/useProdutos'
 import precificacaoProdutoService from '../../estoqueProdutos/services/precificacaoProdutoService'
 import { parseApiError } from '../../../lib/apiError'
@@ -35,9 +36,10 @@ interface FormState {
   retirar: boolean
   dataEntrega: string
   valorFrete: string
+  observacao: string
 }
 
-const emptyForm: FormState = { clienteId: '', enderecoId: '', retirar: false, dataEntrega: '', valorFrete: '' }
+const emptyForm: FormState = { clienteId: '', enderecoId: '', retirar: false, dataEntrega: '', valorFrete: '', observacao: '' }
 const emptyItem: ItemForm = { produtoId: '', quantidade: '1', valorUnitario: '', desconto: '', ignorarComplementoPadrao: false, complementoIds: '' }
 
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
@@ -53,7 +55,7 @@ function Field({ label, required, children }: { label: string; required?: boolea
 }
 
 const inputClass =
-  'w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent placeholder:text-gray-400'
+  'w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent placeholder:text-gray-400 disabled:bg-gray-50 disabled:text-gray-500'
 
 export default function PedidoFormPage() {
   const navigate = useNavigate()
@@ -94,6 +96,7 @@ export default function PedidoFormPage() {
         retirar: pedido.retirar,
         dataEntrega: pedido.dataEntrega ? new Date(pedido.dataEntrega).toISOString().slice(0, 16) : '',
         valorFrete: String(pedido.valorFrete ?? ''),
+        observacao: pedido.observacao ?? '',
       })
       if (pedido.itens?.length) {
         setItens(
@@ -110,9 +113,15 @@ export default function PedidoFormPage() {
     }
   }, [pedido])
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
+  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
     const value = e.target.type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value
     setForm((prev) => ({ ...prev, [e.target.name]: value }))
+  }
+
+  function handleRetirarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const retirar = e.target.checked
+    // Cliente retira no local -> não tem frete; limpa pra não deixar um valor esquecido no submit.
+    setForm((prev) => ({ ...prev, retirar, valorFrete: retirar ? '' : prev.valorFrete }))
   }
 
   function handleItemChange(index: number, field: keyof ItemForm, value: string | boolean) {
@@ -171,6 +180,7 @@ export default function PedidoFormPage() {
       retirar: form.retirar,
       dataEntrega: form.dataEntrega ? new Date(form.dataEntrega).toISOString() : undefined,
       valorFrete: form.valorFrete ? Number(form.valorFrete) : undefined,
+      observacao: form.observacao || undefined,
       itens: buildItens(),
     }
     if (isEditing) {
@@ -227,29 +237,13 @@ export default function PedidoFormPage() {
               </select>
             </Field>
 
-            {selectedCliente?.enderecos?.length ? (
-              <Field label="Endereço de Entrega">
-                <select name="enderecoId" value={form.enderecoId} onChange={handleChange} className={inputClass}>
-                  <option value="">— sem endereço —</option>
-                  {selectedCliente.enderecos.map((end, i) => (
-                    <option key={end.id ?? i} value={end.id ?? ''}>
-                      {end.descricao || `${end.logradouro}, ${end.numero}`}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-            ) : (
-              <Field label="Endereço ID">
-                <input
-                  name="enderecoId"
-                  type="number"
-                  value={form.enderecoId}
-                  onChange={handleChange}
-                  className={inputClass}
-                  placeholder="ID do endereço (opcional)"
-                />
-              </Field>
-            )}
+            <Field label="Endereço de Entrega">
+              <EnderecoClienteField
+                cliente={selectedCliente}
+                value={form.enderecoId}
+                onChange={(value) => setForm((prev) => ({ ...prev, enderecoId: value }))}
+              />
+            </Field>
 
             <Field label="Data de Entrega">
               <input
@@ -269,8 +263,9 @@ export default function PedidoFormPage() {
                 min="0"
                 value={form.valorFrete}
                 onChange={handleChange}
+                disabled={form.retirar}
                 className={inputClass}
-                placeholder="0.00"
+                placeholder={form.retirar ? 'Sem frete (retirada no local)' : '0.00'}
               />
             </Field>
 
@@ -280,12 +275,25 @@ export default function PedidoFormPage() {
                 name="retirar"
                 type="checkbox"
                 checked={form.retirar}
-                onChange={handleChange}
+                onChange={handleRetirarChange}
                 className="w-4 h-4 rounded border-gray-300 text-amber-500 focus:ring-amber-400"
               />
               <label htmlFor="retirar" className="text-sm font-medium text-gray-700">
                 Cliente retira no local
               </label>
+            </div>
+
+            <div className="md:col-span-2">
+              <Field label="Observação">
+                <textarea
+                  name="observacao"
+                  rows={3}
+                  value={form.observacao}
+                  onChange={handleChange}
+                  className={inputClass}
+                  placeholder="Ex: entregar depois das 18h, embalar separado por sabor..."
+                />
+              </Field>
             </div>
           </div>
         </div>

@@ -40,11 +40,34 @@ export default function Vendas() {
         </p>
       </GuiaCard>
 
-      <GuiaCard step={3} title="Monte o pedido">
+      <GuiaCard
+        step={3}
+        title="Negocie antes com um orçamento, se precisar"
+        dica="Orçamento é opcional — se o cliente já fechou o pedido, pode ir direto pro passo seguinte."
+      >
+        <p>
+          Em <span className="font-medium text-gray-800">Vendas → Orçamentos → Novo Orçamento</span>, monte uma proposta
+          com os mesmos itens de um pedido, mais uma data de validade. Enquanto o orçamento estiver{' '}
+          <span className="font-medium text-gray-800">Aberto</span>, os itens continuam editáveis — é ali que você ajusta
+          a proposta junto com o cliente antes de fechar.
+        </p>
+        <p>
+          Quando o cliente decidir, registre a resposta: <span className="font-medium text-gray-800">Aprovar</span> gera
+          um Pedido de verdade automaticamente, com exatamente os itens que sobraram na negociação; o que foi removido no
+          caminho nunca chega no pedido. <span className="font-medium text-gray-800">Rejeitar</span> encerra o orçamento
+          sem criar nada. As duas ações são definitivas — não dá pra reabrir um orçamento já decidido.
+        </p>
+      </GuiaCard>
+
+      <GuiaCard step={4} title="Monte o pedido">
         <p>
           Em <span className="font-medium text-gray-800">Vendas → Pedidos → Novo Pedido</span>, escolha o cliente
           (definitivo depois de salvar — não dá pra trocar de cliente num pedido já criado), o endereço de entrega (ou
           marque “retira no local”) e a data de entrega.
+        </p>
+        <p>
+          Marcar “retira no local” some com o campo de frete — ele fica desabilitado e é limpo automaticamente, já que não
+          existe frete pra buscar no balcão.
         </p>
         <p>
           Para cada item, escolha o produto e a quantidade. O valor unitário já vem preenchido com o preço vigente
@@ -54,7 +77,7 @@ export default function Vendas() {
         <p>O valor total do pedido é sempre calculado pelo sistema, somando os itens, descontos e o frete.</p>
       </GuiaCard>
 
-      <GuiaCard step={4} title="Avance o status direto na lista">
+      <GuiaCard step={5} title="Avance o status direto na lista">
         <p>
           Na lista de <span className="font-medium text-gray-800">Pedidos</span>, o status aparece como um seletor colorido
           na própria linha — não precisa abrir o pedido pra avançar de uma etapa pra outra.

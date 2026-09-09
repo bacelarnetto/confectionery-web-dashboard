@@ -24,6 +24,7 @@ export interface Pedido {
   valorTotal?: number
   valorFrete?: number
   retirar: boolean
+  observacao?: string
   itens: ItemPedido[]
   createdBy: string
   createdOn: string
@@ -37,6 +38,7 @@ export interface PedidoInsertForm {
   retirar?: boolean
   dataEntrega?: string
   valorFrete?: number
+  observacao?: string
   itens: {
     produtoId: number
     quantidade: number
@@ -53,6 +55,7 @@ export interface PedidoUpdateForm {
   retirar?: boolean
   dataEntrega?: string
   valorFrete?: number
+  observacao?: string
   itens?: {
     produtoId: number
     quantidade: number

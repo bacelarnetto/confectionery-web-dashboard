@@ -23,6 +23,7 @@ const routeNames: Record<string, { section: string; title: string }> = {
   '/relatorios/movimentacao-estoque': { section: 'Relatórios', title: 'Movimentação de Estoque' },
   '/guia': { section: 'Ajuda', title: 'Guia do Usuário' },
   '/usuarios': { section: 'Configurações', title: 'Usuários' },
+  '/vendas/orcamentos': { section: 'Vendas', title: 'Orçamentos' },
 }
 
 function formatDate(dateStr: string) {
