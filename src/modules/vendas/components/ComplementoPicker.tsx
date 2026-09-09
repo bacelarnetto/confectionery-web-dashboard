@@ -9,8 +9,6 @@ interface ComplementoPickerProps {
   produtoId?: number
   value: number[]
   onChange: (ids: number[]) => void
-  ignorarPadrao: boolean
-  onIgnorarPadraoChange: (v: boolean) => void
   disabled?: boolean
 }
 
@@ -23,8 +21,6 @@ export default function ComplementoPicker({
   produtoId,
   value,
   onChange,
-  ignorarPadrao,
-  onIgnorarPadraoChange,
   disabled = false,
 }: ComplementoPickerProps) {
   const [search, setSearch] = useState('')
@@ -64,19 +60,7 @@ export default function ComplementoPicker({
 
   return (
     <div className="space-y-3">
-      {!disabled && (
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={ignorarPadrao}
-            onChange={(e) => onIgnorarPadraoChange(e.target.checked)}
-            className="w-4 h-4 rounded border-gray-300 text-amber-500 focus:ring-amber-400"
-          />
-          <span className="text-xs text-gray-600">Ignorar complementos padrão (não incluir automaticamente)</span>
-        </label>
-      )}
-
-      {!ignorarPadrao && padrao.length > 0 && (
+      {padrao.length > 0 && (
         <div>
           <p className="text-xs font-medium text-gray-500 mb-1.5">Padrão (incluso)</p>
           <div className="flex flex-wrap gap-1.5">

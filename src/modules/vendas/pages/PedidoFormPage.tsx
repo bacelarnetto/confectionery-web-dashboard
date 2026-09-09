@@ -28,7 +28,6 @@ interface ItemForm {
   quantidade: string
   valorUnitario: string
   desconto: string
-  ignorarComplementoPadrao: boolean
   complementoIds: number[]
 }
 
@@ -42,7 +41,7 @@ interface FormState {
 }
 
 const emptyForm: FormState = { clienteId: '', enderecoId: '', retirar: false, dataEntrega: '', valorFrete: '', observacao: '' }
-const emptyItem: ItemForm = { produtoId: '', quantidade: '1', valorUnitario: '', desconto: '', ignorarComplementoPadrao: false, complementoIds: [] }
+const emptyItem: ItemForm = { produtoId: '', quantidade: '1', valorUnitario: '', desconto: '', complementoIds: [] }
 
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
@@ -124,7 +123,6 @@ export default function PedidoFormPage() {
               quantidade: String(it.quantidade),
               valorUnitario: String(it.valorUnitario),
               desconto: String(it.desconto ?? ''),
-              ignorarComplementoPadrao: it.ignorarComplementoPadrao ?? false,
               complementoIds: extras,
             }
           }),
@@ -144,7 +142,7 @@ export default function PedidoFormPage() {
     setForm((prev) => ({ ...prev, retirar, valorFrete: retirar ? '' : prev.valorFrete }))
   }
 
-  function handleItemChange(index: number, field: keyof ItemForm, value: string | boolean | number[]) {
+  function handleItemChange(index: number, field: keyof ItemForm, value: string | number[]) {
     setItens((prev) => {
       const updated = [...prev]
       updated[index] = { ...updated[index], [field]: value }
@@ -169,7 +167,6 @@ export default function PedidoFormPage() {
         quantidade: Number(it.quantidade),
         valorUnitario: Number(it.valorUnitario),
         desconto: it.desconto ? Number(it.desconto) : undefined,
-        ignorarComplementoPadrao: it.ignorarComplementoPadrao,
         complementoIds: it.complementoIds,
       }))
   }
@@ -400,8 +397,6 @@ export default function PedidoFormPage() {
                       produtoId={Number(item.produtoId) || undefined}
                       value={item.complementoIds}
                       onChange={(ids) => handleItemChange(index, 'complementoIds', ids)}
-                      ignorarPadrao={item.ignorarComplementoPadrao}
-                      onIgnorarPadraoChange={(v) => handleItemChange(index, 'ignorarComplementoPadrao', v)}
                     />
                   </div>
                 </div>

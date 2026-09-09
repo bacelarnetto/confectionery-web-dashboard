@@ -92,8 +92,8 @@ export default function Vendas() {
         </p>
         <p>
           Os complementos padrão do produto aparecem sozinhos, marcados <span className="font-medium text-gray-800">
-          Incluso</span> (sem cobrar); busque por nome pra adicionar complementos extra — o valor de cada um soma no total
-          do item. Marque "Ignorar complementos padrão" só se, por algum motivo, esse pedido específico não deve levá-los.
+          Incluso</span> (sem cobrar) — todo item desse produto sempre leva eles, sem exceção. Busque por nome pra
+          adicionar complementos extra — o valor de cada um soma no total do item.
         </p>
         <p>O valor total do pedido é sempre calculado pelo sistema, somando os itens, complementos, descontos e o frete.</p>
       </GuiaCard>
