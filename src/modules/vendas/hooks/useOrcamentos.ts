@@ -53,14 +53,6 @@ export function useUpdateOrcamentoStatus() {
   })
 }
 
-export function useDeleteOrcamento() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (id: number) => orcamentoService.remove(id),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: QUERY_KEY }); toast.success('Orçamento removido!') },
-  })
-}
-
 export function useDownloadOrcamentoPdf() {
   return useMutation({
     mutationFn: (id: number) => orcamentoService.getPdf(id),

@@ -126,7 +126,7 @@ export default function ComplementoPicker({
                   } ${disabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                   {c.nome}
-                  <span className="text-gray-400 font-normal">— {formatValor(c.valorVenda)}</span>
+                  <span className="text-gray-400 font-normal">— {c.padrao ? 'padrão — não cobra' : formatValor(c.valorVenda)}</span>
                   {selected && !disabled && <X size={12} className="ml-0.5" />}
                 </button>
               )

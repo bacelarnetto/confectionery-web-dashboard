@@ -36,9 +36,6 @@ const pedidoService = {
       .put(`/pedido/${id}/status`, { status }, { headers: { usuario: 'netto' } })
       .then((r) => r.data)
   },
-  remove(id: number): Promise<void> {
-    return api.delete(`/pedido/${id}`, { headers: { usuario: 'netto' } }).then(() => undefined)
-  },
 }
 
 export default pedidoService

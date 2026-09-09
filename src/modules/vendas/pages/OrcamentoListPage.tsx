@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { Plus, Eye, Trash2, ArrowRight, Download } from 'lucide-react'
+import { Plus, Eye, Ban, ArrowRight, Download } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
 import PageableTable from '../../../components/ui/PageableTable'
-import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal'
+import Button from '../../../components/ui/Button'
+import Modal from '../../../components/ui/Modal'
 import Badge from '../../../components/ui/Badge'
-import { useOrcamentos, useDeleteOrcamento, useDownloadOrcamentoPdf } from '../hooks/useOrcamentos'
+import { useOrcamentos, useUpdateOrcamentoStatus, useDownloadOrcamentoPdf } from '../hooks/useOrcamentos'
 
 const TABLE_HEADERS = ['ID', 'Cliente', 'Status', 'Valor Total', 'Validade', 'Criado em', 'Ações']
 
@@ -22,17 +23,20 @@ export default function OrcamentoListPage() {
   const navigate = useNavigate()
   const [page, setPage] = useState(0)
   const { data, isLoading } = useOrcamentos(page)
-  const deleteMutation = useDeleteOrcamento()
+  const statusMutation = useUpdateOrcamentoStatus()
   const downloadPdfMutation = useDownloadOrcamentoPdf()
 
   const orcamentos = data?.content ?? []
   const totalPages = data?.totalPages ?? 0
 
-  const [deleteTarget, setDeleteTarget] = useState<{ id: number; nome: string } | null>(null)
+  const [rejeitarTarget, setRejeitarTarget] = useState<{ id: number; nome: string } | null>(null)
 
-  function handleDeleteConfirm() {
-    if (!deleteTarget) return
-    deleteMutation.mutate(deleteTarget.id, { onSettled: () => setDeleteTarget(null) })
+  function handleRejeitarConfirm() {
+    if (!rejeitarTarget) return
+    statusMutation.mutate(
+      { id: rejeitarTarget.id, status: 'REJEITADO' },
+      { onSettled: () => setRejeitarTarget(null) },
+    )
   }
 
   return (
@@ -112,13 +116,13 @@ export default function OrcamentoListPage() {
                 >
                   <Download size={15} />
                 </button>
-                {o.status !== 'CONVERTIDO' && (
+                {o.status === 'ABERTO' && (
                   <button
-                    onClick={() => setDeleteTarget({ id: o.id, nome: `Orçamento #${o.id}` })}
+                    onClick={() => setRejeitarTarget({ id: o.id, nome: `Orçamento #${o.id}` })}
                     className="p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                    title="Remover"
+                    title="Rejeitar"
                   >
-                    <Trash2 size={15} />
+                    <Ban size={15} />
                   </button>
                 )}
               </div>
@@ -127,13 +131,26 @@ export default function OrcamentoListPage() {
         ))}
       </PageableTable>
 
-      <DeleteConfirmModal
-        isOpen={!!deleteTarget}
-        onClose={() => setDeleteTarget(null)}
-        onConfirm={handleDeleteConfirm}
-        itemName={deleteTarget?.nome}
-        isPending={deleteMutation.isPending}
-      />
+      <Modal open={!!rejeitarTarget} onClose={() => setRejeitarTarget(null)} title="Rejeitar orçamento">
+        <p className="text-sm text-gray-600 mb-5">
+          Tem certeza que deseja rejeitar{' '}
+          <span className="font-semibold text-gray-900">"{rejeitarTarget?.nome}"</span>? O orçamento fica marcado como{' '}
+          <span className="font-semibold text-gray-900">rejeitado</span> e não pode mais ser editado. Não é possível
+          desfazer.
+        </p>
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={() => setRejeitarTarget(null)}
+            disabled={statusMutation.isPending}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-60"
+          >
+            Voltar
+          </button>
+          <Button type="button" variant="danger" onClick={handleRejeitarConfirm} isLoading={statusMutation.isPending}>
+            Rejeitar orçamento
+          </Button>
+        </div>
+      </Modal>
     </div>
   )
 }

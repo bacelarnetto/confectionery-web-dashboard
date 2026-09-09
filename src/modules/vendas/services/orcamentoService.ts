@@ -31,9 +31,6 @@ const orcamentoService = {
       .put(`/orcamento/${id}/status`, { status }, { headers: { usuario: 'netto' }, skipErrorToast: true })
       .then((r) => r.data)
   },
-  remove(id: number): Promise<void> {
-    return api.delete(`/orcamento/${id}`, { headers: { usuario: 'netto' } }).then(() => undefined)
-  },
   getPdf(id: number): Promise<Blob> {
     return api.get(`/orcamento/${id}/pdf`, { responseType: 'blob' }).then((r) => r.data)
   },

@@ -1,12 +1,15 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { Plus, Eye, Trash2, Search, X } from 'lucide-react'
+import { Plus, Eye, Ban, Search, X } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
 import PageableTable from '../../../components/ui/PageableTable'
-import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal'
-import { usePedidos, useDeletePedido, useUpdatePedidoStatus } from '../hooks/usePedidos'
+import Button from '../../../components/ui/Button'
+import Modal from '../../../components/ui/Modal'
+import { usePedidos, useUpdatePedidoStatus } from '../hooks/usePedidos'
 import { useDebounce } from '../../../hooks/useDebounce'
 import { PEDIDO_STATUS } from '../types/pedido'
+
+const STATUS_TERMINAIS = ['CANCELADO', 'ENTREGUE']
 
 const TABLE_HEADERS = ['ID', 'Cliente', 'Status', 'Valor Total', 'Frete', 'Retirada', 'Criado em', 'Entrega', 'Ações']
 
@@ -40,13 +43,12 @@ export default function PedidoListPage() {
       : undefined
 
   const { data, isLoading } = usePedidos(page, 20, activeFilters)
-  const deleteMutation = useDeletePedido()
   const statusMutation = useUpdatePedidoStatus()
 
   const pedidos = data?.content ?? []
   const totalPages = data?.totalPages ?? 0
 
-  const [deleteTarget, setDeleteTarget] = useState<{ id: number; nome: string } | null>(null)
+  const [cancelTarget, setCancelTarget] = useState<{ id: number; nome: string } | null>(null)
 
   function handleFilterChange(key: string, value: string) {
     setFilters((prev) => ({ ...prev, [key]: value }))
@@ -58,9 +60,12 @@ export default function PedidoListPage() {
     setPage(0)
   }
 
-  function handleDeleteConfirm() {
-    if (!deleteTarget) return
-    deleteMutation.mutate(deleteTarget.id, { onSettled: () => setDeleteTarget(null) })
+  function handleCancelConfirm() {
+    if (!cancelTarget) return
+    statusMutation.mutate(
+      { id: cancelTarget.id, status: 'CANCELADO' },
+      { onSettled: () => setCancelTarget(null) },
+    )
   }
 
   const hasFilters = filters.clienteId || filters.status
@@ -190,26 +195,41 @@ export default function PedidoListPage() {
                 >
                   <Eye size={15} />
                 </button>
-                <button
-                  onClick={() => setDeleteTarget({ id: p.id, nome: `Pedido #${p.id}` })}
-                  className="p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                  title="Remover"
-                >
-                  <Trash2 size={15} />
-                </button>
+                {p.status && !STATUS_TERMINAIS.includes(p.status) && (
+                  <button
+                    onClick={() => setCancelTarget({ id: p.id, nome: `Pedido #${p.id}` })}
+                    className="p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                    title="Cancelar"
+                  >
+                    <Ban size={15} />
+                  </button>
+                )}
               </div>
             </td>
           </tr>
         ))}
       </PageableTable>
 
-      <DeleteConfirmModal
-        isOpen={!!deleteTarget}
-        onClose={() => setDeleteTarget(null)}
-        onConfirm={handleDeleteConfirm}
-        itemName={deleteTarget?.nome}
-        isPending={deleteMutation.isPending}
-      />
+      <Modal open={!!cancelTarget} onClose={() => setCancelTarget(null)} title="Cancelar pedido">
+        <p className="text-sm text-gray-600 mb-5">
+          Tem certeza que deseja cancelar{' '}
+          <span className="font-semibold text-gray-900">"{cancelTarget?.nome}"</span>? O pedido fica marcado como{' '}
+          <span className="font-semibold text-gray-900">cancelado</span> e sai do fluxo normal — ele continua no
+          histórico, mas não é possível desfazer o cancelamento por aqui.
+        </p>
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={() => setCancelTarget(null)}
+            disabled={statusMutation.isPending}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-60"
+          >
+            Voltar
+          </button>
+          <Button type="button" variant="danger" onClick={handleCancelConfirm} isLoading={statusMutation.isPending}>
+            Cancelar pedido
+          </Button>
+        </div>
+      </Modal>
     </div>
   )
 }

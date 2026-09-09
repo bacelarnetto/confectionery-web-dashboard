@@ -43,11 +43,3 @@ export function useUpdatePedidoStatus() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: QUERY_KEY }); toast.success('Status atualizado!') },
   })
 }
-
-export function useDeletePedido() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (id: number) => pedidoService.remove(id),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: QUERY_KEY }); toast.success('Pedido removido!') },
-  })
-}

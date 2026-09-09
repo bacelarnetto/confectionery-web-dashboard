@@ -3,9 +3,11 @@ export interface Complemento {
   categoria: string
   nome: string
   insumoId?: number
+  insumoNome?: string
   valorCusto?: number
   valorVenda?: number
   descricao?: string
+  padrao?: boolean
 }
 
 export interface ComplementoInsertForm {
@@ -15,6 +17,7 @@ export interface ComplementoInsertForm {
   valorCusto: number
   valorVenda: number
   descricao?: string
+  padrao?: boolean
 }
 
 export interface ComplementoUpdateForm {
@@ -24,4 +27,5 @@ export interface ComplementoUpdateForm {
   valorCusto?: number
   valorVenda?: number
   descricao?: string
+  padrao?: boolean
 }

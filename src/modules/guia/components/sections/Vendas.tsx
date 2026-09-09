@@ -31,12 +31,18 @@ export default function Vendas() {
         dica="Complemento é opcional — só cadastre se sua confeitaria de fato vende extras separados do produto principal (recheio a mais, embalagem especial, cobertura...)."
       >
         <p>
-          Em <span className="font-medium text-gray-800">Vendas → Complementos</span>, um complemento tem categoria, nome,
-          o insumo que ele consome e os dois valores: custo e venda.
+          Em <span className="font-medium text-gray-800">Vendas → Complementos</span>, busque o insumo pelo nome — nome,
+          categoria e custo vêm preenchidos automaticamente a partir dele, sem digitar nada solto.
         </p>
         <p>
-          Ele pode ser associado como padrão de um produto (aparece sozinho quando esse produto entra num pedido) ou
-          adicionado livremente item por item, na hora de montar o pedido.
+          Marque <span className="font-medium text-gray-800">"Complemento padrão"</span> quando o custo dele já estiver
+          embutido no preço do produto (ex: a embalagem que todo bolo leva) — esse tipo nunca cobra separado. Deixe
+          desmarcado pra um complemento que é vendido à parte (ex: um brilho especial) — aí você define o valor de venda.
+        </p>
+        <p>
+          Um complemento padrão é associado a um produto na própria tela de{' '}
+          <span className="font-medium text-gray-800">Estoque de Produtos → Produtos</span> (edição) — a partir daí, ele
+          entra sozinho sempre que esse produto aparece num orçamento ou pedido.
         </p>
       </GuiaCard>
 
@@ -61,6 +67,10 @@ export default function Vendas() {
           O campo <span className="font-medium text-gray-800">Observação</span> é seu bloco de notas da negociação — anote
           o que combinou com o cliente ali mesmo, sem precisar de outra ferramenta.
         </p>
+        <p>
+          O botão <span className="font-medium text-gray-800">PDF</span> (na lista ou dentro do orçamento) gera um
+          documento com os itens, complementos e o total — pronto pra imprimir ou enviar pro cliente.
+        </p>
       </GuiaCard>
 
       <GuiaCard step={4} title="Monte o pedido">
@@ -80,7 +90,12 @@ export default function Vendas() {
           <GuiaTooltip text="Assim que você escolhe o produto, o sistema busca a precificação vigente dele — você pode ajustar esse valor no próprio item, se quiser." />
           , mas você pode ajustar — e ainda dá pra aplicar desconto por item.
         </p>
-        <p>O valor total do pedido é sempre calculado pelo sistema, somando os itens, descontos e o frete.</p>
+        <p>
+          Os complementos padrão do produto aparecem sozinhos, marcados <span className="font-medium text-gray-800">
+          Incluso</span> (sem cobrar); busque por nome pra adicionar complementos extra — o valor de cada um soma no total
+          do item. Marque "Ignorar complementos padrão" só se, por algum motivo, esse pedido específico não deve levá-los.
+        </p>
+        <p>O valor total do pedido é sempre calculado pelo sistema, somando os itens, complementos, descontos e o frete.</p>
       </GuiaCard>
 
       <GuiaCard step={5} title="Avance o status direto na lista">

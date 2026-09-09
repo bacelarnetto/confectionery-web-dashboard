@@ -258,11 +258,12 @@ export default function InsumoFormPage() {
               />
             </Field>
 
-            <Field label="Marca">
+            <Field label="Marca" required>
               <input
                 name="marca"
                 value={form.marca}
                 onChange={handleChange}
+                required
                 className={inputClass}
                 placeholder="Marca do insumo"
               />

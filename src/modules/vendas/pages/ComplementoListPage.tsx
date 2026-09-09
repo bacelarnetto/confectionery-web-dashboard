@@ -4,10 +4,11 @@ import { Plus, Pencil, Trash2, Search, X } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
 import PageableTable from '../../../components/ui/PageableTable'
 import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal'
+import Badge from '../../../components/ui/Badge'
 import { useComplementos, useDeleteComplemento } from '../hooks/useComplementos'
 import { useDebounce } from '../../../hooks/useDebounce'
 
-const TABLE_HEADERS = ['ID', 'Categoria', 'Nome', 'Insumo ID', 'Custo (R$)', 'Venda (R$)', 'Ações']
+const TABLE_HEADERS = ['ID', 'Categoria', 'Nome', 'Insumo', 'Custo (R$)', 'Venda (R$)', 'Padrão', 'Ações']
 
 export default function ComplementoListPage() {
   const navigate = useNavigate()
@@ -99,9 +100,12 @@ export default function ComplementoListPage() {
               <span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-700 rounded-full">{c.categoria}</span>
             </td>
             <td className="px-4 py-3 font-medium text-gray-900">{c.nome}</td>
-            <td className="px-4 py-3 text-gray-600">{c.insumoId ?? '—'}</td>
+            <td className="px-4 py-3 text-gray-600 text-sm">{c.insumoNome ?? (c.insumoId ? `ID ${c.insumoId}` : '—')}</td>
             <td className="px-4 py-3 text-gray-600">{c.valorCusto != null ? c.valorCusto.toFixed(2) : '—'}</td>
             <td className="px-4 py-3 text-gray-900 font-medium">{c.valorVenda != null ? c.valorVenda.toFixed(2) : '—'}</td>
+            <td className="px-4 py-3">
+              {c.padrao && <Badge status="PADRAO" />}
+            </td>
             <td className="px-4 py-3">
               <div className="flex items-center gap-2">
                 <button
