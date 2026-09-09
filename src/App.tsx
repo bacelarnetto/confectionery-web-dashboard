@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router'
 import AppLayout from './components/layout/AppLayout'
+import RequireRole from './components/auth/RequireRole'
 import DashboardPage from './pages/DashboardPage'
 import FornecedorListPage from './modules/compras/pages/FornecedorListPage'
 import FornecedorFormPage from './modules/compras/pages/FornecedorFormPage'
@@ -112,9 +113,30 @@ export default function App() {
         <Route path="/alertas-pedido" element={<AlertaPedidoListPage />} />
 
         {/* Usuários */}
-        <Route path="/usuarios" element={<UsuarioListPage />} />
-        <Route path="/usuarios/novo" element={<UsuarioFormPage />} />
-        <Route path="/usuarios/:id/editar" element={<UsuarioFormPage />} />
+        <Route
+          path="/usuarios"
+          element={
+            <RequireRole role="ADMIN">
+              <UsuarioListPage />
+            </RequireRole>
+          }
+        />
+        <Route
+          path="/usuarios/novo"
+          element={
+            <RequireRole role="ADMIN">
+              <UsuarioFormPage />
+            </RequireRole>
+          }
+        />
+        <Route
+          path="/usuarios/:id/editar"
+          element={
+            <RequireRole role="ADMIN">
+              <UsuarioFormPage />
+            </RequireRole>
+          }
+        />
 
         {/* Relatórios */}
         <Route path="/relatorios/faturamento-mensal" element={<FaturamentoMensalPage />} />
