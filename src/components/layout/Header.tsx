@@ -1,6 +1,8 @@
 import { useState, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router'
-import { ChevronRight, User, Bell, AlertTriangle, CalendarClock } from 'lucide-react'
+import { ChevronRight, User, Bell, AlertTriangle, CalendarClock, LogOut } from 'lucide-react'
+import { useAuth } from 'react-oidc-context'
+import { getUsername } from '../../lib/auth'
 import { useAlertasCountAtivos, useAlertas } from '../../modules/estoqueInsumos/hooks/useAlertas'
 import { useCountAlertasPedidoAtivos, useAlertasPedidoAtivos } from '../../modules/vendas/hooks/useAlertasPedido'
 
@@ -40,6 +42,7 @@ function formatDate(dateStr: string) {
 export default function Header() {
   const location = useLocation()
   const navigate = useNavigate()
+  const auth = useAuth()
   
   // Encontra a rota base (remove /novo ou /editar) para exibir o título correto
   const baseRoute = Object.keys(routeNames).find((route) => location.pathname.startsWith(route) && route !== '/')
@@ -240,7 +243,14 @@ export default function Header() {
           <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
             <User size={16} className="text-amber-700" />
           </div>
-          <span className="text-sm font-medium text-gray-700">Netto</span>
+          <span className="text-sm font-medium text-gray-700">{getUsername(auth.user)}</span>
+          <button
+            onClick={() => auth.signoutRedirect()}
+            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+            title="Sair"
+          >
+            <LogOut size={16} />
+          </button>
         </div>
       </div>
     </header>

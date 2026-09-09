@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
 import { NavLink, useLocation } from 'react-router'
+import { useAuth } from 'react-oidc-context'
 import { Truck, ShoppingCart, Cookie, Package, ArrowDownToLine, ArrowUpFromLine, Archive, Activity, LayoutDashboard, Users, Bell, Settings, ChevronDown, Store, UtensilsCrossed, FlaskConical, Layers, KanbanSquare, CalendarClock, BookOpen, TrendingUp, PiggyBank } from 'lucide-react'
 import { useAlertasCountAtivos } from '../../modules/estoqueInsumos/hooks/useAlertas'
 import { useCountAlertasPedidoAtivos } from '../../modules/vendas/hooks/useAlertasPedido'
 import { useAlertasProdutoCountAtivos } from '../../modules/estoqueProdutos/hooks/useAlertasProduto'
+import { hasRole } from '../../lib/auth'
 
 interface NavItem {
   label: string
@@ -16,6 +18,10 @@ interface NavSection {
   title: string
   key: string
   items: NavItem[]
+  // Rota UI-only (o backend não bloqueia por role no MVP, ver doc/defesa-arquitetura-autenticacao.md
+  // D4) — sem essa role, a seção inteira some do menu, mas a API continuaria aceitando a chamada
+  // se alguém acessasse a rota direto.
+  requiresRole?: string
 }
 
 function AlertaBadge() {
@@ -114,6 +120,7 @@ const navigation: NavSection[] = [
   {
     title: 'Administração',
     key: 'admin',
+    requiresRole: 'ADMIN',
     items: [
       { label: 'Usuários', to: '/usuarios', icon: <Users size={18} /> },
     ],
@@ -140,8 +147,10 @@ function getInitialCollapsed(sections: NavSection[], activeKeys: Set<string>): S
 
 export default function Sidebar() {
   const location = useLocation()
+  const auth = useAuth()
+  const visibleNavigation = navigation.filter((s) => !s.requiresRole || hasRole(auth.user, s.requiresRole))
 
-  const activeSection = navigation.find((s) =>
+  const activeSection = visibleNavigation.find((s) =>
     s.items.some((item) => {
       if (item.to === '/') return location.pathname === '/'
       return location.pathname.startsWith(item.to)
@@ -149,7 +158,7 @@ export default function Sidebar() {
   )
 
   const [collapsed, setCollapsed] = useState<Set<string>>(() =>
-    getInitialCollapsed(navigation, new Set(activeSection ? [activeSection.key] : [])),
+    getInitialCollapsed(visibleNavigation, new Set(activeSection ? [activeSection.key] : [])),
   )
 
   useEffect(() => {
@@ -190,7 +199,7 @@ export default function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-1">
-        {navigation.map((section) => {
+        {visibleNavigation.map((section) => {
           const isCollapsed = collapsed.has(section.key)
           return (
             <div key={section.key} className="mb-1">

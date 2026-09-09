@@ -1,5 +1,6 @@
 import axios from 'axios'
 import toast from 'react-hot-toast'
+import { userManager, getUsername } from './auth'
 
 // Permite que uma chamada específica assuma a responsabilidade de exibir o próprio erro
 // (ex: validação inline num formulário) em vez do toast genérico global — usado pelos
@@ -17,6 +18,31 @@ const api = axios.create({
   },
 })
 
+// Anexa o access token em toda requisição (F7). userManager.getUser() lê do sessionStorage
+// compartilhado com o <AuthProvider> — não precisa da mesma instância/hook, só do mesmo storage.
+//
+// Também sobrescreve createdBy/updatedBy (corpo) e o header "usuario" (usado pelos DELETEs, ver
+// doc/defesa-arquitetura-autenticacao.md §12.1) com o usuário autenticado de verdade, aqui e só
+// aqui — em vez de caçar as ~30 telas que ainda montam esses campos com o placeholder 'netto' de
+// antes do login existir. Continuam sendo campos livres no contrato do backend (Fase 3 do B12,
+// que os removeria de vez, ainda não foi implementada), então até lá isso é reforçado no cliente.
+api.interceptors.request.use(async (config) => {
+  const user = await userManager.getUser()
+  if (!user?.access_token) return config
+
+  config.headers.Authorization = `Bearer ${user.access_token}`
+  config.headers.usuario = getUsername(user)
+
+  if (config.data && typeof config.data === 'object' && !(config.data instanceof FormData)) {
+    if ('createdBy' in config.data) config.data.createdBy = getUsername(user)
+    if ('updatedBy' in config.data) config.data.updatedBy = getUsername(user)
+  }
+
+  return config
+})
+
+let redirecionandoParaLogin = false
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -28,6 +54,16 @@ api.interceptors.response.use(
       status,
       data,
     })
+
+    // 401 aqui significa que o access token expirou e o renew silencioso não deu conta a tempo
+    // (ou foi revogado) — não tem "tentar de novo", o usuário precisa logar de novo. Guarda pra
+    // não disparar N redirects se várias chamadas em voo derem 401 juntas.
+    if (status === 401 && !redirecionandoParaLogin) {
+      redirecionandoParaLogin = true
+      toast.error('Sessão expirada — faça login novamente.')
+      userManager.signinRedirect().catch(() => { redirecionandoParaLogin = false })
+      return Promise.reject(error)
+    }
 
     // skipErrorToast só vale para erros 4xx (o formulário se responsabiliza por explicar a
     // regra de negócio inline); falhas de rede ou 5xx sempre caem no toast genérico, porque
