@@ -1,5 +1,6 @@
 import type { ComponentType, ReactNode } from 'react'
-import { Sprout, ShoppingCart, Bell, Wallet, Sparkles, Store, KanbanSquare, CalendarClock, History } from 'lucide-react'
+import { LogIn, Sprout, ShoppingCart, Bell, Wallet, Sparkles, Store, KanbanSquare, CalendarClock, History } from 'lucide-react'
+import AcessoUsuarios from './components/sections/AcessoUsuarios'
 import PrimeirosPassos from './components/sections/PrimeirosPassos'
 import Compras from './components/sections/Compras'
 import AlertasInsumo from './components/sections/AlertasInsumo'
@@ -19,6 +20,13 @@ export interface GuiaSecao {
 }
 
 export const guiaSections: GuiaSecao[] = [
+  {
+    id: 'acesso-usuarios',
+    titulo: 'Acesso e Usuários',
+    descricao: 'Login, sua sessão e os perfis de acesso',
+    icone: <LogIn size={16} />,
+    Component: AcessoUsuarios,
+  },
   {
     id: 'primeiros-passos',
     titulo: 'Primeiros Passos',
