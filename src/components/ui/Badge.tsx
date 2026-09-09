@@ -11,6 +11,11 @@ const statusStyles: Record<string, string> = {
   CANCELADA:    'bg-red-100 text-red-700',
   // Estoque / outros
   RECEBIDA:     'bg-green-100 text-green-800',
+  // Perfil de usuário (F9)
+  ADMIN:        'bg-purple-100 text-purple-700',
+  ESTOQUE:      'bg-blue-100 text-blue-700',
+  VENDAS:       'bg-green-100 text-green-800',
+  PRODUCAO:     'bg-orange-100 text-orange-700',
 }
 
 const statusLabels: Record<string, string> = {
@@ -20,6 +25,10 @@ const statusLabels: Record<string, string> = {
   CONFIRMADA:   'Confirmada',
   CANCELADA:    'Cancelada',
   RECEBIDA:     'Recebida',
+  ADMIN:        'Admin',
+  ESTOQUE:      'Estoque',
+  VENDAS:       'Vendas',
+  PRODUCAO:     'Produção',
 }
 
 export default function Badge({ status }: BadgeProps) {

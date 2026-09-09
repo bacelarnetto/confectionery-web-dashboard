@@ -4,9 +4,10 @@ import { Plus, Pencil, Trash2 } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
 import PageableTable from '../../../components/ui/PageableTable'
 import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal'
+import Badge from '../../../components/ui/Badge'
 import { useUsuarios, useDeleteUsuario } from '../hooks/useUsuarios'
 
-const TABLE_HEADERS = ['Nome', 'Email', 'Ações']
+const TABLE_HEADERS = ['Nome', 'Email', 'Perfil', 'Ações']
 
 export default function UsuarioListPage() {
   const navigate = useNavigate()
@@ -53,6 +54,7 @@ export default function UsuarioListPage() {
           <tr key={u.id} className="hover:bg-gray-50 transition-colors">
             <td className="px-4 py-3 font-medium text-gray-900">{u.nome}</td>
             <td className="px-4 py-3 text-gray-600">{u.email ?? '—'}</td>
+            <td className="px-4 py-3">{u.perfil ? <Badge status={u.perfil} /> : '—'}</td>
             <td className="px-4 py-3">
               <div className="flex items-center gap-2">
                 <button
