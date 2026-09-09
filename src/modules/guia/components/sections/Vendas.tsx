@@ -57,6 +57,10 @@ export default function Vendas() {
           caminho nunca chega no pedido. <span className="font-medium text-gray-800">Rejeitar</span> encerra o orçamento
           sem criar nada. As duas ações são definitivas — não dá pra reabrir um orçamento já decidido.
         </p>
+        <p>
+          O campo <span className="font-medium text-gray-800">Observação</span> é seu bloco de notas da negociação — anote
+          o que combinou com o cliente ali mesmo, sem precisar de outra ferramenta.
+        </p>
       </GuiaCard>
 
       <GuiaCard step={4} title="Monte o pedido">
@@ -67,7 +71,9 @@ export default function Vendas() {
         </p>
         <p>
           Marcar “retira no local” some com o campo de frete — ele fica desabilitado e é limpo automaticamente, já que não
-          existe frete pra buscar no balcão.
+          existe frete pra buscar no balcão. Assim como no orçamento, o campo{' '}
+          <span className="font-medium text-gray-800">Observação</span> fica disponível pra qualquer nota livre sobre o
+          pedido.
         </p>
         <p>
           Para cada item, escolha o produto e a quantidade. O valor unitário já vem preenchido com o preço vigente

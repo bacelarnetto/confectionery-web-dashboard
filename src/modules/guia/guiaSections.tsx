@@ -1,5 +1,5 @@
 import type { ComponentType, ReactNode } from 'react'
-import { LogIn, Sprout, ShoppingCart, Bell, Wallet, Sparkles, Store, KanbanSquare, CalendarClock, History } from 'lucide-react'
+import { LogIn, Sprout, ShoppingCart, Bell, Wallet, Sparkles, Store, KanbanSquare, CalendarClock, History, BarChart3 } from 'lucide-react'
 import AcessoUsuarios from './components/sections/AcessoUsuarios'
 import PrimeirosPassos from './components/sections/PrimeirosPassos'
 import Compras from './components/sections/Compras'
@@ -9,6 +9,7 @@ import Precificacao from './components/sections/Precificacao'
 import Vendas from './components/sections/Vendas'
 import Mural from './components/sections/Mural'
 import AlertasPedido from './components/sections/AlertasPedido'
+import Relatorios from './components/sections/Relatorios'
 import Historico from './components/sections/Historico'
 
 export interface GuiaSecao {
@@ -82,6 +83,13 @@ export const guiaSections: GuiaSecao[] = [
     descricao: 'Prazos de entrega, sem surpresa',
     icone: <CalendarClock size={16} />,
     Component: AlertasPedido,
+  },
+  {
+    id: 'relatorios',
+    titulo: 'Relatórios',
+    descricao: 'Faturamento, custo e estoque prontos pra exportar',
+    icone: <BarChart3 size={16} />,
+    Component: Relatorios,
   },
   {
     id: 'historico',

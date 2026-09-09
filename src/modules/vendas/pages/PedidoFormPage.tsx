@@ -6,8 +6,10 @@ import Button from '../../../components/ui/Button'
 import { usePedido, useCreatePedido, useUpdatePedido } from '../hooks/usePedidos'
 import { useClientes } from '../hooks/useClientes'
 import EnderecoClienteField from '../components/EnderecoClienteField'
+import ComplementoPicker from '../components/ComplementoPicker'
 import { useProdutos } from '../../estoqueProdutos/hooks/useProdutos'
 import precificacaoProdutoService from '../../estoqueProdutos/services/precificacaoProdutoService'
+import complementoService from '../services/complementoService'
 import { parseApiError } from '../../../lib/apiError'
 
 /**
@@ -27,7 +29,7 @@ interface ItemForm {
   valorUnitario: string
   desconto: string
   ignorarComplementoPadrao: boolean
-  complementoIds: string
+  complementoIds: number[]
 }
 
 interface FormState {
@@ -40,7 +42,7 @@ interface FormState {
 }
 
 const emptyForm: FormState = { clienteId: '', enderecoId: '', retirar: false, dataEntrega: '', valorFrete: '', observacao: '' }
-const emptyItem: ItemForm = { produtoId: '', quantidade: '1', valorUnitario: '', desconto: '', ignorarComplementoPadrao: false, complementoIds: '' }
+const emptyItem: ItemForm = { produtoId: '', quantidade: '1', valorUnitario: '', desconto: '', ignorarComplementoPadrao: false, complementoIds: [] }
 
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
@@ -99,16 +101,34 @@ export default function PedidoFormPage() {
         observacao: pedido.observacao ?? '',
       })
       if (pedido.itens?.length) {
-        setItens(
-          pedido.itens.map((it) => ({
-            produtoId: String(it.produtoId),
-            quantidade: String(it.quantidade),
-            valorUnitario: String(it.valorUnitario),
-            desconto: String(it.desconto ?? ''),
-            ignorarComplementoPadrao: it.ignorarComplementoPadrao ?? false,
-            complementoIds: it.complementoIds?.join(', ') ?? '',
-          })),
-        )
+        Promise.all(
+          pedido.itens.map(async (it) => {
+            let extras: number[] = []
+            try {
+              const padrao = await complementoService.getByProdutoId(it.produtoId)
+              const padraoIds = new Set(padrao.map((c) => c.id))
+              if (it.complementos?.length) {
+                extras = it.complementos
+                  .filter((c) => c.complementoId != null && !padraoIds.has(c.complementoId))
+                  .map((c) => c.complementoId!)
+              } else if (it.complementoIds?.length) {
+                extras = it.complementoIds.filter((id) => !padraoIds.has(id))
+              }
+            } catch {
+              extras = it.complementoIds ?? (it.complementos ?? [])
+                .filter((c) => c.complementoId != null)
+                .map((c) => c.complementoId!)
+            }
+            return {
+              produtoId: String(it.produtoId),
+              quantidade: String(it.quantidade),
+              valorUnitario: String(it.valorUnitario),
+              desconto: String(it.desconto ?? ''),
+              ignorarComplementoPadrao: it.ignorarComplementoPadrao ?? false,
+              complementoIds: extras,
+            }
+          }),
+        ).then(setItens)
       }
     }
   }, [pedido])
@@ -124,7 +144,7 @@ export default function PedidoFormPage() {
     setForm((prev) => ({ ...prev, retirar, valorFrete: retirar ? '' : prev.valorFrete }))
   }
 
-  function handleItemChange(index: number, field: keyof ItemForm, value: string | boolean) {
+  function handleItemChange(index: number, field: keyof ItemForm, value: string | boolean | number[]) {
     setItens((prev) => {
       const updated = [...prev]
       updated[index] = { ...updated[index], [field]: value }
@@ -150,9 +170,7 @@ export default function PedidoFormPage() {
         valorUnitario: Number(it.valorUnitario),
         desconto: it.desconto ? Number(it.desconto) : undefined,
         ignorarComplementoPadrao: it.ignorarComplementoPadrao,
-        complementoIds: it.complementoIds
-          ? it.complementoIds.split(',').map((s) => Number(s.trim())).filter((n) => !isNaN(n) && n > 0)
-          : [],
+        complementoIds: it.complementoIds,
       }))
   }
 
@@ -378,27 +396,13 @@ export default function PedidoFormPage() {
                     />
                   </Field>
                   <div className="col-span-2">
-                    <Field label="Complemento IDs (separados por vírgula)">
-                      <input
-                        type="text"
-                        value={item.complementoIds}
-                        onChange={(e) => handleItemChange(index, 'complementoIds', e.target.value)}
-                        className={inputClass}
-                        placeholder="Ex: 1, 3, 7"
-                      />
-                    </Field>
-                  </div>
-                  <div className="flex items-center gap-2 pt-5">
-                    <input
-                      id={`ignorar-${index}`}
-                      type="checkbox"
-                      checked={item.ignorarComplementoPadrao}
-                      onChange={(e) => handleItemChange(index, 'ignorarComplementoPadrao', e.target.checked)}
-                      className="w-4 h-4 rounded border-gray-300 text-amber-500 focus:ring-amber-400"
+                    <ComplementoPicker
+                      produtoId={Number(item.produtoId) || undefined}
+                      value={item.complementoIds}
+                      onChange={(ids) => handleItemChange(index, 'complementoIds', ids)}
+                      ignorarPadrao={item.ignorarComplementoPadrao}
+                      onIgnorarPadraoChange={(v) => handleItemChange(index, 'ignorarComplementoPadrao', v)}
                     />
-                    <label htmlFor={`ignorar-${index}`} className="text-xs text-gray-600">
-                      Ignorar complemento padrão
-                    </label>
                   </div>
                 </div>
               </div>

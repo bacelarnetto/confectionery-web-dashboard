@@ -1,15 +1,17 @@
 import { useState, useEffect, FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router'
-import { Plus, Trash2, AlertCircle, ArrowRight, Check, X } from 'lucide-react'
+import { Plus, Trash2, AlertCircle, ArrowRight, Check, X, Download } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
 import Button from '../../../components/ui/Button'
 import Badge from '../../../components/ui/Badge'
 import Modal from '../../../components/ui/Modal'
-import { useOrcamento, useCreateOrcamento, useUpdateOrcamento, useUpdateOrcamentoStatus } from '../hooks/useOrcamentos'
+import { useOrcamento, useCreateOrcamento, useUpdateOrcamento, useUpdateOrcamentoStatus, useDownloadOrcamentoPdf } from '../hooks/useOrcamentos'
 import { useClientes } from '../hooks/useClientes'
 import EnderecoClienteField from '../components/EnderecoClienteField'
+import ComplementoPicker from '../components/ComplementoPicker'
 import { useProdutos } from '../../estoqueProdutos/hooks/useProdutos'
 import precificacaoProdutoService from '../../estoqueProdutos/services/precificacaoProdutoService'
+import complementoService from '../services/complementoService'
 import { parseApiError } from '../../../lib/apiError'
 
 /** Mesmo padrão do PedidoFormPage: único ponto do backend que devolve erro reconhecível por campo. */
@@ -23,6 +25,8 @@ interface ItemForm {
   quantidade: string
   valorUnitario: string
   desconto: string
+  ignorarComplementoPadrao: boolean
+  complementoIds: number[]
 }
 
 interface FormState {
@@ -33,7 +37,7 @@ interface FormState {
 }
 
 const emptyForm: FormState = { clienteId: '', enderecoId: '', dataValidade: '', observacao: '' }
-const emptyItem: ItemForm = { produtoId: '', quantidade: '1', valorUnitario: '', desconto: '' }
+const emptyItem: ItemForm = { produtoId: '', quantidade: '1', valorUnitario: '', desconto: '', ignorarComplementoPadrao: false, complementoIds: [] }
 
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
@@ -62,6 +66,7 @@ export default function OrcamentoFormPage() {
   const createMutation = useCreateOrcamento()
   const updateMutation = useUpdateOrcamento()
   const statusMutation = useUpdateOrcamentoStatus()
+  const downloadPdfMutation = useDownloadOrcamentoPdf()
 
   const [form, setForm] = useState<FormState>(emptyForm)
   const [itens, setItens] = useState<ItemForm[]>([{ ...emptyItem }])
@@ -95,14 +100,30 @@ export default function OrcamentoFormPage() {
         observacao: orcamento.observacao ?? '',
       })
       if (orcamento.itens?.length) {
-        setItens(
-          orcamento.itens.map((it) => ({
-            produtoId: String(it.produtoId),
-            quantidade: String(it.quantidade),
-            valorUnitario: String(it.valorUnitario),
-            desconto: String(it.desconto ?? ''),
-          })),
-        )
+        Promise.all(
+          orcamento.itens.map(async (it) => {
+            let extras: number[] = []
+            try {
+              const padrao = await complementoService.getByProdutoId(it.produtoId)
+              const padraoIds = new Set(padrao.map((c) => c.id))
+              extras = (it.complementos ?? [])
+                .filter((c) => c.complementoId != null && !padraoIds.has(c.complementoId))
+                .map((c) => c.complementoId!)
+            } catch {
+              extras = (it.complementos ?? [])
+                .filter((c) => c.complementoId != null)
+                .map((c) => c.complementoId!)
+            }
+            return {
+              produtoId: String(it.produtoId),
+              quantidade: String(it.quantidade),
+              valorUnitario: String(it.valorUnitario),
+              desconto: String(it.desconto ?? ''),
+              ignorarComplementoPadrao: it.ignorarComplementoPadrao ?? false,
+              complementoIds: extras,
+            }
+          }),
+        ).then(setItens)
       }
     }
   }, [orcamento])
@@ -111,7 +132,7 @@ export default function OrcamentoFormPage() {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
-  function handleItemChange(index: number, field: keyof ItemForm, value: string) {
+  function handleItemChange(index: number, field: keyof ItemForm, value: string | boolean | number[]) {
     setItens((prev) => {
       const updated = [...prev]
       updated[index] = { ...updated[index], [field]: value }
@@ -136,6 +157,8 @@ export default function OrcamentoFormPage() {
         quantidade: Number(it.quantidade),
         valorUnitario: Number(it.valorUnitario),
         desconto: it.desconto ? Number(it.desconto) : undefined,
+        ignorarComplementoPadrao: it.ignorarComplementoPadrao,
+        complementoIds: it.complementoIds,
       }))
   }
 
@@ -230,6 +253,18 @@ export default function OrcamentoFormPage() {
         }
       >
         {status && <Badge status={status} />}
+        {isEditing && orcamento && (
+          <button
+            type="button"
+            onClick={() => downloadPdfMutation.mutate(numericId)}
+            disabled={downloadPdfMutation.isPending}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-60"
+            title="Baixar PDF"
+          >
+            <Download size={14} />
+            PDF
+          </button>
+        )}
       </PageHeader>
 
       {erroGeral && (
@@ -398,6 +433,16 @@ export default function OrcamentoFormPage() {
                         placeholder="0.00"
                       />
                     </Field>
+                  </div>
+                  <div className="mt-3">
+                    <ComplementoPicker
+                      produtoId={Number(item.produtoId) || undefined}
+                      value={item.complementoIds}
+                      onChange={(ids) => handleItemChange(index, 'complementoIds', ids)}
+                      ignorarPadrao={item.ignorarComplementoPadrao}
+                      onIgnorarPadraoChange={(v) => handleItemChange(index, 'ignorarComplementoPadrao', v)}
+                      disabled={isReadOnly}
+                    />
                   </div>
                 </div>
               )

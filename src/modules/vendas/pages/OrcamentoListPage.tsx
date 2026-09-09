@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { Plus, Eye, Trash2, ArrowRight } from 'lucide-react'
+import { Plus, Eye, Trash2, ArrowRight, Download } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
 import PageableTable from '../../../components/ui/PageableTable'
 import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal'
 import Badge from '../../../components/ui/Badge'
-import { useOrcamentos, useDeleteOrcamento } from '../hooks/useOrcamentos'
+import { useOrcamentos, useDeleteOrcamento, useDownloadOrcamentoPdf } from '../hooks/useOrcamentos'
 
 const TABLE_HEADERS = ['ID', 'Cliente', 'Status', 'Valor Total', 'Validade', 'Criado em', 'Ações']
 
@@ -23,6 +23,7 @@ export default function OrcamentoListPage() {
   const [page, setPage] = useState(0)
   const { data, isLoading } = useOrcamentos(page)
   const deleteMutation = useDeleteOrcamento()
+  const downloadPdfMutation = useDownloadOrcamentoPdf()
 
   const orcamentos = data?.content ?? []
   const totalPages = data?.totalPages ?? 0
@@ -99,6 +100,17 @@ export default function OrcamentoListPage() {
                   title="Ver / editar"
                 >
                   <Eye size={15} />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    downloadPdfMutation.mutate(o.id)
+                  }}
+                  disabled={downloadPdfMutation.isPending}
+                  className="p-1.5 rounded-md text-gray-400 hover:text-amber-600 hover:bg-amber-50 transition-colors disabled:opacity-60"
+                  title="Baixar PDF"
+                >
+                  <Download size={15} />
                 </button>
                 {o.status !== 'CONVERTIDO' && (
                   <button

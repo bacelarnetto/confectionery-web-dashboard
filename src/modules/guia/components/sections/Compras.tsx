@@ -1,3 +1,4 @@
+import { FileText } from 'lucide-react'
 import GuiaSection from '../GuiaSection'
 import GuiaCard from '../GuiaCard'
 
@@ -14,6 +15,13 @@ export default function Compras() {
           fornecedor (opcional) e adicione os itens: o insumo, a quantidade e o valor unitário que você espera pagar.
         </p>
         <p>Pense nela como a sua lista de compras de mercado — só que essa, o sistema lembra pra você depois.</p>
+        <p>
+          Precisa enviar a lista pro fornecedor? O ícone{' '}
+          <span className="inline-flex items-center gap-1 align-middle text-xs font-medium text-amber-700 bg-amber-50 rounded px-2 py-0.5">
+            <FileText size={12} /> Baixar PDF
+          </span>{' '}
+          na listagem de Compras gera um PDF com os itens da compra, prontos pra imprimir ou mandar por WhatsApp/e-mail.
+        </p>
       </GuiaCard>
 
       <GuiaCard

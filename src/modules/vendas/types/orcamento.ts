@@ -5,6 +5,8 @@ export interface ItemOrcamento {
   valorUnitario: number
   valorTotal?: number
   desconto?: number
+  ignorarComplementoPadrao?: boolean
+  complementos?: { id?: number; complementoId?: number; complementoNome?: string }[]
 }
 
 export interface Orcamento {
@@ -34,6 +36,8 @@ export interface OrcamentoInsertForm {
     quantidade: number
     valorUnitario: number
     desconto?: number
+    ignorarComplementoPadrao: boolean
+    complementoIds: number[]
   }[]
   createdBy: string
 }
@@ -47,6 +51,8 @@ export interface OrcamentoUpdateForm {
     quantidade: number
     valorUnitario: number
     desconto?: number
+    ignorarComplementoPadrao: boolean
+    complementoIds: number[]
   }[]
   updatedBy: string
 }

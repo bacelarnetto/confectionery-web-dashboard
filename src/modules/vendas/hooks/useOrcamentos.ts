@@ -60,3 +60,23 @@ export function useDeleteOrcamento() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: QUERY_KEY }); toast.success('Orçamento removido!') },
   })
 }
+
+export function useDownloadOrcamentoPdf() {
+  return useMutation({
+    mutationFn: (id: number) => orcamentoService.getPdf(id),
+    onSuccess: (data, id) => {
+      const url = window.URL.createObjectURL(new Blob([data], { type: 'application/pdf' }))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `orcamento-${id}.pdf`)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+      toast.success('Download em andamento...')
+    },
+    onError: () => {
+      toast.error('Erro ao baixar PDF do orçamento.')
+    },
+  })
+}

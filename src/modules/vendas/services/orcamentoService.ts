@@ -34,6 +34,9 @@ const orcamentoService = {
   remove(id: number): Promise<void> {
     return api.delete(`/orcamento/${id}`, { headers: { usuario: 'netto' } }).then(() => undefined)
   },
+  getPdf(id: number): Promise<Blob> {
+    return api.get(`/orcamento/${id}/pdf`, { responseType: 'blob' }).then((r) => r.data)
+  },
 }
 
 export default orcamentoService
