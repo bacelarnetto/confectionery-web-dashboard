@@ -19,3 +19,10 @@ export function useEstoqueInsumoPorInsumo(insumoId: number) {
     enabled: !!insumoId,
   })
 }
+
+export function useEstoqueValorizado() {
+  return useQuery({
+    queryKey: ['estoque-insumo', 'valorizado'],
+    queryFn: () => estoqueInsumoService.getValorizado(),
+  })
+}

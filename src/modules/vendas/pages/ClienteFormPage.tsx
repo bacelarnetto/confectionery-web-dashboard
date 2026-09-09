@@ -5,6 +5,7 @@ import PageHeader from '../../../components/ui/PageHeader'
 import Button from '../../../components/ui/Button'
 import { useCliente, useCreateCliente, useUpdateCliente } from '../hooks/useClientes'
 import { Endereco } from '../types/cliente'
+import ClienteHistoricoPedidos from './ClienteHistoricoPedidos'
 
 interface FormState {
   nome: string
@@ -226,6 +227,12 @@ export default function ClienteFormPage() {
           </Button>
         </div>
       </form>
+
+      {isEditing && (
+        <div className="mt-6">
+          <ClienteHistoricoPedidos clienteId={numericId} />
+        </div>
+      )}
     </div>
   )
 }

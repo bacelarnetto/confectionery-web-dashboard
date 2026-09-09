@@ -1,11 +1,15 @@
 import { useState } from 'react'
-import { ChevronLeft, ChevronRight, Search, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Search, X, PiggyBank } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
 import Table from '../../../components/ui/Table'
-import { useEstoqueInsumos } from '../hooks/useEstoqueInsumos'
+import { useEstoqueInsumos, useEstoqueValorizado } from '../hooks/useEstoqueInsumos'
 import { useDebounce } from '../../../hooks/useDebounce'
 
-const TABLE_HEADERS = ['ID', 'Insumo', 'Quantidade', 'Última Atualização', 'Atualizado Por']
+const TABLE_HEADERS = ['ID', 'Insumo', 'Quantidade', 'Valor Imobilizado', 'Última Atualização', 'Atualizado Por']
+
+function formatCurrency(v: number) {
+  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+}
 
 function SkeletonRows() {
   return (
@@ -50,9 +54,13 @@ export default function EstoqueInsumoListPage() {
   }
 
   const { data, isLoading } = useEstoqueInsumos(page, 20, Object.keys(filterParams).length > 0 ? filterParams : undefined)
+  const { data: valorizadoData } = useEstoqueValorizado()
 
   const estoque = data?.content ?? []
   const totalPages = data?.totalPages ?? 0
+
+  const valorizadoPorInsumo = new Map((valorizadoData ?? []).map((v) => [v.insumoId, v]))
+  const valorTotalImobilizado = (valorizadoData ?? []).reduce((acc, v) => acc + v.valorTotal, 0)
 
   function handleFilterChange(key: string, value: string) {
     setFilters((prev) => ({ ...prev, [key]: value }))
@@ -70,6 +78,16 @@ export default function EstoqueInsumoListPage() {
         title="Estoque de Insumos"
         subtitle="Acompanhe o saldo atual dos insumos no estoque"
       />
+
+      <div className="mb-4 bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex items-center gap-4 max-w-sm">
+        <div className="p-2.5 bg-emerald-50 rounded-lg text-emerald-600">
+          <PiggyBank size={22} />
+        </div>
+        <div>
+          <p className="text-sm text-gray-500">Capital imobilizado em insumos</p>
+          <p className="text-xl font-semibold text-gray-900">{formatCurrency(valorTotalImobilizado)}</p>
+        </div>
+      </div>
 
       <div className="mb-4">
         <button
@@ -138,6 +156,9 @@ export default function EstoqueInsumoListPage() {
               </td>
               <td className="px-4 py-3 text-gray-900 font-medium">
                 {e.quantidade.toFixed(2)}
+              </td>
+              <td className="px-4 py-3 text-emerald-700 font-medium">
+                {valorizadoPorInsumo.has(e.insumoId) ? formatCurrency(valorizadoPorInsumo.get(e.insumoId)!.valorTotal) : '—'}
               </td>
               <td className="px-4 py-3 text-gray-600">
                 {formatDate(e.updatedOn || e.createdOn)}

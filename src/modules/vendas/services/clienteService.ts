@@ -1,5 +1,5 @@
 import api from '../../../lib/axios'
-import { Cliente, ClienteInsertForm, ClienteUpdateForm } from '../types/cliente'
+import { Cliente, ClienteInsertForm, ClienteUpdateForm, PedidoResumo, ClienteTotalGasto } from '../types/cliente'
 
 export interface PageResponse<T> {
   content: T[]
@@ -15,6 +15,12 @@ const clienteService = {
   },
   getById(id: number): Promise<Cliente> {
     return api.get(`/cliente/${id}`).then((r) => r.data)
+  },
+  getPedidos(id: number, page = 0, size = 20): Promise<PageResponse<PedidoResumo>> {
+    return api.get(`/cliente/${id}/pedidos`, { params: { page, size } }).then((r) => r.data)
+  },
+  getTotalGasto(id: number): Promise<ClienteTotalGasto> {
+    return api.get(`/cliente/${id}/total-gasto`).then((r) => r.data)
   },
   create(data: ClienteInsertForm): Promise<Cliente> {
     return api.post('/cliente', data).then((r) => r.data)

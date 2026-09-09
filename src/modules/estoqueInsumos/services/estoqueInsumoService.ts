@@ -1,5 +1,5 @@
 import api from '../../../lib/axios'
-import { EstoqueInsumo } from '../types/estoqueInsumo'
+import { EstoqueInsumo, EstoqueValorizado } from '../types/estoqueInsumo'
 import { PageResponse } from './categoriaInsumoService'
 
 const estoqueInsumoService = {
@@ -18,6 +18,10 @@ const estoqueInsumoService = {
 
   getByInsumoId(insumoId: number): Promise<EstoqueInsumo> {
     return api.get<EstoqueInsumo>(`/estoque-insumo/insumo/${insumoId}`).then((res) => res.data)
+  },
+
+  getValorizado(): Promise<EstoqueValorizado[]> {
+    return api.get<EstoqueValorizado[]>('/estoque-insumo/valorizado').then((res) => res.data)
   },
 }
 

@@ -20,6 +20,22 @@ export function useCliente(id: number) {
   })
 }
 
+export function useClientePedidos(id: number, page = 0, size = 20) {
+  return useQuery({
+    queryKey: [...QUERY_KEY, id, 'pedidos', page, size],
+    queryFn: () => clienteService.getPedidos(id, page, size),
+    enabled: id > 0,
+  })
+}
+
+export function useClienteTotalGasto(id: number) {
+  return useQuery({
+    queryKey: [...QUERY_KEY, id, 'total-gasto'],
+    queryFn: () => clienteService.getTotalGasto(id),
+    enabled: id > 0,
+  })
+}
+
 export function useCreateCliente() {
   const queryClient = useQueryClient()
   return useMutation({

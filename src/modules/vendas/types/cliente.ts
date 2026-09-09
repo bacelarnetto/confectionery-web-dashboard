@@ -43,3 +43,16 @@ export interface ClienteUpdateForm {
   enderecos?: Endereco[]
   updatedBy: string
 }
+
+export interface PedidoResumo {
+  id: number
+  status: string
+  dataEntrega?: string
+  valorTotal: number
+  createdOn: string
+}
+
+export interface ClienteTotalGasto {
+  clienteId: number
+  totalGasto: number
+}

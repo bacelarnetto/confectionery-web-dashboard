@@ -8,3 +8,11 @@ export interface EstoqueInsumo {
   updatedBy?: string
   updatedOn?: string
 }
+
+export interface EstoqueValorizado {
+  insumoId: number
+  insumoNome: string
+  quantidadeTotal: number
+  valorTotal: number
+  valorCustoMedio: number
+}
