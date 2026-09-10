@@ -7,6 +7,7 @@ import { useCreateEntradaProduto } from '../hooks/useEntradasProduto'
 import { useProdutos } from '../hooks/useProdutos'
 import { useFornecedores } from '../../compras/hooks/useFornecedores'
 import { parseApiError } from '../../../lib/apiError'
+import { formatCurrency } from '../../../lib/format'
 
 /**
  * O backend não estrutura erro por campo — só embute "(produtoId=X)" na frase (ver
@@ -280,7 +281,7 @@ export default function EntradaProdutoFormPage() {
                       <input
                         type="text"
                         readOnly
-                        value={`R$ ${total.toFixed(2)}`}
+                        value={formatCurrency(total)}
                         className={inputClass + ' bg-gray-50 text-gray-500'}
                       />
                     </Field>

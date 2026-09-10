@@ -7,6 +7,7 @@ import Button from '../../../components/ui/Button'
 import Modal from '../../../components/ui/Modal'
 import Badge from '../../../components/ui/Badge'
 import { useOrcamentos, useUpdateOrcamentoStatus, useDownloadOrcamentoPdf } from '../hooks/useOrcamentos'
+import { formatCurrency } from '../../../lib/format'
 
 const TABLE_HEADERS = ['ID', 'Cliente', 'Status', 'Valor Total', 'Validade', 'Criado em', 'Ações']
 
@@ -84,7 +85,7 @@ export default function OrcamentoListPage() {
               </div>
             </td>
             <td className="px-4 py-3 font-medium text-gray-900">
-              {o.valorTotal != null ? `R$ ${Number(o.valorTotal).toFixed(2)}` : '—'}
+              {formatCurrency(o.valorTotal)}
             </td>
             <td className="px-4 py-3 text-gray-600">
               {o.dataValidade ? (

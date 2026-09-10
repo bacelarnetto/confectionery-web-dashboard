@@ -6,6 +6,7 @@ import Button from '../../../components/ui/Button'
 import { useCliente, useCreateCliente, useUpdateCliente } from '../hooks/useClientes'
 import { Endereco } from '../types/cliente'
 import ClienteHistoricoPedidos from './ClienteHistoricoPedidos'
+import { maskPhone } from '../../../lib/format'
 
 interface FormState {
   nome: string
@@ -61,6 +62,11 @@ export default function ClienteFormPage() {
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
+  }
+
+  function handlePhoneChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const { name, value } = e.target
+    setForm((prev) => ({ ...prev, [name]: maskPhone(value) }))
   }
 
   function handleEnderecoChange(index: number, field: keyof Endereco, value: string) {
@@ -138,10 +144,10 @@ export default function ClienteFormPage() {
               <input name="email" type="email" value={form.email} onChange={handleChange} className={inputClass} placeholder="email@exemplo.com" />
             </Field>
             <Field label="Celular">
-              <input name="celular" value={form.celular} onChange={handleChange} className={inputClass} placeholder="(11) 99999-9999" />
+              <input name="celular" value={form.celular} onChange={handlePhoneChange} className={inputClass} placeholder="(11) 99999-9999" maxLength={15} />
             </Field>
             <Field label="Telefone">
-              <input name="telefone" value={form.telefone} onChange={handleChange} className={inputClass} placeholder="(11) 3333-3333" />
+              <input name="telefone" value={form.telefone} onChange={handlePhoneChange} className={inputClass} placeholder="(11) 3333-3333" maxLength={15} />
             </Field>
           </div>
         </div>

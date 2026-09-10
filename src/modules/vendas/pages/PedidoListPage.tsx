@@ -8,6 +8,7 @@ import Modal from '../../../components/ui/Modal'
 import { usePedidos, useUpdatePedidoStatus } from '../hooks/usePedidos'
 import { useDebounce } from '../../../hooks/useDebounce'
 import { PEDIDO_STATUS } from '../types/pedido'
+import { formatCurrency } from '../../../lib/format'
 
 const STATUS_TERMINAIS = ['CANCELADO', 'ENTREGUE']
 
@@ -166,10 +167,10 @@ export default function PedidoListPage() {
               ) : '—'}
             </td>
             <td className="px-4 py-3 font-medium text-gray-900">
-              {p.valorTotal != null ? `R$ ${Number(p.valorTotal).toFixed(2)}` : '—'}
+              {formatCurrency(p.valorTotal)}
             </td>
             <td className="px-4 py-3 text-gray-600">
-              {p.valorFrete != null ? `R$ ${Number(p.valorFrete).toFixed(2)}` : '—'}
+              {formatCurrency(p.valorFrete)}
             </td>
             <td className="px-4 py-3 text-gray-600">
               {p.retirar ? (

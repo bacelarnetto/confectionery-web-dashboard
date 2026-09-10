@@ -6,6 +6,7 @@ import PageableTable from '../../../components/ui/PageableTable'
 import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal'
 import { useFornecedores, useDeleteFornecedor } from '../hooks/useFornecedores'
 import { useDebounce } from '../../../hooks/useDebounce'
+import { maskPhone } from '../../../lib/format'
 
 const TABLE_HEADERS = ['ID', 'Nome', 'CNPJ', 'Telefone', 'E-mail', 'Ações']
 
@@ -141,7 +142,7 @@ export default function FornecedorListPage() {
             <td className="px-4 py-3 text-gray-500 text-sm">{f.id}</td>
             <td className="px-4 py-3 font-medium text-gray-900">{f.nome}</td>
             <td className="px-4 py-3 text-gray-600">{f.cnpj ?? '—'}</td>
-            <td className="px-4 py-3 text-gray-600">{f.telefone ?? '—'}</td>
+            <td className="px-4 py-3 text-gray-600">{f.telefone ? maskPhone(f.telefone) : '—'}</td>
             <td className="px-4 py-3 text-gray-600">{f.email ?? '—'}</td>
             <td className="px-4 py-3">
               <div className="flex items-center gap-2">

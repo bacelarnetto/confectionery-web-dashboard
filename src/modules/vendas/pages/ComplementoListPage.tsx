@@ -7,6 +7,7 @@ import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal'
 import Badge from '../../../components/ui/Badge'
 import { useComplementos, useDeleteComplemento } from '../hooks/useComplementos'
 import { useDebounce } from '../../../hooks/useDebounce'
+import { formatNumberBR } from '../../../lib/format'
 
 const TABLE_HEADERS = ['ID', 'Categoria', 'Nome', 'Insumo', 'Custo (R$)', 'Venda (R$)', 'Padrão', 'Ações']
 
@@ -101,8 +102,8 @@ export default function ComplementoListPage() {
             </td>
             <td className="px-4 py-3 font-medium text-gray-900">{c.nome}</td>
             <td className="px-4 py-3 text-gray-600 text-sm">{c.insumoNome ?? (c.insumoId ? `ID ${c.insumoId}` : '—')}</td>
-            <td className="px-4 py-3 text-gray-600">{c.valorCusto != null ? c.valorCusto.toFixed(2) : '—'}</td>
-            <td className="px-4 py-3 text-gray-900 font-medium">{c.valorVenda != null ? c.valorVenda.toFixed(2) : '—'}</td>
+            <td className="px-4 py-3 text-gray-600">{formatNumberBR(c.valorCusto)}</td>
+            <td className="px-4 py-3 text-gray-900 font-medium">{formatNumberBR(c.valorVenda)}</td>
             <td className="px-4 py-3">
               {c.padrao && <Badge status="PADRAO" />}
             </td>

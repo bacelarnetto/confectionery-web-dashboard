@@ -4,6 +4,7 @@ import { Plus } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
 import PageableTable from '../../../components/ui/PageableTable'
 import { useEntradasProduto } from '../hooks/useEntradasProduto'
+import { formatCurrency } from '../../../lib/format'
 
 const TABLE_HEADERS = ['ID', 'Fornecedor ID', 'Itens', 'Valor Total', 'Recebido em', 'Criado por', 'Criado em']
 
@@ -51,7 +52,7 @@ export default function EntradaProdutoListPage() {
               <td className="px-4 py-3 text-gray-500 text-sm">{e.id}</td>
               <td className="px-4 py-3 text-gray-600">{e.fornecedorId ?? '—'}</td>
               <td className="px-4 py-3 text-gray-600">{e.itens.length} {e.itens.length === 1 ? 'item' : 'itens'}</td>
-              <td className="px-4 py-3 font-medium text-gray-900">R$ {valorTotal.toFixed(2)}</td>
+              <td className="px-4 py-3 font-medium text-gray-900">{formatCurrency(valorTotal)}</td>
               <td className="px-4 py-3 text-gray-600">{formatDate(e.dataRecebimento)}</td>
               <td className="px-4 py-3 text-gray-600">{e.createdBy}</td>
               <td className="px-4 py-3 text-gray-600">{formatDate(e.createdOn)}</td>
