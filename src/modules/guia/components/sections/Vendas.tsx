@@ -124,9 +124,9 @@ export default function Vendas() {
 
         <p>
           Marcar <span className="font-medium text-gray-800">EM PRODUÇÃO</span> é o segundo (e último) momento em que o
-          sistema mexe em estoque sozinho: o produto vendido sai do estoque de produto — aquele que a Fabricação
-          abasteceu — e, se o pedido tiver algum complemento, o insumo dele também é descontado ali, na hora, já que
-          complemento não passa pela Fabricação.
+          sistema mexe em estoque sozinho: o produto vendido sai do estoque de produto — abastecido pela Fabricação ou
+          por uma Entrada de Produto direta, no caso de terceirizado — e, se o pedido tiver algum complemento, o insumo
+          dele também é descontado ali, na hora, já que complemento não passa pela Fabricação.
         </p>
       </GuiaCard>
 

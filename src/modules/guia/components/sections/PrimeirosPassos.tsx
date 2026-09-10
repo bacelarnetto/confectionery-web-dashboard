@@ -55,11 +55,18 @@ export default function PrimeirosPassos() {
         <p>O sistema faz dois serviços de uma vez: atualiza a “foto” dos preços da receita e desconta os ingredientes do seu estoque automaticamente.</p>
         <p>
           É o único momento em que o estoque de <span className="font-medium text-gray-800">insumo</span> da receita
-          diminui — e, do outro lado, é quando o estoque de <span className="font-medium text-gray-800">produto</span>{' '}
-          aumenta: a fornada que você acabou de registrar fica disponível pra entrar num pedido.
+          diminui — e, do outro lado, é um dos dois jeitos de o estoque de{' '}
+          <span className="font-medium text-gray-800">produto</span> aumentar: a fornada que você acabou de registrar
+          fica disponível pra entrar num pedido.
         </p>
         <p>
           Assim você nunca “aposta” se tem farinha suficiente: os alertas e o mural trabalham com a realidade da sua despensa.
+        </p>
+        <p>
+          Nem todo produto passa pela Fabricação — se você compra pronto de terceiro ou terceiriza a produção, use{' '}
+          <span className="font-medium text-gray-800">Estoque de Produtos → Entradas</span> em vez disso: informe o
+          produto, a quantidade e o custo unitário, e o lote entra direto no estoque, sem precisar de Receita nenhuma.
+          <GuiaTooltip text="Cada lote de produto guarda a sua origem (Fabricação ou Terceirizado) — dá pra ver isso na coluna 'Origem' do Estoque Atual." />
         </p>
       </GuiaCard>
 
