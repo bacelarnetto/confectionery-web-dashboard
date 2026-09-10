@@ -6,6 +6,7 @@ import PageableTable from '../../../components/ui/PageableTable'
 import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal'
 import { useEntradasInsumo, useDeleteEntradaInsumo } from '../hooks/useEntradasInsumo'
 import { useDebounce } from '../../../hooks/useDebounce'
+import { formatCurrency } from '../../../lib/format'
 
 const TABLE_HEADERS = ['ID', 'Compra ID', 'Valor Total', 'NF', 'Usuário', 'Criado por', 'Ações']
 
@@ -141,7 +142,7 @@ export default function EntradaInsumoListPage() {
           <tr key={e.id} className="hover:bg-gray-50 transition-colors">
             <td className="px-4 py-3 font-medium text-gray-900">#{e.id}</td>
             <td className="px-4 py-3 text-gray-600">{e.compraId ?? '—'}</td>
-            <td className="px-4 py-3 text-gray-600">R$ {e.valorTotal.toFixed(2)}</td>
+            <td className="px-4 py-3 text-gray-600">{formatCurrency(e.valorTotal)}</td>
             <td className="px-4 py-3 text-gray-600">{e.numeroNotaFiscal ?? '—'}</td>
             <td className="px-4 py-3 text-gray-600">{e.usuarioId}</td>
             <td className="px-4 py-3 text-gray-600">{e.createdBy}</td>

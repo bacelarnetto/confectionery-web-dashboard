@@ -6,6 +6,7 @@ import PageableTable from '../../../components/ui/PageableTable'
 import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal'
 import { useClientes, useDeleteCliente } from '../hooks/useClientes'
 import { useDebounce } from '../../../hooks/useDebounce'
+import { maskPhone } from '../../../lib/format'
 
 const TABLE_HEADERS = ['ID', 'Nome', 'CPF', 'Celular', 'E-mail', 'Endereços', 'Ações']
 
@@ -102,7 +103,7 @@ export default function ClienteListPage() {
             <td className="px-4 py-3 text-gray-500 text-sm">{c.id}</td>
             <td className="px-4 py-3 font-medium text-gray-900">{c.nome}</td>
             <td className="px-4 py-3 text-gray-600">{c.cpf ?? '—'}</td>
-            <td className="px-4 py-3 text-gray-600">{c.celular ?? c.telefone ?? '—'}</td>
+            <td className="px-4 py-3 text-gray-600">{c.celular || c.telefone ? maskPhone(c.celular ?? c.telefone) : '—'}</td>
             <td className="px-4 py-3 text-gray-600">{c.email ?? '—'}</td>
             <td className="px-4 py-3 text-gray-600">{c.enderecos?.length ?? 0}</td>
             <td className="px-4 py-3">

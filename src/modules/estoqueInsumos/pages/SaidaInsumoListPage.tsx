@@ -6,6 +6,7 @@ import PageableTable from '../../../components/ui/PageableTable'
 import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal'
 import { useSaidasInsumo, useDeleteSaidaInsumo } from '../hooks/useSaidasInsumo'
 import { useDebounce } from '../../../hooks/useDebounce'
+import { formatCurrency } from '../../../lib/format'
 
 const TABLE_HEADERS = ['ID', 'Tipo ID', 'Valor Total', 'Produto ID', 'Usuário', 'Criado por', 'Ações']
 
@@ -141,7 +142,7 @@ export default function SaidaInsumoListPage() {
           <tr key={s.id} className="hover:bg-gray-50 transition-colors">
             <td className="px-4 py-3 font-medium text-gray-900">#{s.id}</td>
             <td className="px-4 py-3 text-gray-600">{s.tipoId}</td>
-            <td className="px-4 py-3 text-gray-600">R$ {s.valorTotal.toFixed(2)}</td>
+            <td className="px-4 py-3 text-gray-600">{formatCurrency(s.valorTotal)}</td>
             <td className="px-4 py-3 text-gray-600">{s.produtoId ?? '—'}</td>
             <td className="px-4 py-3 text-gray-600">{s.usuarioId}</td>
             <td className="px-4 py-3 text-gray-600">{s.createdBy}</td>

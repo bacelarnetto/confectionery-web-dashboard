@@ -18,6 +18,15 @@ const api = axios.create({
   },
 })
 
+// X-Request-Id (F19): o backend ecoa o header se ele vier na requisição, ou gera um UUID se não
+// vier, e o mesmo valor aparece no corpo de erro (ErroResponseDTO.requestId). Guardamos o último
+// visto (sucesso ou erro) pra poder citar como referência de suporte sem precisar abrir o Network tab.
+let lastRequestId: string | undefined
+
+export function getLastRequestId(): string | undefined {
+  return lastRequestId
+}
+
 // Anexa o access token em toda requisição (F7). userManager.getUser() lê do sessionStorage
 // compartilhado com o <AuthProvider> — não precisa da mesma instância/hook, só do mesmo storage.
 //
@@ -44,15 +53,21 @@ api.interceptors.request.use(async (config) => {
 let redirecionandoParaLogin = false
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    lastRequestId = response.headers?.['x-request-id'] ?? lastRequestId
+    return response
+  },
   (error) => {
     const status = error.response?.status
     const url = error.config?.url
     const data = error.response?.data
+    const requestId = data?.requestId ?? error.response?.headers?.['x-request-id']
+    if (requestId) lastRequestId = requestId
 
     console.error(`[API Error] ${error.request.method?.toUpperCase() || 'GET'} ${url}`, {
       status,
       data,
+      requestId,
     })
 
     // 401 aqui significa que o access token expirou e o renew silencioso não deu conta a tempo
@@ -82,6 +97,7 @@ api.interceptors.response.use(
       } else {
         mensagem = data?.mensagem || data?.message || 'Erro de conexão. Tente novamente.'
       }
+      if (requestId) mensagem += ` (ID: ${requestId})`
       toast.error(mensagem)
     }
     return Promise.reject(error)

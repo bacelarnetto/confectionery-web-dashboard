@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router'
 import PageHeader from '../../../components/ui/PageHeader'
 import Button from '../../../components/ui/Button'
 import { useFornecedor, useCreateFornecedor, useUpdateFornecedor } from '../hooks/useFornecedores'
+import { maskPhone } from '../../../lib/format'
 
 interface FormState {
   nome: string
@@ -84,6 +85,10 @@ export default function FornecedorFormPage() {
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
+  }
+
+  function handleTelefoneChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setForm((prev) => ({ ...prev, telefone: maskPhone(e.target.value) }))
   }
 
   function handleSubmit(e: FormEvent) {
@@ -203,9 +208,10 @@ export default function FornecedorFormPage() {
               <input
                 name="telefone"
                 value={form.telefone}
-                onChange={handleChange}
+                onChange={handleTelefoneChange}
                 className={inputClass}
                 placeholder="(00) 00000-0000"
+                maxLength={15}
               />
             </Field>
 

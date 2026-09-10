@@ -6,6 +6,7 @@ import PageableTable from '../../../components/ui/PageableTable'
 import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal'
 import { useInsumos, useDeleteInsumo } from '../hooks/useInsumos'
 import { useDebounce } from '../../../hooks/useDebounce'
+import { formatCurrency } from '../../../lib/format'
 
 const TABLE_HEADERS = ['ID', 'Nome', 'Valor', 'Marca', 'Unidade', 'Categoria', 'Tipo', 'Ações']
 
@@ -143,7 +144,7 @@ export default function InsumoListPage() {
           <tr key={i.id} className="hover:bg-gray-50 transition-colors">
             <td className="px-4 py-3 text-gray-500 text-sm">{i.id}</td>
             <td className="px-4 py-3 font-medium text-gray-900">{i.nome}</td>
-            <td className="px-4 py-3 text-gray-600">R$ {i.valor.toFixed(2)}</td>
+            <td className="px-4 py-3 text-gray-600">{formatCurrency(i.valor)}</td>
             <td className="px-4 py-3 text-gray-600">{i.marca ?? '—'}</td>
             <td className="px-4 py-3">
               <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-blue-50 text-blue-700 rounded-full font-mono">
