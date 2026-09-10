@@ -1,5 +1,8 @@
 export interface ItemPedidoComplemento {
+  id?: number
   complementoId?: number
+  complementoNome?: string
+  valorVenda?: number
 }
 
 export interface ItemPedido {

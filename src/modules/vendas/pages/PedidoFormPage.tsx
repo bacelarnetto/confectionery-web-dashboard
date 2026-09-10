@@ -6,7 +6,9 @@ import Button from '../../../components/ui/Button'
 import { usePedido, useCreatePedido, useUpdatePedido } from '../hooks/usePedidos'
 import { useClientes } from '../hooks/useClientes'
 import EnderecoClienteField from '../components/EnderecoClienteField'
-import ComplementoPicker from '../components/ComplementoPicker'
+import ComplementoPicker, { ComplementoResolvido } from '../components/ComplementoPicker'
+import ResumoValoresCard from '../components/ResumoValoresCard'
+import { calcularResumo } from '../lib/resumoValores'
 import { useProdutos } from '../../estoqueProdutos/hooks/useProdutos'
 import precificacaoProdutoService from '../../estoqueProdutos/services/precificacaoProdutoService'
 import complementoService from '../services/complementoService'
@@ -29,6 +31,7 @@ interface ItemForm {
   valorUnitario: string
   desconto: string
   complementoIds: number[]
+  complementosResolvidos: ComplementoResolvido[]
 }
 
 interface FormState {
@@ -41,7 +44,7 @@ interface FormState {
 }
 
 const emptyForm: FormState = { clienteId: '', enderecoId: '', retirar: false, dataEntrega: '', valorFrete: '', observacao: '' }
-const emptyItem: ItemForm = { produtoId: '', quantidade: '1', valorUnitario: '', desconto: '', complementoIds: [] }
+const emptyItem: ItemForm = { produtoId: '', quantidade: '1', valorUnitario: '', desconto: '', complementoIds: [], complementosResolvidos: [] }
 
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
@@ -103,9 +106,10 @@ export default function PedidoFormPage() {
         Promise.all(
           pedido.itens.map(async (it) => {
             let extras: number[] = []
+            let padraoIds = new Set<number>()
             try {
               const padrao = await complementoService.getByProdutoId(it.produtoId)
-              const padraoIds = new Set(padrao.map((c) => c.id))
+              padraoIds = new Set(padrao.map((c) => c.id))
               if (it.complementos?.length) {
                 extras = it.complementos
                   .filter((c) => c.complementoId != null && !padraoIds.has(c.complementoId))
@@ -118,12 +122,24 @@ export default function PedidoFormPage() {
                 .filter((c) => c.complementoId != null)
                 .map((c) => c.complementoId!)
             }
+            // Usa o snapshot (nome/valorVenda) já devolvido pelo backend (B29) pra montar o resumo
+            // sem depender do ComplementoPicker terminar de resolver -- funciona até se o
+            // complemento original já tiver sido excluído.
+            const complementosResolvidos: ComplementoResolvido[] = (it.complementos ?? [])
+              .filter((c) => c.complementoNome)
+              .map((c) => ({
+                id: c.complementoId ?? -1,
+                nome: c.complementoNome!,
+                valorVenda: c.valorVenda ?? 0,
+                padrao: c.complementoId != null && padraoIds.has(c.complementoId),
+              }))
             return {
               produtoId: String(it.produtoId),
               quantidade: String(it.quantidade),
               valorUnitario: String(it.valorUnitario),
               desconto: String(it.desconto ?? ''),
               complementoIds: extras,
+              complementosResolvidos,
             }
           }),
         ).then(setItens)
@@ -142,7 +158,7 @@ export default function PedidoFormPage() {
     setForm((prev) => ({ ...prev, retirar, valorFrete: retirar ? '' : prev.valorFrete }))
   }
 
-  function handleItemChange(index: number, field: keyof ItemForm, value: string | number[]) {
+  function handleItemChange(index: number, field: keyof ItemForm, value: string | number[] | ComplementoResolvido[]) {
     setItens((prev) => {
       const updated = [...prev]
       updated[index] = { ...updated[index], [field]: value }
@@ -212,6 +228,7 @@ export default function PedidoFormPage() {
   }
 
   const isPending = createMutation.isPending || updateMutation.isPending
+  const resumo = calcularResumo(itens, form.retirar ? 0 : Number(form.valorFrete) || 0)
 
   if (isEditing && isLoading) {
     return <div className="flex items-center justify-center h-48 text-gray-400 text-sm">Carregando...</div>
@@ -397,6 +414,7 @@ export default function PedidoFormPage() {
                       produtoId={Number(item.produtoId) || undefined}
                       value={item.complementoIds}
                       onChange={(ids) => handleItemChange(index, 'complementoIds', ids)}
+                      onResolvedChange={(resolvidos) => handleItemChange(index, 'complementosResolvidos', resolvidos)}
                     />
                   </div>
                 </div>
@@ -404,6 +422,8 @@ export default function PedidoFormPage() {
             ))}
           </div>
         </div>
+
+        <ResumoValoresCard resumo={resumo} />
 
         <div className="flex items-center justify-end gap-3">
           <button

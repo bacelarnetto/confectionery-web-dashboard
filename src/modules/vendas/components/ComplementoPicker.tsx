@@ -1,15 +1,24 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { X } from 'lucide-react'
 import complementoService from '../services/complementoService'
 import { useComplementos } from '../hooks/useComplementos'
 import { Complemento } from '../types/complemento'
 
+export interface ComplementoResolvido {
+  id: number
+  nome: string
+  valorVenda: number
+  padrao: boolean
+}
+
 interface ComplementoPickerProps {
   produtoId?: number
   value: number[]
   onChange: (ids: number[]) => void
   disabled?: boolean
+  /** Reporta pro formulário pai o padrão + os extras selecionados já resolvidos (nome/valor/padrão), pra somar no resumo sem duplicar fetch. */
+  onResolvedChange?: (resolvidos: ComplementoResolvido[]) => void
 }
 
 const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -22,6 +31,7 @@ export default function ComplementoPicker({
   value,
   onChange,
   disabled = false,
+  onResolvedChange,
 }: ComplementoPickerProps) {
   const [search, setSearch] = useState('')
 
@@ -37,6 +47,36 @@ export default function ComplementoPicker({
   const { data: extrasData } = useComplementos(0, 50, search.length > 0 ? { nome: search } : undefined)
   const allExtras = extrasData?.content ?? []
   const extras = allExtras.filter((c) => !padraoIds.has(c.id))
+
+  // O extra selecionado pode não estar nos 50 primeiros resultados da busca em branco -- busca
+  // individual só pelos que faltam, pra sempre conseguir resolver o valor de todo selecionado.
+  const known = new Map<number, Complemento>()
+  padrao.forEach((c) => known.set(c.id, c))
+  allExtras.forEach((c) => known.set(c.id, c))
+  const missingIds = value.filter((id) => !known.has(id))
+
+  const { data: missingData } = useQuery({
+    queryKey: ['complementos-faltantes', missingIds],
+    queryFn: () => Promise.all(missingIds.map((id) => complementoService.getById(id))),
+    enabled: missingIds.length > 0,
+  })
+  missingData?.forEach((c) => known.set(c.id, c))
+
+  useEffect(() => {
+    if (!onResolvedChange) return
+    const extrasResolvidos: ComplementoResolvido[] = value
+      .map((id) => known.get(id))
+      .filter((c): c is Complemento => !!c)
+      .map((c) => ({ id: c.id, nome: c.nome, valorVenda: c.valorVenda ?? 0, padrao: false }))
+    const padraoResolvidos: ComplementoResolvido[] = padrao.map((c) => ({
+      id: c.id,
+      nome: c.nome,
+      valorVenda: 0,
+      padrao: true,
+    }))
+    onResolvedChange([...padraoResolvidos, ...extrasResolvidos])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value.join(','), padrao.map((c) => c.id).join(','), missingData])
 
   function toggleExtra(id: number) {
     if (disabled) return

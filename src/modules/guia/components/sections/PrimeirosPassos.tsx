@@ -54,6 +54,11 @@ export default function PrimeirosPassos() {
         </p>
         <p>O sistema faz dois serviços de uma vez: atualiza a “foto” dos preços da receita e desconta os ingredientes do seu estoque automaticamente.</p>
         <p>
+          É o único momento em que o estoque de <span className="font-medium text-gray-800">insumo</span> da receita
+          diminui — e, do outro lado, é quando o estoque de <span className="font-medium text-gray-800">produto</span>{' '}
+          aumenta: a fornada que você acabou de registrar fica disponível pra entrar num pedido.
+        </p>
+        <p>
           Assim você nunca “aposta” se tem farinha suficiente: os alertas e o mural trabalham com a realidade da sua despensa.
         </p>
       </GuiaCard>

@@ -6,7 +6,7 @@ export interface ItemOrcamento {
   valorTotal?: number
   desconto?: number
   ignorarComplementoPadrao?: boolean
-  complementos?: { id?: number; complementoId?: number; complementoNome?: string }[]
+  complementos?: { id?: number; complementoId?: number; complementoNome?: string; valorVenda?: number }[]
 }
 
 export interface Orcamento {
@@ -17,6 +17,7 @@ export interface Orcamento {
   status?: string
   dataValidade?: string
   valorTotal?: number
+  valorFrete?: number
   pedidoId?: number
   observacao?: string
   itens: ItemOrcamento[]
@@ -30,6 +31,7 @@ export interface OrcamentoInsertForm {
   clienteId: number
   enderecoId?: number
   dataValidade?: string
+  valorFrete?: number
   observacao?: string
   itens: {
     produtoId: number
@@ -45,6 +47,7 @@ export interface OrcamentoInsertForm {
 export interface OrcamentoUpdateForm {
   enderecoId?: number
   dataValidade?: string
+  valorFrete?: number
   observacao?: string
   itens?: {
     produtoId: number

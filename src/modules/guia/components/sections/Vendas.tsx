@@ -121,6 +121,13 @@ export default function Vendas() {
             <span className="text-xs text-gray-400">pode acontecer a partir de qualquer etapa acima, a qualquer momento</span>
           </div>
         </div>
+
+        <p>
+          Marcar <span className="font-medium text-gray-800">EM PRODUÇÃO</span> é o segundo (e último) momento em que o
+          sistema mexe em estoque sozinho: o produto vendido sai do estoque de produto — aquele que a Fabricação
+          abasteceu — e, se o pedido tiver algum complemento, o insumo dele também é descontado ali, na hora, já que
+          complemento não passa pela Fabricação.
+        </p>
       </GuiaCard>
 
       <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl text-sm text-emerald-800">

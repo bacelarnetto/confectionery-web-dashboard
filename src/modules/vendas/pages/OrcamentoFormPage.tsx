@@ -8,7 +8,9 @@ import Modal from '../../../components/ui/Modal'
 import { useOrcamento, useCreateOrcamento, useUpdateOrcamento, useUpdateOrcamentoStatus, useDownloadOrcamentoPdf } from '../hooks/useOrcamentos'
 import { useClientes } from '../hooks/useClientes'
 import EnderecoClienteField from '../components/EnderecoClienteField'
-import ComplementoPicker from '../components/ComplementoPicker'
+import ComplementoPicker, { ComplementoResolvido } from '../components/ComplementoPicker'
+import ResumoValoresCard from '../components/ResumoValoresCard'
+import { calcularResumo } from '../lib/resumoValores'
 import { useProdutos } from '../../estoqueProdutos/hooks/useProdutos'
 import precificacaoProdutoService from '../../estoqueProdutos/services/precificacaoProdutoService'
 import complementoService from '../services/complementoService'
@@ -26,17 +28,19 @@ interface ItemForm {
   valorUnitario: string
   desconto: string
   complementoIds: number[]
+  complementosResolvidos: ComplementoResolvido[]
 }
 
 interface FormState {
   clienteId: string
   enderecoId: string
   dataValidade: string
+  valorFrete: string
   observacao: string
 }
 
-const emptyForm: FormState = { clienteId: '', enderecoId: '', dataValidade: '', observacao: '' }
-const emptyItem: ItemForm = { produtoId: '', quantidade: '1', valorUnitario: '', desconto: '', complementoIds: [] }
+const emptyForm: FormState = { clienteId: '', enderecoId: '', dataValidade: '', valorFrete: '', observacao: '' }
+const emptyItem: ItemForm = { produtoId: '', quantidade: '1', valorUnitario: '', desconto: '', complementoIds: [], complementosResolvidos: [] }
 
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
@@ -96,15 +100,17 @@ export default function OrcamentoFormPage() {
         clienteId: String(orcamento.clienteId ?? ''),
         enderecoId: String(orcamento.enderecoId ?? ''),
         dataValidade: orcamento.dataValidade ? orcamento.dataValidade.slice(0, 10) : '',
+        valorFrete: String(orcamento.valorFrete ?? ''),
         observacao: orcamento.observacao ?? '',
       })
       if (orcamento.itens?.length) {
         Promise.all(
           orcamento.itens.map(async (it) => {
             let extras: number[] = []
+            let padraoIds = new Set<number>()
             try {
               const padrao = await complementoService.getByProdutoId(it.produtoId)
-              const padraoIds = new Set(padrao.map((c) => c.id))
+              padraoIds = new Set(padrao.map((c) => c.id))
               extras = (it.complementos ?? [])
                 .filter((c) => c.complementoId != null && !padraoIds.has(c.complementoId))
                 .map((c) => c.complementoId!)
@@ -113,12 +119,23 @@ export default function OrcamentoFormPage() {
                 .filter((c) => c.complementoId != null)
                 .map((c) => c.complementoId!)
             }
+            // Snapshot (nome/valorVenda) já devolvido pelo backend (B29) -- resumo funciona mesmo
+            // se o complemento original já tiver sido excluído.
+            const complementosResolvidos: ComplementoResolvido[] = (it.complementos ?? [])
+              .filter((c) => c.complementoNome)
+              .map((c) => ({
+                id: c.complementoId ?? -1,
+                nome: c.complementoNome!,
+                valorVenda: c.valorVenda ?? 0,
+                padrao: c.complementoId != null && padraoIds.has(c.complementoId),
+              }))
             return {
               produtoId: String(it.produtoId),
               quantidade: String(it.quantidade),
               valorUnitario: String(it.valorUnitario),
               desconto: String(it.desconto ?? ''),
               complementoIds: extras,
+              complementosResolvidos,
             }
           }),
         ).then(setItens)
@@ -130,7 +147,7 @@ export default function OrcamentoFormPage() {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
-  function handleItemChange(index: number, field: keyof ItemForm, value: string | number[]) {
+  function handleItemChange(index: number, field: keyof ItemForm, value: string | number[] | ComplementoResolvido[]) {
     setItens((prev) => {
       const updated = [...prev]
       updated[index] = { ...updated[index], [field]: value }
@@ -189,6 +206,7 @@ export default function OrcamentoFormPage() {
           data: {
             enderecoId: form.enderecoId ? Number(form.enderecoId) : undefined,
             dataValidade: dataValidadeIso,
+            valorFrete: form.valorFrete ? Number(form.valorFrete) : undefined,
             observacao: form.observacao || undefined,
             itens: buildItens(),
             updatedBy: 'netto',
@@ -202,6 +220,7 @@ export default function OrcamentoFormPage() {
           clienteId: Number(form.clienteId),
           enderecoId: form.enderecoId ? Number(form.enderecoId) : undefined,
           dataValidade: dataValidadeIso,
+          valorFrete: form.valorFrete ? Number(form.valorFrete) : undefined,
           observacao: form.observacao || undefined,
           itens: buildItens(),
           createdBy: 'netto',
@@ -233,6 +252,7 @@ export default function OrcamentoFormPage() {
   }
 
   const isPending = createMutation.isPending || updateMutation.isPending
+  const resumo = calcularResumo(itens, Number(form.valorFrete) || 0)
 
   if (isEditing && isLoading) {
     return <div className="flex items-center justify-center h-48 text-gray-400 text-sm">Carregando...</div>
@@ -322,6 +342,20 @@ export default function OrcamentoFormPage() {
                 onChange={handleChange}
                 disabled={isReadOnly}
                 className={inputClass}
+              />
+            </Field>
+
+            <Field label="Valor de Frete (R$)">
+              <input
+                name="valorFrete"
+                type="number"
+                step="0.01"
+                min="0"
+                value={form.valorFrete}
+                onChange={handleChange}
+                disabled={isReadOnly}
+                className={inputClass}
+                placeholder="0.00"
               />
             </Field>
 
@@ -437,6 +471,7 @@ export default function OrcamentoFormPage() {
                       produtoId={Number(item.produtoId) || undefined}
                       value={item.complementoIds}
                       onChange={(ids) => handleItemChange(index, 'complementoIds', ids)}
+                      onResolvedChange={(resolvidos) => handleItemChange(index, 'complementosResolvidos', resolvidos)}
                       disabled={isReadOnly}
                     />
                   </div>
@@ -445,6 +480,8 @@ export default function OrcamentoFormPage() {
             })}
           </div>
         </div>
+
+        <ResumoValoresCard resumo={resumo} />
 
         <div className="flex items-center justify-end gap-3">
           <button
