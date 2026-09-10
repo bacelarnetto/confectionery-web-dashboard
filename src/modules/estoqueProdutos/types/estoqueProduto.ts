@@ -1,3 +1,5 @@
+export type OrigemEstoqueProduto = 'FABRICACAO' | 'TERCEIRIZADO'
+
 export interface EstoqueProduto {
   id: number
   produtoId: number
@@ -5,4 +7,5 @@ export interface EstoqueProduto {
   dataFabricacao?: string
   dataValidade?: string
   createdOn: string
+  origem?: OrigemEstoqueProduto
 }

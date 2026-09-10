@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { NavLink, useLocation } from 'react-router'
 import { useAuth } from 'react-oidc-context'
-import { Truck, ShoppingCart, Cookie, Package, ArrowDownToLine, ArrowUpFromLine, Archive, Activity, LayoutDashboard, Users, Bell, Settings, ChevronDown, Store, UtensilsCrossed, FlaskConical, Layers, KanbanSquare, CalendarClock, BookOpen, TrendingUp, PiggyBank, FileText } from 'lucide-react'
+import { Truck, ShoppingCart, Cookie, Package, PackagePlus, ArrowDownToLine, ArrowUpFromLine, Archive, Activity, LayoutDashboard, Users, Bell, Settings, ChevronDown, Store, UtensilsCrossed, FlaskConical, Layers, KanbanSquare, CalendarClock, BookOpen, TrendingUp, PiggyBank, FileText } from 'lucide-react'
 import { useAlertasCountAtivos } from '../../modules/estoqueInsumos/hooks/useAlertas'
 import { useCountAlertasPedidoAtivos } from '../../modules/vendas/hooks/useAlertasPedido'
 import { useAlertasProdutoCountAtivos } from '../../modules/estoqueProdutos/hooks/useAlertasProduto'
@@ -92,6 +92,7 @@ const navigation: NavSection[] = [
       { label: 'Produtos', to: '/estoque-produtos/produtos', icon: <UtensilsCrossed size={18} /> },
       { label: 'Receitas', to: '/estoque-produtos/receitas', icon: <FlaskConical size={18} /> },
       { label: 'Fabricação', to: '/estoque-produtos/fabricacoes', icon: <Layers size={18} /> },
+      { label: 'Entradas', to: '/estoque-produtos/entradas', icon: <PackagePlus size={18} /> },
       { label: 'Estoque Atual', to: '/estoque-produtos/estoque', icon: <Archive size={18} /> },
       { label: 'Alertas', to: '/estoque-produtos/alertas', icon: <Bell size={18} />, badge: () => <AlertaProdutoBadge /> },
       { label: 'Parametrização', to: '/estoque-produtos/parametrizacao-alertas', icon: <Settings size={18} /> },

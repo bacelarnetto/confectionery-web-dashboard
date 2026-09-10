@@ -28,6 +28,8 @@ import ProdutoFormPage from './modules/estoqueProdutos/pages/ProdutoFormPage'
 import ReceitaListPage from './modules/estoqueProdutos/pages/ReceitaListPage'
 import ReceitaFormPage from './modules/estoqueProdutos/pages/ReceitaFormPage'
 import EstoqueProdutoListPage from './modules/estoqueProdutos/pages/EstoqueProdutoListPage'
+import EntradaProdutoListPage from './modules/estoqueProdutos/pages/EntradaProdutoListPage'
+import EntradaProdutoFormPage from './modules/estoqueProdutos/pages/EntradaProdutoFormPage'
 import FabricacaoListPage from './modules/estoqueProdutos/pages/FabricacaoListPage'
 import FabricacaoFormPage from './modules/estoqueProdutos/pages/FabricacaoFormPage'
 import AlertaProdutoListPage from './modules/estoqueProdutos/pages/AlertaProdutoListPage'
@@ -94,6 +96,8 @@ export default function App() {
         <Route path="/estoque-produtos/receitas/nova" element={<ReceitaFormPage />} />
         <Route path="/estoque-produtos/receitas/:id/editar" element={<ReceitaFormPage />} />
         <Route path="/estoque-produtos/estoque" element={<EstoqueProdutoListPage />} />
+        <Route path="/estoque-produtos/entradas" element={<EntradaProdutoListPage />} />
+        <Route path="/estoque-produtos/entradas/nova" element={<EntradaProdutoFormPage />} />
         <Route path="/estoque-produtos/fabricacoes" element={<FabricacaoListPage />} />
         <Route path="/estoque-produtos/fabricacoes/nova" element={<FabricacaoFormPage />} />
         <Route path="/estoque-produtos/alertas" element={<AlertaProdutoListPage />} />

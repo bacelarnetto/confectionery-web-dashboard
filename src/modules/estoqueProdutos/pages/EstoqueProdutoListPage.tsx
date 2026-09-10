@@ -2,10 +2,11 @@ import { useState } from 'react'
 import { Search, X } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
 import PageableTable from '../../../components/ui/PageableTable'
+import Badge from '../../../components/ui/Badge'
 import { useEstoqueProdutos } from '../hooks/useEstoqueProdutos'
 import { useDebounce } from '../../../hooks/useDebounce'
 
-const TABLE_HEADERS = ['ID', 'Produto ID', 'Quantidade', 'Data de Fabricação', 'Data de Validade', 'Criado em']
+const TABLE_HEADERS = ['ID', 'Produto ID', 'Quantidade', 'Origem', 'Data de Fabricação', 'Data de Validade', 'Criado em']
 
 function formatDate(dateStr: string | undefined): string {
   if (!dateStr) return '—'
@@ -93,6 +94,7 @@ export default function EstoqueProdutoListPage() {
             <td className="px-4 py-3 text-gray-500 text-sm">{e.id}</td>
             <td className="px-4 py-3 text-gray-600">{e.produtoId}</td>
             <td className="px-4 py-3 font-medium text-gray-900">{e.quantidade.toFixed(2)}</td>
+            <td className="px-4 py-3">{e.origem ? <Badge status={e.origem} /> : '—'}</td>
             <td className="px-4 py-3 text-gray-600">{formatDate(e.dataFabricacao)}</td>
             <td className="px-4 py-3 text-gray-600">
               {e.dataValidade ? (

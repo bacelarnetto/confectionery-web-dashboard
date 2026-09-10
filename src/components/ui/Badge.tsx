@@ -22,6 +22,9 @@ const statusStyles: Record<string, string> = {
   REJEITADO:    'bg-red-100 text-red-700',
   EXPIRADO:     'bg-gray-100 text-gray-600',
   PADRAO:       'bg-indigo-100 text-indigo-700',
+  // Origem do lote de estoque de produto (F17)
+  FABRICACAO:   'bg-blue-100 text-blue-700',
+  TERCEIRIZADO: 'bg-teal-100 text-teal-700',
 }
 
 const statusLabels: Record<string, string> = {
@@ -40,6 +43,8 @@ const statusLabels: Record<string, string> = {
   REJEITADO:    'Rejeitado',
   EXPIRADO:     'Expirado',
   PADRAO:       'Padrão',
+  FABRICACAO:   'Fabricação',
+  TERCEIRIZADO: 'Terceirizado',
 }
 
 export default function Badge({ status }: BadgeProps) {
