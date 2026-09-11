@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { NavLink, useLocation } from 'react-router'
 import { useAuth } from 'react-oidc-context'
-import { Truck, ShoppingCart, Cookie, Package, PackagePlus, ArrowDownToLine, ArrowUpFromLine, Archive, Activity, LayoutDashboard, Users, Bell, Settings, ChevronDown, Store, UtensilsCrossed, FlaskConical, Layers, KanbanSquare, CalendarClock, BookOpen, TrendingUp, PiggyBank, FileText } from 'lucide-react'
+import { Truck, ShoppingCart, Cookie, Package, PackagePlus, ArrowDownToLine, ArrowUpFromLine, Archive, Activity, LayoutDashboard, Users, Bell, Settings, ChevronDown, Store, UtensilsCrossed, FlaskConical, Layers, KanbanSquare, CalendarClock, BookOpen, TrendingUp, PiggyBank, FileText, X } from 'lucide-react'
 import { useAlertasCountAtivos } from '../../modules/estoqueInsumos/hooks/useAlertas'
 import { useCountAlertasPedidoAtivos } from '../../modules/vendas/hooks/useAlertasPedido'
 import { useAlertasProdutoCountAtivos } from '../../modules/estoqueProdutos/hooks/useAlertasProduto'
@@ -147,7 +147,12 @@ function getInitialCollapsed(sections: NavSection[], activeKeys: Set<string>): S
   return new Set(sections.map((s) => s.key).filter((k) => !activeKeys.has(k)))
 }
 
-export default function Sidebar() {
+interface SidebarProps {
+  isOpen: boolean
+  onClose: () => void
+}
+
+export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const location = useLocation()
   const auth = useAuth()
   const visibleNavigation = navigation.filter((s) => !s.requiresRole || hasRole(auth.user, s.requiresRole))
@@ -180,6 +185,12 @@ export default function Sidebar() {
     }
   }, [location.pathname])
 
+  // No mobile o menu é um drawer sobreposto (ver Header/AppLayout) -- fecha sozinho ao navegar,
+  // já que senão a tela de destino fica escondida atrás dele.
+  useEffect(() => {
+    onClose()
+  }, [location.pathname])
+
   function toggleSection(key: string) {
     setCollapsed((prev) => {
       const next = new Set(prev)
@@ -190,14 +201,35 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="w-60 flex-shrink-0 bg-gray-900 text-white flex flex-col h-full">
-      {/* Brand */}
-      <div className="flex items-center gap-3 px-5 py-5 border-b border-gray-700">
-        <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center flex-shrink-0">
-          <Cookie size={18} className="text-white" />
+    <>
+      {/* Backdrop: só existe (e captura clique) enquanto o drawer mobile está aberto */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
+
+      <aside
+        className={`w-64 flex-shrink-0 bg-sidebar text-white flex flex-col h-full fixed inset-y-0 left-0 z-40 transition-transform duration-200 ease-out lg:static lg:z-auto lg:translate-x-0 ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        {/* Brand */}
+        <div className="flex items-center gap-3 px-5 py-5 border-b border-sidebar-border">
+          <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center flex-shrink-0">
+            <Cookie size={18} className="text-white" />
+          </div>
+          <span className="font-semibold text-base tracking-tight flex-1">Confectionery</span>
+          <button
+            onClick={onClose}
+            className="p-1 text-gray-400 hover:text-white rounded-md lg:hidden"
+            aria-label="Fechar menu"
+          >
+            <X size={20} />
+          </button>
         </div>
-        <span className="font-semibold text-base tracking-tight">Confectionery</span>
-      </div>
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-1">
@@ -207,7 +239,7 @@ export default function Sidebar() {
             <div key={section.key} className="mb-1">
               <button
                 onClick={() => toggleSection(section.key)}
-                className="w-full flex items-center justify-between px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400 hover:text-gray-200 transition-colors rounded-md hover:bg-gray-800"
+                className="w-full flex items-center justify-between px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400 hover:text-gray-200 transition-colors rounded-md hover:bg-sidebar-hover"
               >
                 <span>{section.title}</span>
                 <ChevronDown
@@ -226,8 +258,8 @@ export default function Sidebar() {
                         className={({ isActive }) =>
                           `flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
                             isActive
-                              ? 'bg-gray-700 text-white font-medium'
-                              : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                              ? 'bg-sidebar-active text-white font-medium'
+                              : 'text-gray-300 hover:bg-sidebar-hover hover:text-white'
                           }`
                         }
                       >
@@ -244,10 +276,11 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Footer */}
-      <div className="px-5 py-4 border-t border-gray-700">
-        <p className="text-xs text-gray-500">v0.1.0 · Admin</p>
-      </div>
-    </aside>
+        {/* Footer */}
+        <div className="px-5 py-4 border-t border-sidebar-border">
+          <p className="text-xs text-gray-500">v0.1.0 · Admin</p>
+        </div>
+      </aside>
+    </>
   )
 }

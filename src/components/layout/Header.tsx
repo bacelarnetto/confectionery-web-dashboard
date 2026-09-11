@@ -1,10 +1,16 @@
 import { useState, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router'
-import { ChevronRight, User, Bell, AlertTriangle, CalendarClock, LogOut } from 'lucide-react'
+import { ChevronRight, User, Bell, AlertTriangle, CalendarClock, LogOut, Menu, Palette, Check } from 'lucide-react'
 import { useAuth } from 'react-oidc-context'
 import { getUsername } from '../../lib/auth'
 import { useAlertasCountAtivos, useAlertas } from '../../modules/estoqueInsumos/hooks/useAlertas'
 import { useCountAlertasPedidoAtivos, useAlertasPedidoAtivos } from '../../modules/vendas/hooks/useAlertasPedido'
+import { THEMES, ThemeName, applyTheme, getStoredTheme } from '../../lib/theme'
+
+const THEME_SWATCHES: Record<ThemeName, string> = {
+  laranja: '#f59e0b',
+  rosa: '#c96a82',
+}
 
 const routeNames: Record<string, { section: string; title: string }> = {
   '/': { section: 'Dashboard', title: 'Visão Geral' },
@@ -41,7 +47,11 @@ function formatDate(dateStr: string) {
   }
 }
 
-export default function Header() {
+interface HeaderProps {
+  onMenuClick: () => void
+}
+
+export default function Header({ onMenuClick }: HeaderProps) {
   const location = useLocation()
   const navigate = useNavigate()
   const auth = useAuth()
@@ -63,8 +73,16 @@ export default function Header() {
 
   const [showPopover, setShowPopover] = useState(false)
   const [showPedidoPopover, setShowPedidoPopover] = useState(false)
+  const [showThemePopover, setShowThemePopover] = useState(false)
+  const [theme, setTheme] = useState<ThemeName>(getStoredTheme)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pedidoTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  function handleThemeChange(next: ThemeName) {
+    applyTheme(next)
+    setTheme(next)
+    setShowThemePopover(false)
+  }
 
   const handleMouseEnter = () => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current)
@@ -78,23 +96,34 @@ export default function Header() {
   }
 
   return (
-    <header className="h-14 flex-shrink-0 bg-white border-b border-gray-200 shadow-sm flex items-center justify-between px-6 z-20">
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-1.5 text-sm">
-        <span className="text-gray-400 font-medium">{section}</span>
-        {showBreadcrumb && (
-          <>
-            <ChevronRight size={14} className="text-gray-300" />
-            <span className="text-gray-700 font-semibold">{title}</span>
-          </>
-        )}
-        {!showBreadcrumb && (
-          <span className="text-gray-700 font-semibold sr-only">{title}</span>
-        )}
+    <header className="h-14 flex-shrink-0 bg-white border-b border-gray-200 shadow-sm flex items-center justify-between px-3 sm:px-6 gap-2 z-20">
+      <div className="flex items-center gap-2 min-w-0">
+        {/* Menu hambúrguer: só no mobile -- o menu lateral fica escondido abaixo do breakpoint lg */}
+        <button
+          onClick={onMenuClick}
+          className="p-2 -ml-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors lg:hidden flex-shrink-0"
+          aria-label="Abrir menu"
+        >
+          <Menu size={20} />
+        </button>
+
+        {/* Breadcrumb */}
+        <div className="flex items-center gap-1.5 text-sm min-w-0 truncate">
+          <span className="text-gray-400 font-medium truncate">{section}</span>
+          {showBreadcrumb && (
+            <>
+              <ChevronRight size={14} className="text-gray-300 flex-shrink-0" />
+              <span className="text-gray-700 font-semibold truncate">{title}</span>
+            </>
+          )}
+          {!showBreadcrumb && (
+            <span className="text-gray-700 font-semibold sr-only">{title}</span>
+          )}
+        </div>
       </div>
 
       {/* Right Side Actions */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
         {/* Notificações */}
         <div 
           className="relative flex items-center h-full"
@@ -116,7 +145,7 @@ export default function Header() {
 
           {/* Popover */}
           {showPopover && (
-            <div className="absolute top-12 right-0 w-80 bg-white border border-gray-200 shadow-xl rounded-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 z-50">
+            <div className="absolute top-12 right-0 w-80 max-w-[calc(100vw-1.5rem)] bg-white border border-gray-200 shadow-xl rounded-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 z-50">
               <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-gray-900">Alertas Recentes</h3>
                 <span className="text-xs font-medium px-2 py-0.5 bg-red-100 text-red-700 rounded-full">
@@ -199,7 +228,7 @@ export default function Header() {
           </button>
 
           {showPedidoPopover && (
-            <div className="absolute top-12 right-0 w-72 bg-white border border-gray-200 shadow-xl rounded-xl overflow-hidden z-50">
+            <div className="absolute top-12 right-0 w-72 max-w-[calc(100vw-1.5rem)] bg-white border border-gray-200 shadow-xl rounded-xl overflow-hidden z-50">
               <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-gray-900">Alertas de Pedidos</h3>
                 <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${temAtrasadoPedido ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>
@@ -237,15 +266,53 @@ export default function Header() {
           )}
         </div>
 
+        {/* Tema */}
+        <div className="relative flex items-center h-full">
+          <button
+            onClick={() => setShowThemePopover((v) => !v)}
+            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+            title="Tema"
+          >
+            <Palette size={20} />
+          </button>
+
+          {showThemePopover && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setShowThemePopover(false)} />
+              <div className="absolute top-12 right-0 w-48 bg-white border border-gray-200 shadow-xl rounded-xl overflow-hidden z-50">
+                <div className="px-4 py-2.5 border-b border-gray-100 bg-gray-50">
+                  <h3 className="text-sm font-semibold text-gray-900">Tema</h3>
+                </div>
+                <div className="p-1.5">
+                  {THEMES.map((t) => (
+                    <button
+                      key={t.value}
+                      onClick={() => handleThemeChange(t.value)}
+                      className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <span
+                        className="w-4 h-4 rounded-full flex-shrink-0 border border-black/10"
+                        style={{ backgroundColor: THEME_SWATCHES[t.value] }}
+                      />
+                      <span className="flex-1 text-left">{t.label}</span>
+                      {theme === t.value && <Check size={15} className="text-gray-400" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
         {/* Separator */}
-        <div className="h-6 w-px bg-gray-200" />
+        <div className="h-6 w-px bg-gray-200 hidden sm:block" />
 
         {/* User */}
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
             <User size={16} className="text-amber-700" />
           </div>
-          <span className="text-sm font-medium text-gray-700">{getUsername(auth.user)}</span>
+          <span className="text-sm font-medium text-gray-700 hidden sm:inline">{getUsername(auth.user)}</span>
           <button
             onClick={() => auth.signoutRedirect()}
             className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"

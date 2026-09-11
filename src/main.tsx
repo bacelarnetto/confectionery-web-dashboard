@@ -8,7 +8,11 @@ import App from './App'
 import AuthGate from './components/auth/AuthGate'
 import SilentRenewPage from './pages/SilentRenewPage'
 import { oidcConfig } from './lib/auth'
+import { applyTheme, getStoredTheme } from './lib/theme'
 import './index.css'
+
+// Aplicado antes do primeiro render pra não piscar o tema errado (flash of default theme).
+applyTheme(getStoredTheme())
 
 const queryClient = new QueryClient({
   defaultOptions: {

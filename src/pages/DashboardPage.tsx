@@ -12,6 +12,7 @@ import {
 import {
   BarChart,
   Bar,
+  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -61,6 +62,20 @@ function KpiCard({ title, value, icon, isLoading }: KpiCardProps) {
 
 function ChartSkeleton() {
   return <div className="h-72 bg-gray-100 rounded-lg animate-pulse" />
+}
+
+// Mesmas cores dos badges de status de Pedido (ver STATUS_COLORS em PedidoListPage.tsx), só que em
+// hex pro fill do gráfico em vez de classe Tailwind.
+// Paleta pra gráficos de ranking (item 1, item 2, ...) sem categoria fixa — cicla por índice.
+const RANKING_CHART_COLORS = ['#f59e0b', '#6366f1', '#22c55e', '#ec4899', '#06b6d4', '#f97316', '#a855f7', '#84cc16']
+
+const STATUS_CHART_COLORS: Record<string, string> = {
+  RASCUNHO: '#9ca3af',
+  CONFIRMADO: '#3b82f6',
+  EM_PRODUCAO: '#a855f7',
+  PRONTO: '#22c55e',
+  ENTREGUE: '#14b8a6',
+  CANCELADO: '#ef4444',
 }
 
 export default function DashboardPage() {
@@ -195,7 +210,11 @@ export default function DashboardPage() {
                     width={120}
                   />
                   <RechartsTooltip />
-                  <Bar dataKey="qtd" fill="#f59e0b" radius={[0, 4, 4, 0]} name="Quantidade" />
+                  <Bar dataKey="qtd" radius={[0, 4, 4, 0]} name="Quantidade">
+                    {(estoqueVolumes ?? []).map((entry, index) => (
+                      <Cell key={entry.name} fill={RANKING_CHART_COLORS[index % RANKING_CHART_COLORS.length]} />
+                    ))}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -229,7 +248,11 @@ export default function DashboardPage() {
                     width={130}
                   />
                   <RechartsTooltip />
-                  <Bar dataKey="totalVendido" fill="#f59e0b" radius={[0, 4, 4, 0]} name="Qtd Vendida" />
+                  <Bar dataKey="totalVendido" radius={[0, 4, 4, 0]} name="Qtd Vendida">
+                    {topProdutos.map((entry, index) => (
+                      <Cell key={entry.nome} fill={RANKING_CHART_COLORS[index % RANKING_CHART_COLORS.length]} />
+                    ))}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -262,9 +285,12 @@ export default function DashboardPage() {
                     dataKey="total"
                     name="Pedidos"
                     radius={[4, 4, 0, 0]}
-                    fill="#f59e0b"
                     label={{ position: 'top', fontSize: 12, fill: '#6b7280' }}
-                  />
+                  >
+                    {pedidosStatus.map((entry) => (
+                      <Cell key={entry.status} fill={STATUS_CHART_COLORS[entry.status] ?? '#9ca3af'} />
+                    ))}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>

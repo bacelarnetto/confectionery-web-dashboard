@@ -1,3 +1,44 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Temas (ver src/lib/theme.ts) -- "laranja" reproduz exatamente a paleta amber padrão do
+   Tailwind + sidebar cinza-escuro que o app já tinha, então é o default e não muda nada pra
+   quem não mexer no seletor de tema. "rosa" é a paleta nova, pensada pro tom de confeitaria
+   (rosa-poeira, não neon) com a sidebar num vinho/ameixa escuro em vez de cinza puro. */
+:root,
+:root[data-theme='laranja'] {
+  --color-primary-50: #fffbeb;
+  --color-primary-100: #fef3c7;
+  --color-primary-200: #fde68a;
+  --color-primary-300: #fcd34d;
+  --color-primary-400: #fbbf24;
+  --color-primary-500: #f59e0b;
+  --color-primary-600: #d97706;
+  --color-primary-700: #b45309;
+  --color-primary-800: #92400e;
+  --color-primary-900: #78350f;
+
+  --color-sidebar-bg: #111827;
+  --color-sidebar-border: #374151;
+  --color-sidebar-hover: #1f2937;
+  --color-sidebar-active: #374151;
+}
+
+:root[data-theme='rosa'] {
+  --color-primary-50: #fdf3f5;
+  --color-primary-100: #fbe4e9;
+  --color-primary-200: #f5c7d1;
+  --color-primary-300: #eba3b4;
+  --color-primary-400: #dd8296;
+  --color-primary-500: #c96a82;
+  --color-primary-600: #ad4f68;
+  --color-primary-700: #8a3d52;
+  --color-primary-800: #6b2e3f;
+  --color-primary-900: #4c202c;
+
+  --color-sidebar-bg: #3b1f2b;
+  --color-sidebar-border: #5c3346;
+  --color-sidebar-hover: #4a2736;
+  --color-sidebar-active: #6b3b4f;
+}
