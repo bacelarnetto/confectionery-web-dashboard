@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { Link } from 'react-router'
 import {
   TrendingUp,
   PackageMinus,
@@ -8,11 +9,15 @@ import {
   DollarSign,
   Clock,
   Receipt,
+  HandCoins,
 } from 'lucide-react'
 import {
   BarChart,
   Bar,
   Cell,
+  PieChart as RechartsPieChart,
+  Pie,
+  Legend,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -32,6 +37,7 @@ import {
   useTopProdutos,
   usePedidosPorStatus,
 } from '../modules/dashboard/hooks/useDashboard'
+import { useResumoMes } from '../modules/financeiro/hooks/useFinanceiro'
 
 // --- Components ---
 
@@ -76,6 +82,117 @@ const STATUS_CHART_COLORS: Record<string, string> = {
   PRONTO: '#22c55e',
   ENTREGUE: '#14b8a6',
   CANCELADO: '#ef4444',
+}
+
+function mesAtual(): string {
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+}
+
+// Card "Resumo do Mês" (F5) — conectado ao GET /api/financeiro/resumo?mes= do mês atual.
+function ResumoMesSection() {
+  const fmt = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+  const mes = mesAtual()
+  const { data: resumo, isLoading } = useResumoMes(mes)
+
+  const pieData = (resumo?.gastosPorCategoria ?? []).map((c) => ({ name: c.tipoGastoNome, value: c.valor }))
+  const totalPendente = resumo?.recebimentosPendentes?.total ?? 0
+  const qtdPendente = resumo?.recebimentosPendentes?.quantidade ?? 0
+
+  return (
+    <section>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+          Financeiro — Resumo do Mês {mes.replace('-', '/')}
+        </h2>
+        <div className="flex items-center gap-3 text-sm">
+          <Link to="/financeiro/gastos" className="font-medium text-amber-600 hover:text-amber-700">
+            Gastos
+          </Link>
+          <Link to="/financeiro/contas-receber" className="font-medium text-amber-600 hover:text-amber-700">
+            Contas a Receber
+          </Link>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <KpiCard
+          title="Receita"
+          value={resumo ? fmt.format(resumo.receita) : '—'}
+          icon={<DollarSign size={20} className="text-emerald-600" />}
+          isLoading={isLoading}
+        />
+        <KpiCard
+          title="Gastos"
+          value={resumo ? fmt.format(resumo.gastos) : '—'}
+          icon={<Receipt size={20} className="text-red-500" />}
+          isLoading={isLoading}
+        />
+        <KpiCard
+          title="Custo dos Doces (COGS)"
+          value={resumo ? fmt.format(resumo.cogsInsumos) : '—'}
+          icon={<PackageMinus size={20} className="text-amber-600" />}
+          isLoading={isLoading}
+        />
+        <KpiCard
+          title="Lucro Real"
+          value={resumo ? fmt.format(resumo.lucroReal) : '—'}
+          icon={<PiggyBank size={20} />}
+          isLoading={isLoading}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+          <h3 className="text-base font-semibold text-gray-900 mb-6">Gastos por Categoria</h3>
+          {isLoading ? (
+            <ChartSkeleton />
+          ) : pieData.length === 0 ? (
+            <div className="h-72 flex items-center justify-center text-sm text-gray-400">Nenhum gasto no mês</div>
+          ) : (
+            <div className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <RechartsPieChart>
+                  <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label>
+                    {pieData.map((entry, index) => (
+                      <Cell key={entry.name} fill={RANKING_CHART_COLORS[index % RANKING_CHART_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip formatter={(v: any) => [fmt.format(Number(v)), '']} />
+                  <Legend />
+                </RechartsPieChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </div>
+
+        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex flex-col">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-base font-semibold text-gray-900">A Receber</h3>
+            <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600">
+              <HandCoins size={20} />
+            </div>
+          </div>
+          {isLoading ? (
+            <div className="h-8 bg-gray-200 rounded animate-pulse w-40" />
+          ) : (
+            <>
+              <p className="text-3xl font-semibold text-gray-900">{fmt.format(totalPendente)}</p>
+              <p className="text-sm text-gray-500 mt-2">{qtdPendente} conta(s) pendente(s) de recebimento</p>
+              <div className="mt-auto pt-6">
+                <Link
+                  to="/financeiro/contas-receber"
+                  className="inline-flex items-center justify-center w-full gap-2 px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 transition-colors"
+                >
+                  Ver contas a receber
+                </Link>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </section>
+  )
 }
 
 export default function DashboardPage() {
@@ -161,6 +278,9 @@ export default function DashboardPage() {
           />
         </div>
       </div>
+
+      {/* Financeiro — Resumo do Mês */}
+      <ResumoMesSection />
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

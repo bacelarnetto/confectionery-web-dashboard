@@ -31,6 +31,9 @@ const routeNames: Record<string, { section: string; title: string }> = {
   '/guia': { section: 'Ajuda', title: 'Guia do Usuário' },
   '/usuarios': { section: 'Configurações', title: 'Usuários' },
   '/vendas/orcamentos': { section: 'Vendas', title: 'Orçamentos' },
+  '/financeiro/tipos-gasto': { section: 'Financeiro', title: 'Tipos de Gasto' },
+  '/financeiro/gastos': { section: 'Financeiro', title: 'Gastos' },
+  '/financeiro/contas-receber': { section: 'Financeiro', title: 'Contas a Receber' },
 }
 
 function formatDate(dateStr: string) {

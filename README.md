@@ -21,9 +21,61 @@ O projeto utiliza as seguintes tecnologias e bibliotecas no frontend:
 O código-fonte base da aplicação web se concentra dentro da pasta `src/`.
 Em alinhamento às regras arquiteturais definidas para o ecossistema do **ConfectioneryEase**:
 
-- O frontend comunica-se com as APIs de cada módulo do backend (`compras`, `estoqueInsumos`, `shared`, `vendas`, `estoqueProdutos`).
+- O frontend comunica-se com as APIs de cada módulo do backend (`compras`, `estoqueInsumos`, `shared`, `vendas`, `estoqueProdutos`, `financeiro`).
 - **Clients HTTP:** A comunicação via API é centralizada em funções focadas que utilizam o Axios, mantidas em serviços e custom hooks (`useQuery` / `useMutation` do TanStack Query).
 - **Integração Desacoplada:** Assim como a regra seguida pelo backend, a comunicação de módulos feita na UI sempre passa propriedades refenciadas por **IDs base**, preservando o isolamento entre contextos (ex.: um Insumo se liga a uma Compra exclusivamente por `compraId`).
+
+## 💰 Finanças
+
+O módulo de Finanças permite acompanhar gastos, receitas e contas a receber da confeitaria de forma simples e objetiva.
+
+### Resumo do Mês (Dashboard)
+
+Ao acessar a tela principal (Dashboard), a seção **"Financeiro — Resumo do Mês"** mostra, de um relance:
+
+- **Receita** total do mês.
+- **Gastos** totais do mês.
+- **Custo dos Doces (COGS)** — quanto custou a matéria-prima dos pedidos entregues.
+- **Lucro Real** — receita menos gastos e custo dos doces.
+- **Gráfico de pizza** com a distribuição dos gastos por categoria.
+- **A Receber** — total e quantidade de pedidos/contas ainda não quitados.
+
+### Lançar um Gasto
+
+1. Acesse **Financeiro → Gastos** no menu lateral.
+2. Clique em **Novo Gasto**.
+3. Preencha:
+   - **Tipo de Gasto** — escolha entre as categorias cadastradas (ex.: aluguel, energia, embalagens…).
+   - **Valor** — valor em reais.
+   - **Data do Pagamento** — data em que o pagamento foi (ou será) efetuado.
+   - **Descrição** — detalhe opcional sobre o gasto.
+   - **Documento** — campo opcional para referência (nota fiscal, comprovante, etc.).
+4. Marque **Recorrente** se for um gasto fixo que se repete todo mês (ex.: aluguel, internet).
+5. Salve. O gasto aparecerá automaticamente no resumo do mês.
+
+> **Dica:** Use o botão **"Repetir Próximo Mês"** em um gasto já lançado para duplicá-lo automaticamente no mês seguinte, sem precisar preencher tudo de novo.
+
+### Categorias de Gasto (Tipos de Gasto)
+
+1. Acesse **Financeiro → Tipos de Gasto** no menu lateral.
+2. Aqui você cria, edita e remove as categorias usadas ao lançar gastos (ex.: Aluguel, Energia, Água, Embalagens, Ingredientes, Marketing…).
+
+### Contas a Receber
+
+Acesse **Financeiro → Contas a Receber** para acompanhar tudo que ainda falta receber:
+
+- **Pedidos pendentes** — pedidos já entregues que ainda não foram quitados. Cada pedido mostra o valor, o cliente e um *motivo de pendência* que você pode editar (ex.: "aguardando pagamento via Pix", "cliente solicitou prazo").
+- **Contas avulsas** — receitas que não vêm de pedidos (ex.: funcionário que quebrou algo, aluguel de espaço, venda avulsa). Você pode cadastrar, editar e excluir essas contas.
+
+Para registrar o recebimento de um pedido ou conta avulsa, clique em **Receber**, informe o valor e a data, e confirme.
+
+### Pagamento na Tela de Pedido
+
+Na tela de edição de um pedido (**Vendas → Pedidos → Editar**), há um card **"Pagamento"** que exibe:
+
+- O saldo pendente (valor total do pedido menos o total já pago).
+- Um botão para **registrar pagamento** (valor + data).
+- Campo para editar o **motivo de pendência**, caso o pedido ainda não tenha sido quitado integralmente.
 
 ## 🚀 Como Executar Localmente
 

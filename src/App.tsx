@@ -49,6 +49,11 @@ import GuiaPage from './modules/guia/pages/GuiaPage'
 import FaturamentoMensalPage from './modules/relatorios/pages/FaturamentoMensalPage'
 import CustoProducaoPage from './modules/relatorios/pages/CustoProducaoPage'
 import MovimentacaoEstoquePage from './modules/relatorios/pages/MovimentacaoEstoquePage'
+import TipoGastoListPage from './modules/financeiro/pages/TipoGastoListPage'
+import TipoGastoFormPage from './modules/financeiro/pages/TipoGastoFormPage'
+import GastoListPage from './modules/financeiro/pages/GastoListPage'
+import GastoFormPage from './modules/financeiro/pages/GastoFormPage'
+import ContaReceberListPage from './modules/financeiro/pages/ContaReceberListPage'
 
 export default function App() {
   return (
@@ -151,6 +156,15 @@ export default function App() {
         <Route path="/relatorios/faturamento-mensal" element={<FaturamentoMensalPage />} />
         <Route path="/relatorios/custo-producao" element={<CustoProducaoPage />} />
         <Route path="/relatorios/movimentacao-estoque" element={<MovimentacaoEstoquePage />} />
+
+        {/* Financeiro */}
+        <Route path="/financeiro/tipos-gasto" element={<TipoGastoListPage />} />
+        <Route path="/financeiro/tipos-gasto/novo" element={<TipoGastoFormPage />} />
+        <Route path="/financeiro/tipos-gasto/:id/editar" element={<TipoGastoFormPage />} />
+        <Route path="/financeiro/gastos" element={<GastoListPage />} />
+        <Route path="/financeiro/gastos/novo" element={<GastoFormPage />} />
+        <Route path="/financeiro/gastos/:id/editar" element={<GastoFormPage />} />
+        <Route path="/financeiro/contas-receber" element={<ContaReceberListPage />} />
 
         {/* Guia do Usuário */}
         <Route path="/guia" element={<GuiaPage />} />

@@ -1,5 +1,5 @@
 import api from '../../../lib/axios'
-import { Pedido, PedidoInsertForm, PedidoUpdateForm } from '../types/pedido'
+import { Pedido, PedidoInsertForm, PedidoUpdateForm, PagamentoPedido, PagamentoPedidoInsertForm } from '../types/pedido'
 
 export interface PageResponse<T> {
   content: T[]
@@ -34,6 +34,17 @@ const pedidoService = {
   updateStatus(id: number, status: string): Promise<Pedido> {
     return api
       .put(`/pedido/${id}/status`, { status }, { headers: { usuario: 'netto' } })
+      .then((r) => r.data)
+  },
+  getPagamentosPedido(id: number): Promise<PagamentoPedido[]> {
+    return api.get(`/pedido/${id}/pagamentos`).then((r) => r.data)
+  },
+  registrarPagamentoPedido(id: number, data: PagamentoPedidoInsertForm): Promise<PagamentoPedido> {
+    return api.post(`/pedido/${id}/pagamentos`, data).then((r) => r.data)
+  },
+  updateMotivoPendencia(id: number, motivoPendencia?: string): Promise<Pedido> {
+    return api
+      .put(`/pedido/${id}`, { motivoPendencia, updatedBy: 'netto' }, { skipErrorToast: true })
       .then((r) => r.data)
   },
 }

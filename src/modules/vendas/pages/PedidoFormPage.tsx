@@ -8,6 +8,7 @@ import { useClientes } from '../hooks/useClientes'
 import EnderecoClienteField from '../components/EnderecoClienteField'
 import ComplementoPicker, { ComplementoResolvido } from '../components/ComplementoPicker'
 import ResumoValoresCard from '../components/ResumoValoresCard'
+import PedidoPagamentoCard from '../components/PedidoPagamentoCard'
 import { calcularResumo } from '../lib/resumoValores'
 import { useProdutos } from '../../estoqueProdutos/hooks/useProdutos'
 import precificacaoProdutoService from '../../estoqueProdutos/services/precificacaoProdutoService'
@@ -424,6 +425,10 @@ export default function PedidoFormPage() {
         </div>
 
         <ResumoValoresCard resumo={resumo} />
+
+        {isEditing && pedido && (
+          <PedidoPagamentoCard pedidoId={numericId} pedido={pedido} />
+        )}
 
         <div className="flex items-center justify-end gap-3">
           <button

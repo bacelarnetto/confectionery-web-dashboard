@@ -28,6 +28,7 @@ export interface Pedido {
   valorFrete?: number
   retirar: boolean
   observacao?: string
+  motivoPendencia?: string
   itens: ItemPedido[]
   createdBy: string
   createdOn: string
@@ -59,6 +60,7 @@ export interface PedidoUpdateForm {
   dataEntrega?: string
   valorFrete?: number
   observacao?: string
+  motivoPendencia?: string
   itens?: {
     produtoId: number
     quantidade: number
@@ -68,6 +70,22 @@ export interface PedidoUpdateForm {
     complementoIds?: number[]
   }[]
   updatedBy: string
+}
+
+export interface PagamentoPedido {
+  id: number
+  pedidoId: number
+  valor: number
+  dataPagamento: string
+  observacao?: string
+  createdOn?: string
+}
+
+export interface PagamentoPedidoInsertForm {
+  valor: number
+  dataPagamento: string
+  observacao?: string
+  createdBy: string
 }
 
 export const PEDIDO_STATUS = [

@@ -25,6 +25,9 @@ const statusStyles: Record<string, string> = {
   // Origem do lote de estoque de produto (F17)
   FABRICACAO:   'bg-blue-100 text-blue-700',
   TERCEIRIZADO: 'bg-teal-100 text-teal-700',
+  // Contas a receber (financeiro)
+  PARCIAL:      'bg-blue-100 text-blue-700',
+  PAGO:         'bg-green-100 text-green-800',
 }
 
 const statusLabels: Record<string, string> = {
@@ -45,6 +48,8 @@ const statusLabels: Record<string, string> = {
   PADRAO:       'Padrão',
   FABRICACAO:   'Fabricação',
   TERCEIRIZADO: 'Terceirizado',
+  PARCIAL:      'Parcial',
+  PAGO:         'Pago',
 }
 
 export default function Badge({ status }: BadgeProps) {

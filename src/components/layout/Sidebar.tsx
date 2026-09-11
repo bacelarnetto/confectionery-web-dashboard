@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { NavLink, useLocation } from 'react-router'
 import { useAuth } from 'react-oidc-context'
-import { Truck, ShoppingCart, Cookie, Package, PackagePlus, ArrowDownToLine, ArrowUpFromLine, Archive, Activity, LayoutDashboard, Users, Bell, Settings, ChevronDown, Store, UtensilsCrossed, FlaskConical, Layers, KanbanSquare, CalendarClock, BookOpen, TrendingUp, PiggyBank, FileText, X } from 'lucide-react'
+import { Truck, ShoppingCart, Cookie, Package, PackagePlus, ArrowDownToLine, ArrowUpFromLine, Archive, Activity, LayoutDashboard, Users, Bell, Settings, ChevronDown, Store, UtensilsCrossed, FlaskConical, Layers, KanbanSquare, CalendarClock, BookOpen, TrendingUp, PiggyBank, FileText, Tags, Receipt, Banknote, X } from 'lucide-react'
 import { useAlertasCountAtivos } from '../../modules/estoqueInsumos/hooks/useAlertas'
 import { useCountAlertasPedidoAtivos } from '../../modules/vendas/hooks/useAlertasPedido'
 import { useAlertasProdutoCountAtivos } from '../../modules/estoqueProdutos/hooks/useAlertasProduto'
@@ -108,6 +108,15 @@ const navigation: NavSection[] = [
       { label: 'Pedidos', to: '/vendas/pedidos', icon: <Store size={18} /> },
       { label: 'Mural da Semana', to: '/vendas/mural', icon: <KanbanSquare size={18} /> },
       { label: 'Alertas de Pedidos', to: '/alertas-pedido', icon: <CalendarClock size={18} />, badge: () => <AlertaPedidoBadge /> },
+    ],
+  },
+  {
+    title: 'Financeiro',
+    key: 'financeiro',
+    items: [
+      { label: 'Contas a Receber', to: '/financeiro/contas-receber', icon: <Banknote size={18} /> },
+      { label: 'Gastos', to: '/financeiro/gastos', icon: <Receipt size={18} /> },
+      { label: 'Tipos de Gasto', to: '/financeiro/tipos-gasto', icon: <Tags size={18} /> },
     ],
   },
   {
