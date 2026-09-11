@@ -94,8 +94,8 @@ export default function GastoFormPage() {
       tipoGastoId: Number(form.tipoGastoId),
       descricao: form.descricao || undefined,
       valor: Number(form.valor),
-      dataCompetencia: form.dataCompetencia || undefined,
-      dataPagamento: form.dataPagamento || undefined,
+      dataCompetencia: form.dataCompetencia ? new Date(`${form.dataCompetencia}T00:00:00`).toISOString() : undefined,
+      dataPagamento: form.dataPagamento ? new Date(`${form.dataPagamento}T00:00:00`).toISOString() : undefined,
       recorrente: form.recorrente,
       documento: form.documento || undefined,
     }
@@ -128,6 +128,7 @@ export default function GastoFormPage() {
       <PageHeader
         title={isEditing ? 'Editar Gasto' : 'Novo Gasto'}
         subtitle={isEditing ? 'Atualize os dados do gasto' : 'Registre um novo gasto'}
+        backTo="/financeiro/gastos"
       />
 
       <form onSubmit={handleSubmit}>
@@ -227,7 +228,7 @@ export default function GastoFormPage() {
           <button
             type="button"
             onClick={() => navigate('/financeiro/gastos')}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
           >
             Cancelar
           </button>

@@ -15,6 +15,7 @@ import {
   useRegistrarRecebimentoAvulsa,
 } from '../hooks/useFinanceiro'
 import { useRegistrarPagamentoPedido, useUpdateMotivoPendenciaPedido } from '../../vendas/hooks/usePedidos'
+import { useFormasPagamento } from '../../vendas/hooks/useFormasPagamento'
 import { formatCurrency } from '../../../lib/format'
 import { ContaReceber } from '../types/contaReceber'
 
@@ -193,15 +194,19 @@ export default function ContaReceberListPage() {
 function RecebimentoModal({ target, onClose }: { target: ContaReceber | null; onClose: () => void }) {
   const registrarPagamentoPedido = useRegistrarPagamentoPedido()
   const registrarRecebimentoAvulsa = useRegistrarRecebimentoAvulsa()
+  const { data: formasPagamentoData } = useFormasPagamento(0, 100)
+  const formasPagamento = formasPagamentoData?.content ?? []
 
   const [valor, setValor] = useState('')
   const [data, setData] = useState(hoje())
+  const [formaPagamentoId, setFormaPagamentoId] = useState('')
   const [observacao, setObservacao] = useState('')
 
   useEffect(() => {
     if (target) {
       setValor(target.saldo != null ? String(target.saldo) : '')
       setData(hoje())
+      setFormaPagamentoId('')
       setObservacao('')
     }
   }, [target])
@@ -214,17 +219,24 @@ function RecebimentoModal({ target, onClose }: { target: ContaReceber | null; on
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
+    const dataIso = new Date(`${data}T00:00:00`).toISOString()
     if (isPagamentoPedido) {
       registrarPagamentoPedido.mutate(
         {
           id: conta.pedidoId ?? conta.idRef,
-          data: { valor: Number(valor), dataPagamento: data, observacao: observacao || undefined, createdBy: 'netto' },
+          data: {
+            valor: Number(valor),
+            dataPagamento: dataIso,
+            formaPagamentoId: Number(formaPagamentoId),
+            observacao: observacao || undefined,
+            createdBy: 'netto',
+          },
         },
         { onSettled: onClose },
       )
     } else {
       registrarRecebimentoAvulsa.mutate(
-        { id: conta.idRef, data: { valor: Number(valor), dataRecebimento: data } },
+        { id: conta.idRef, data: { valor: Number(valor), dataRecebimento: dataIso } },
         { onSettled: onClose },
       )
     }
@@ -255,6 +267,21 @@ function RecebimentoModal({ target, onClose }: { target: ContaReceber | null; on
           <input type="date" value={data} onChange={(e) => setData(e.target.value)} required className={inputClass} />
         </Field>
         {isPagamentoPedido && (
+          <Field label="Forma de pagamento" required>
+            <select
+              value={formaPagamentoId}
+              onChange={(e) => setFormaPagamentoId(e.target.value)}
+              required
+              className={inputClass}
+            >
+              <option value="">Selecione...</option>
+              {formasPagamento.map((f) => (
+                <option key={f.id} value={f.id}>{f.nome}</option>
+              ))}
+            </select>
+          </Field>
+        )}
+        {isPagamentoPedido && (
           <Field label="Observação">
             <input
               value={observacao}
@@ -269,7 +296,7 @@ function RecebimentoModal({ target, onClose }: { target: ContaReceber | null; on
             type="button"
             onClick={onClose}
             disabled={isPending}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-60"
+            className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-60"
           >
             Cancelar
           </button>
@@ -327,7 +354,7 @@ function AvulsaModal({
       descricao,
       valor: Number(valor),
       motivo: motivo || undefined,
-      dataVencimento: dataVencimento || undefined,
+      dataVencimento: dataVencimento ? new Date(`${dataVencimento}T00:00:00`).toISOString() : undefined,
     }
     if (isEditing) {
       updateMutation.mutate({ id: editId, data: { ...payload, updatedBy: 'netto' } }, { onSettled: onClose })
@@ -377,7 +404,7 @@ function AvulsaModal({
             type="button"
             onClick={onClose}
             disabled={isPending}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-60"
+            className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-60"
           >
             Cancelar
           </button>
@@ -427,7 +454,7 @@ function MotivoModal({ target, onClose }: { target: ContaReceber | null; onClose
             type="button"
             onClick={onClose}
             disabled={updateMotivoMutation.isPending}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-60"
+            className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-60"
           >
             Cancelar
           </button>

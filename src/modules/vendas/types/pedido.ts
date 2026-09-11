@@ -77,6 +77,8 @@ export interface PagamentoPedido {
   pedidoId: number
   valor: number
   dataPagamento: string
+  formaPagamentoId?: number
+  formaPagamentoNome?: string
   observacao?: string
   createdOn?: string
 }
@@ -84,6 +86,7 @@ export interface PagamentoPedido {
 export interface PagamentoPedidoInsertForm {
   valor: number
   dataPagamento: string
+  formaPagamentoId: number
   observacao?: string
   createdBy: string
 }

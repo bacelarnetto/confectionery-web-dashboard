@@ -174,6 +174,7 @@ export default function ComplementoFormPage() {
       <PageHeader
         title={isEditing ? 'Editar Complemento' : 'Novo Complemento'}
         subtitle={isEditing ? 'Atualize os dados do complemento' : 'Cadastre um novo complemento'}
+        backTo="/vendas/complementos"
       />
 
       <form onSubmit={handleSubmit}>
@@ -339,7 +340,7 @@ export default function ComplementoFormPage() {
           <button
             type="button"
             onClick={() => navigate('/vendas/complementos')}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
           >
             Cancelar
           </button>

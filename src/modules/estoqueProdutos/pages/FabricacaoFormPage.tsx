@@ -69,6 +69,7 @@ export default function FabricacaoFormPage() {
       <PageHeader
         title="Nova Fabricação"
         subtitle="Registre uma fabricação de produto — os insumos serão debitados automaticamente"
+        backTo="/estoque-produtos/fabricacoes"
       />
 
       <form onSubmit={handleSubmit}>
@@ -145,7 +146,7 @@ export default function FabricacaoFormPage() {
           <button
             type="button"
             onClick={() => navigate('/estoque-produtos/fabricacoes')}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
           >
             Cancelar
           </button>

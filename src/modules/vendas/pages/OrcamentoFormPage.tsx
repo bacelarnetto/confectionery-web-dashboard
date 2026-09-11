@@ -269,6 +269,7 @@ export default function OrcamentoFormPage() {
               : 'Negocie os itens com o cliente e registre a decisão quando ele responder'
             : 'Monte uma proposta de compra para o cliente'
         }
+        backTo="/vendas/orcamentos"
       >
         {status && <Badge status={status} />}
         {isEditing && orcamento && (
@@ -487,7 +488,7 @@ export default function OrcamentoFormPage() {
           <button
             type="button"
             onClick={() => navigate('/vendas/orcamentos')}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
           >
             {isReadOnly ? 'Voltar' : 'Cancelar'}
           </button>

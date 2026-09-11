@@ -136,6 +136,7 @@ export default function CompraFormPage() {
       <PageHeader
         title={isEditing ? 'Editar Compra' : 'Nova Compra'}
         subtitle={isEditing ? 'Atualize os dados da ordem de compra' : 'Registre uma nova ordem de compra'}
+        backTo="/compras/compras"
       />
 
       <form onSubmit={handleSubmit} className="space-y-5">
@@ -285,7 +286,7 @@ export default function CompraFormPage() {
           <button
             type="button"
             onClick={() => navigate('/compras/compras')}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
           >
             Cancelar
           </button>

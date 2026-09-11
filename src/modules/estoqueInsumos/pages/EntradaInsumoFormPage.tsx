@@ -234,6 +234,7 @@ export default function EntradaInsumoFormPage() {
       <PageHeader
         title={isEditing ? 'Editar Entrada' : 'Nova Entrada'}
         subtitle={isEditing ? 'Atualize os dados da entrada' : 'Cadastre uma nova entrada de insumo'}
+        backTo="/estoque-insumos/entradas"
       />
 
       {erroGeral && (
@@ -440,7 +441,7 @@ export default function EntradaInsumoFormPage() {
           <button
             type="button"
             onClick={() => navigate('/estoque-insumos/entradas')}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
           >
             Cancelar
           </button>

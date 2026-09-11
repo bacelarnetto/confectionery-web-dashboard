@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { NavLink, useLocation } from 'react-router'
 import { useAuth } from 'react-oidc-context'
-import { Truck, ShoppingCart, Cookie, Package, PackagePlus, ArrowDownToLine, ArrowUpFromLine, Archive, Activity, LayoutDashboard, Users, Bell, Settings, ChevronDown, Store, UtensilsCrossed, FlaskConical, Layers, KanbanSquare, CalendarClock, BookOpen, TrendingUp, PiggyBank, FileText, Tags, Receipt, Banknote, X } from 'lucide-react'
+import { Truck, ShoppingCart, Cookie, Package, PackagePlus, ArrowDownToLine, ArrowUpFromLine, Archive, Activity, LayoutDashboard, Users, Bell, Settings, ChevronDown, Store, UtensilsCrossed, FlaskConical, Layers, KanbanSquare, CalendarClock, BookOpen, TrendingUp, PiggyBank, FileText, Tags, Receipt, Banknote, Building2, CreditCard, X } from 'lucide-react'
 import { useAlertasCountAtivos } from '../../modules/estoqueInsumos/hooks/useAlertas'
 import { useCountAlertasPedidoAtivos } from '../../modules/vendas/hooks/useAlertasPedido'
 import { useAlertasProdutoCountAtivos } from '../../modules/estoqueProdutos/hooks/useAlertasProduto'
@@ -104,6 +104,7 @@ const navigation: NavSection[] = [
     items: [
       { label: 'Clientes', to: '/vendas/clientes', icon: <Users size={18} /> },
       { label: 'Complementos', to: '/vendas/complementos', icon: <Package size={18} /> },
+      { label: 'Formas de Pagamento', to: '/vendas/formas-pagamento', icon: <CreditCard size={18} /> },
       { label: 'Orçamentos', to: '/vendas/orcamentos', icon: <FileText size={18} /> },
       { label: 'Pedidos', to: '/vendas/pedidos', icon: <Store size={18} /> },
       { label: 'Mural da Semana', to: '/vendas/mural', icon: <KanbanSquare size={18} /> },
@@ -134,6 +135,7 @@ const navigation: NavSection[] = [
     requiresRole: 'ADMIN',
     items: [
       { label: 'Usuários', to: '/usuarios', icon: <Users size={18} /> },
+      { label: 'Dados da Empresa', to: '/dados-emissor', icon: <Building2 size={18} /> },
     ],
   },
   {
@@ -258,7 +260,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               </button>
 
               {!isCollapsed && (
-                <ul className="mt-0.5 space-y-0.5">
+                // Fundo levemente mais claro que o resto da sidebar (overlay branco translúcido,
+                // funciona nos dois temas sem precisar de variável CSS nova) -- separa visualmente
+                // o bloco de submenu do título da seção acima.
+                <ul className="mt-0.5 space-y-0.5 bg-white/5 rounded-lg p-1.5">
                   {section.items.map((item) => (
                     <li key={item.to}>
                       <NavLink

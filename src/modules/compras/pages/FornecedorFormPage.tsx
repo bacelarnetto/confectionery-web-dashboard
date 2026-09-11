@@ -134,6 +134,7 @@ export default function FornecedorFormPage() {
       <PageHeader
         title={isEditing ? 'Editar Fornecedor' : 'Novo Fornecedor'}
         subtitle={isEditing ? 'Atualize os dados do fornecedor' : 'Cadastre um novo fornecedor'}
+        backTo="/compras/fornecedores"
       />
 
       <form onSubmit={handleSubmit}>
@@ -253,7 +254,7 @@ export default function FornecedorFormPage() {
           <button
             type="button"
             onClick={() => navigate('/compras/fornecedores')}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
           >
             Cancelar
           </button>

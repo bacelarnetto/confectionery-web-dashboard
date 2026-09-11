@@ -1,9 +1,15 @@
 import { useState, useEffect, FormEvent } from 'react'
-import { HandCoins } from 'lucide-react'
+import { HandCoins, Download } from 'lucide-react'
 import Modal from '../../../components/ui/Modal'
 import Button from '../../../components/ui/Button'
 import { Pedido } from '../types/pedido'
-import { usePagamentosPedido, useRegistrarPagamentoPedido, useUpdateMotivoPendenciaPedido } from '../hooks/usePedidos'
+import {
+  usePagamentosPedido,
+  useRegistrarPagamentoPedido,
+  useUpdateMotivoPendenciaPedido,
+  useDownloadReciboPagamento,
+} from '../hooks/usePedidos'
+import { useFormasPagamento } from '../hooks/useFormasPagamento'
 import { formatCurrency } from '../../../lib/format'
 
 const inputClass =
@@ -34,10 +40,14 @@ export default function PedidoPagamentoCard({ pedidoId, pedido }: Props) {
   const { data: pagamentos, isLoading } = usePagamentosPedido(pedidoId)
   const registrarMutation = useRegistrarPagamentoPedido()
   const updateMotivoMutation = useUpdateMotivoPendenciaPedido()
+  const downloadReciboMutation = useDownloadReciboPagamento()
+  const { data: formasPagamentoData } = useFormasPagamento(0, 100)
+  const formasPagamento = formasPagamentoData?.content ?? []
 
   const [showModal, setShowModal] = useState(false)
   const [valor, setValor] = useState('')
   const [dataPagamento, setDataPagamento] = useState(hoje())
+  const [formaPagamentoId, setFormaPagamentoId] = useState('')
   const [observacao, setObservacao] = useState('')
   const [motivo, setMotivo] = useState('')
 
@@ -52,6 +62,7 @@ export default function PedidoPagamentoCard({ pedidoId, pedido }: Props) {
   function openModal() {
     setValor(saldo > 0 ? String(saldo) : '')
     setDataPagamento(hoje())
+    setFormaPagamentoId('')
     setObservacao('')
     setShowModal(true)
   }
@@ -61,7 +72,13 @@ export default function PedidoPagamentoCard({ pedidoId, pedido }: Props) {
     registrarMutation.mutate(
       {
         id: pedidoId,
-        data: { valor: Number(valor), dataPagamento, observacao: observacao || undefined, createdBy: 'netto' },
+        data: {
+          valor: Number(valor),
+          dataPagamento: new Date(`${dataPagamento}T00:00:00`).toISOString(),
+          formaPagamentoId: Number(formaPagamentoId),
+          observacao: observacao || undefined,
+          createdBy: 'netto',
+        },
       },
       { onSettled: () => setShowModal(false) },
     )
@@ -76,15 +93,27 @@ export default function PedidoPagamentoCard({ pedidoId, pedido }: Props) {
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Pagamento</h3>
-          <button
-            type="button"
-            onClick={openModal}
-            disabled={saldo <= 0 || registrarMutation.isPending}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            <HandCoins size={14} />
-            Registrar Pagamento
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => downloadReciboMutation.mutate(pedidoId)}
+              disabled={listaPagamentos.length === 0 || downloadReciboMutation.isPending}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Baixar recibo de pagamento"
+            >
+              <Download size={14} />
+              Baixar Recibo
+            </button>
+            <button
+              type="button"
+              onClick={openModal}
+              disabled={saldo <= 0 || registrarMutation.isPending}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-emerald-600 rounded-lg shadow-sm hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-emerald-600"
+            >
+              <HandCoins size={14} />
+              Registrar Pagamento
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
@@ -112,7 +141,8 @@ export default function PedidoPagamentoCard({ pedidoId, pedido }: Props) {
               <tr className="text-xs text-gray-500 border-b">
                 <th className="text-left pb-1">Data</th>
                 <th className="text-right pb-1">Valor</th>
-                <th className="text-left pb-1">Observação</th>
+                <th className="text-left pb-1 pl-4">Forma</th>
+                <th className="text-left pb-1 pl-4">Observação</th>
               </tr>
             </thead>
             <tbody>
@@ -120,7 +150,8 @@ export default function PedidoPagamentoCard({ pedidoId, pedido }: Props) {
                 <tr key={p.id} className="border-b last:border-0">
                   <td className="py-1.5">{formatData(p.dataPagamento)}</td>
                   <td className="text-right py-1.5 font-medium">{formatCurrency(p.valor)}</td>
-                  <td className="py-1.5 text-gray-600">{p.observacao ?? '—'}</td>
+                  <td className="py-1.5 pl-4 text-gray-600">{p.formaPagamentoNome ?? '—'}</td>
+                  <td className="py-1.5 pl-4 text-gray-600">{p.observacao ?? '—'}</td>
                 </tr>
               ))}
             </tbody>
@@ -141,7 +172,6 @@ export default function PedidoPagamentoCard({ pedidoId, pedido }: Props) {
             />
             <Button
               type="button"
-              variant="secondary"
               onClick={handleSalvarMotivo}
               isLoading={updateMotivoMutation.isPending}
             >
@@ -182,6 +212,22 @@ export default function PedidoPagamentoCard({ pedidoId, pedido }: Props) {
             />
           </div>
           <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Forma de pagamento <span className="text-red-500 ml-0.5">*</span>
+            </label>
+            <select
+              value={formaPagamentoId}
+              onChange={(e) => setFormaPagamentoId(e.target.value)}
+              required
+              className={inputClass}
+            >
+              <option value="">Selecione...</option>
+              {formasPagamento.map((f) => (
+                <option key={f.id} value={f.id}>{f.nome}</option>
+              ))}
+            </select>
+          </div>
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Observação</label>
             <input
               value={observacao}
@@ -195,7 +241,7 @@ export default function PedidoPagamentoCard({ pedidoId, pedido }: Props) {
               type="button"
               onClick={() => setShowModal(false)}
               disabled={registrarMutation.isPending}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-60"
+              className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-60"
             >
               Cancelar
             </button>

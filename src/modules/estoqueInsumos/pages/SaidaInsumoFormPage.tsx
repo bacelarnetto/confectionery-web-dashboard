@@ -116,6 +116,7 @@ export default function SaidaInsumoFormPage() {
       <PageHeader
         title="Nova Saída"
         subtitle="Cadastre uma nova saída de insumo"
+        backTo="/estoque-insumos/saidas"
       />
 
       <form onSubmit={handleSubmit}>
@@ -262,7 +263,7 @@ export default function SaidaInsumoFormPage() {
           <button
             type="button"
             onClick={() => navigate('/estoque-insumos/saidas')}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
           >
             Cancelar
           </button>

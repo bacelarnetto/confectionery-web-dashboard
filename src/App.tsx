@@ -18,6 +18,7 @@ import EstoqueInsumoListPage from './modules/estoqueInsumos/pages/EstoqueInsumoL
 import MovimentacaoListPage from './modules/estoqueInsumos/pages/MovimentacaoListPage'
 import UsuarioListPage from './modules/shared/pages/UsuarioListPage'
 import UsuarioFormPage from './modules/shared/pages/UsuarioFormPage'
+import DadosEmissorFormPage from './modules/shared/pages/DadosEmissorFormPage'
 import AlertaListPage from './modules/estoqueInsumos/pages/AlertaListPage'
 import ParametrizacaoAlertaListPage from './modules/estoqueInsumos/pages/ParametrizacaoAlertaListPage'
 import ParametrizacaoAlertaFormPage from './modules/estoqueInsumos/pages/ParametrizacaoAlertaFormPage'
@@ -43,6 +44,8 @@ import PedidoListPage from './modules/vendas/pages/PedidoListPage'
 import PedidoFormPage from './modules/vendas/pages/PedidoFormPage'
 import OrcamentoListPage from './modules/vendas/pages/OrcamentoListPage'
 import OrcamentoFormPage from './modules/vendas/pages/OrcamentoFormPage'
+import FormaPagamentoListPage from './modules/vendas/pages/FormaPagamentoListPage'
+import FormaPagamentoFormPage from './modules/vendas/pages/FormaPagamentoFormPage'
 import AlertaPedidoListPage from './modules/vendas/pages/AlertaPedidoListPage'
 import PedidoMuralPage from './modules/vendas/pages/PedidoMuralPage'
 import GuiaPage from './modules/guia/pages/GuiaPage'
@@ -123,6 +126,9 @@ export default function App() {
         <Route path="/vendas/orcamentos" element={<OrcamentoListPage />} />
         <Route path="/vendas/orcamentos/novo" element={<OrcamentoFormPage />} />
         <Route path="/vendas/orcamentos/:id/editar" element={<OrcamentoFormPage />} />
+        <Route path="/vendas/formas-pagamento" element={<FormaPagamentoListPage />} />
+        <Route path="/vendas/formas-pagamento/novo" element={<FormaPagamentoFormPage />} />
+        <Route path="/vendas/formas-pagamento/:id/editar" element={<FormaPagamentoFormPage />} />
         <Route path="/vendas/mural" element={<PedidoMuralPage />} />
         <Route path="/alertas-pedido" element={<AlertaPedidoListPage />} />
 
@@ -148,6 +154,14 @@ export default function App() {
           element={
             <RequireRole role="ADMIN">
               <UsuarioFormPage />
+            </RequireRole>
+          }
+        />
+        <Route
+          path="/dados-emissor"
+          element={
+            <RequireRole role="ADMIN">
+              <DadosEmissorFormPage />
             </RequireRole>
           }
         />

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router'
-import { ArrowLeft } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
 import Button from '../../../components/ui/Button'
 import { useUsuario, useCreateUsuario, useUpdateUsuario } from '../hooks/useUsuarios'
@@ -91,15 +90,8 @@ export default function UsuarioFormPage() {
       <PageHeader
         title={isEditing ? 'Editar Usuário' : 'Novo Usuário'}
         subtitle={isEditing ? 'Atualize os dados do usuário' : 'Cadastre um novo usuário no sistema'}
-      >
-        <button
-          onClick={() => navigate('/usuarios')}
-          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-        >
-          <ArrowLeft size={16} />
-          Voltar
-        </button>
-      </PageHeader>
+        backTo="/usuarios"
+      />
 
       <form onSubmit={handleSubmit} className="p-6 bg-white rounded-lg shadow-sm border space-y-4 max-w-xl">
         <div>

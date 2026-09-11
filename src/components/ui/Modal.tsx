@@ -1,4 +1,5 @@
 import { ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 
 interface ModalProps {
@@ -11,7 +12,11 @@ interface ModalProps {
 export default function Modal({ open, onClose, title, children }: ModalProps) {
   if (!open) return null
 
-  return (
+  // Portal pra fora da árvore do DOM (direto em document.body): sem isso, um <Modal> aberto a
+  // partir de dentro de um <form> (ex: PedidoPagamentoCard dentro do form de PedidoFormPage) cria
+  // HTML inválido -- <form> aninhado dentro de <form> -- e o navegador descarta o form interno
+  // silenciosamente, fazendo o submit do modal disparar o form errado (o de fora).
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Overlay */}
       <div
@@ -32,6 +37,7 @@ export default function Modal({ open, onClose, title, children }: ModalProps) {
         </div>
         <div className="px-5 py-4">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

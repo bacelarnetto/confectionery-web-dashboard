@@ -97,6 +97,7 @@ export default function CategoriaProdutoFormPage() {
       <PageHeader
         title={isEditing ? 'Editar Categoria' : 'Nova Categoria'}
         subtitle={isEditing ? 'Atualize os dados da categoria' : 'Cadastre uma nova categoria de produto'}
+        backTo="/estoque-produtos/categorias"
       />
 
       <form onSubmit={handleSubmit}>
@@ -129,7 +130,7 @@ export default function CategoriaProdutoFormPage() {
           <button
             type="button"
             onClick={() => navigate('/estoque-produtos/categorias')}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
           >
             Cancelar
           </button>

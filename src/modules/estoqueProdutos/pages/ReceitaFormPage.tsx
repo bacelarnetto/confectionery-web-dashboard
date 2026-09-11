@@ -200,6 +200,7 @@ export default function ReceitaFormPage() {
       <PageHeader
         title={isEditing ? 'Editar Receita' : 'Nova Receita'}
         subtitle={isEditing ? 'Atualize os dados da receita' : 'Cadastre uma nova receita'}
+        backTo="/estoque-produtos/receitas"
       />
 
       {erroGeral && (
@@ -445,7 +446,7 @@ export default function ReceitaFormPage() {
           <button
             type="button"
             onClick={() => navigate('/estoque-produtos/receitas')}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
           >
             Cancelar
           </button>

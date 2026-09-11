@@ -142,6 +142,7 @@ export default function ProdutoFormPage() {
       <PageHeader
         title={isEditing ? 'Editar Produto' : 'Novo Produto'}
         subtitle={isEditing ? 'Atualize os dados do produto' : 'Cadastre um novo produto'}
+        backTo="/estoque-produtos/produtos"
       />
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -191,7 +192,7 @@ export default function ProdutoFormPage() {
           <button
             type="button"
             onClick={() => navigate('/estoque-produtos/produtos')}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
           >
             Cancelar
           </button>

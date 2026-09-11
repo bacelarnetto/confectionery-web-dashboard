@@ -2,26 +2,26 @@ import { useState, useEffect, FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import PageHeader from '../../../components/ui/PageHeader'
 import Button from '../../../components/ui/Button'
-import { useTipoGasto, useCreateTipoGasto, useUpdateTipoGasto } from '../hooks/useFinanceiro'
+import { useFormaPagamento, useCreateFormaPagamento, useUpdateFormaPagamento } from '../hooks/useFormasPagamento'
 
 const inputClass =
   'w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent placeholder:text-gray-400'
 
-export default function TipoGastoFormPage() {
+export default function FormaPagamentoFormPage() {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
   const isEditing = !!id
   const numericId = Number(id ?? 0)
 
-  const { data: tipoGasto, isLoading } = useTipoGasto(numericId)
-  const createMutation = useCreateTipoGasto()
-  const updateMutation = useUpdateTipoGasto()
+  const { data: formaPagamento, isLoading } = useFormaPagamento(numericId)
+  const createMutation = useCreateFormaPagamento()
+  const updateMutation = useUpdateFormaPagamento()
 
   const [nome, setNome] = useState('')
 
   useEffect(() => {
-    if (tipoGasto) setNome(tipoGasto.nome ?? '')
-  }, [tipoGasto])
+    if (formaPagamento) setNome(formaPagamento.nome ?? '')
+  }, [formaPagamento])
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -29,12 +29,12 @@ export default function TipoGastoFormPage() {
     if (isEditing) {
       updateMutation.mutate(
         { id: numericId, data: { nome, updatedBy: 'netto' } },
-        { onSuccess: () => navigate('/financeiro/tipos-gasto') },
+        { onSuccess: () => navigate('/vendas/formas-pagamento') },
       )
     } else {
       createMutation.mutate(
         { nome, createdBy: 'netto' },
-        { onSuccess: () => navigate('/financeiro/tipos-gasto') },
+        { onSuccess: () => navigate('/vendas/formas-pagamento') },
       )
     }
   }
@@ -52,9 +52,9 @@ export default function TipoGastoFormPage() {
   return (
     <div className="max-w-3xl">
       <PageHeader
-        title={isEditing ? 'Editar Tipo de Gasto' : 'Novo Tipo de Gasto'}
-        subtitle={isEditing ? 'Atualize o nome do tipo de gasto' : 'Cadastre um novo tipo de gasto'}
-        backTo="/financeiro/tipos-gasto"
+        title={isEditing ? 'Editar Forma de Pagamento' : 'Nova Forma de Pagamento'}
+        subtitle={isEditing ? 'Atualize o nome da forma de pagamento' : 'Cadastre uma nova forma de pagamento'}
+        backTo="/vendas/formas-pagamento"
       />
 
       <form onSubmit={handleSubmit}>
@@ -69,7 +69,7 @@ export default function TipoGastoFormPage() {
               onChange={(e) => setNome(e.target.value)}
               required
               className={inputClass}
-              placeholder="Ex: Mão de obra, Aluguel, Energia..."
+              placeholder="Ex: Pix, Cartão de crédito, Dinheiro..."
             />
           </div>
         </div>
@@ -77,13 +77,13 @@ export default function TipoGastoFormPage() {
         <div className="flex items-center justify-end gap-3 mt-5">
           <button
             type="button"
-            onClick={() => navigate('/financeiro/tipos-gasto')}
+            onClick={() => navigate('/vendas/formas-pagamento')}
             className="px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
           >
             Cancelar
           </button>
           <Button type="submit" isLoading={isPending}>
-            {isEditing ? 'Salvar alterações' : 'Cadastrar tipo de gasto'}
+            {isEditing ? 'Salvar alterações' : 'Cadastrar forma de pagamento'}
           </Button>
         </div>
       </form>

@@ -45,6 +45,8 @@ api.interceptors.request.use(async (config) => {
   if (config.data && typeof config.data === 'object' && !(config.data instanceof FormData)) {
     if ('createdBy' in config.data) config.data.createdBy = getUsername(user)
     if ('updatedBy' in config.data) config.data.updatedBy = getUsername(user)
+    // PUT /dados-emissor usa "usuario" no corpo (em vez de updatedBy) -- mesmo motivo, mesmo tratamento.
+    if ('usuario' in config.data) config.data.usuario = getUsername(user)
   }
 
   return config

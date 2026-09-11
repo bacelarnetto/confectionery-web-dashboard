@@ -193,7 +193,7 @@ export default function AlertaListPage() {
       <Modal open={!!resolveTarget} onClose={() => setResolveTarget(null)} title="Resolver alerta">
         <p className="text-sm text-gray-600 mb-5">Confirma a resolução do alerta <span className="font-semibold">#{resolveTarget?.id}</span>?</p>
         <div className="flex justify-end gap-2">
-          <button onClick={() => setResolveTarget(null)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">Cancelar</button>
+          <button onClick={() => setResolveTarget(null)} className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100">Cancelar</button>
           <button onClick={handleResolveConfirm} disabled={resolverMutation.isPending} className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 disabled:opacity-60">
             {resolverMutation.isPending ? 'Resolvendo...' : 'Resolver'}
           </button>

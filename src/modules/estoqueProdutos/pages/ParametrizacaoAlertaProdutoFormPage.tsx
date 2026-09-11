@@ -71,6 +71,7 @@ export default function ParametrizacaoAlertaProdutoFormPage() {
       <PageHeader
         title={isEdit ? 'Editar Parametrização' : 'Nova Parametrização'}
         subtitle="Configure os limites de alerta para um produto"
+        backTo="/estoque-produtos/parametrizacao-alertas"
       />
 
       <form onSubmit={handleSubmit} className="max-w-lg bg-white rounded-xl border border-gray-200 p-6 shadow-sm space-y-4">
@@ -120,7 +121,7 @@ export default function ParametrizacaoAlertaProdutoFormPage() {
           <button
             type="button"
             onClick={() => navigate('/estoque-produtos/parametrizacao-alertas')}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+            className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100"
           >
             Cancelar
           </button>

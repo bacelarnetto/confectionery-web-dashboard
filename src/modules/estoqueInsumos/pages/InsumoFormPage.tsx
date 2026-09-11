@@ -223,6 +223,7 @@ export default function InsumoFormPage() {
       <PageHeader
         title={isEditing ? 'Editar Insumo' : 'Novo Insumo'}
         subtitle={isEditing ? 'Atualize os dados do insumo' : 'Cadastre um novo insumo'}
+        backTo="/estoque-insumos/insumos"
       />
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -414,7 +415,7 @@ export default function InsumoFormPage() {
           <button
             type="button"
             onClick={() => navigate('/estoque-insumos/insumos')}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
           >
             Cancelar
           </button>

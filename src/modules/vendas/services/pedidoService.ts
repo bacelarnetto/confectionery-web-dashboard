@@ -47,6 +47,9 @@ const pedidoService = {
       .put(`/pedido/${id}`, { motivoPendencia, updatedBy: 'netto' }, { skipErrorToast: true })
       .then((r) => r.data)
   },
+  getReciboPagamentoPdf(id: number): Promise<Blob> {
+    return api.get(`/pedido/${id}/recibo-pdf`, { responseType: 'blob' }).then((r) => r.data)
+  },
 }
 
 export default pedidoService

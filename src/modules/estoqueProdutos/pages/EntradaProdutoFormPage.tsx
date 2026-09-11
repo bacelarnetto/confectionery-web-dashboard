@@ -140,6 +140,7 @@ export default function EntradaProdutoFormPage() {
       <PageHeader
         title="Nova Entrada de Produto"
         subtitle="Produto terceirizado ou comprado pronto — entra direto no estoque, sem passar pela Fabricação"
+        backTo="/estoque-produtos/entradas"
       />
 
       {erroGeral && (
@@ -296,7 +297,7 @@ export default function EntradaProdutoFormPage() {
           <button
             type="button"
             onClick={() => navigate('/estoque-produtos/entradas')}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
           >
             Cancelar
           </button>

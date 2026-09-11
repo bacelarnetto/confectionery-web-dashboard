@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { Plus, Eye, Ban, Search, X } from 'lucide-react'
+import { Plus, Eye, Ban, Search, X, CircleDollarSign } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
 import PageableTable from '../../../components/ui/PageableTable'
 import Button from '../../../components/ui/Button'
@@ -9,6 +9,7 @@ import { usePedidos, useUpdatePedidoStatus } from '../hooks/usePedidos'
 import { useDebounce } from '../../../hooks/useDebounce'
 import { PEDIDO_STATUS } from '../types/pedido'
 import { formatCurrency } from '../../../lib/format'
+import { useContasReceber } from '../../financeiro/hooks/useFinanceiro'
 
 const STATUS_TERMINAIS = ['CANCELADO', 'ENTREGUE']
 
@@ -45,6 +46,14 @@ export default function PedidoListPage() {
 
   const { data, isLoading } = usePedidos(page, 20, activeFilters)
   const statusMutation = useUpdatePedidoStatus()
+
+  // Contas a receber pendentes (ABERTO/PARCIAL) já vêm agregadas do financeiro -- evita 1 fetch de
+  // pagamentos por linha da lista. Usado só pra marcar visualmente pedido ENTREGUE ainda não pago.
+  const { data: contasReceber } = useContasReceber(true)
+  const pedidosNaoPagosIds = useMemo(
+    () => new Set((contasReceber ?? []).filter((c) => c.origem === 'PEDIDO' && c.pedidoId != null).map((c) => c.pedidoId!)),
+    [contasReceber],
+  )
 
   const pedidos = data?.content ?? []
   const totalPages = data?.totalPages ?? 0
@@ -154,17 +163,24 @@ export default function PedidoListPage() {
             <td className="px-4 py-3 text-gray-500 text-sm">{p.id}</td>
             <td className="px-4 py-3 text-gray-700 font-medium">{p.clienteNome ?? p.clienteId ?? '—'}</td>
             <td className="px-4 py-3">
-              {p.status ? (
-                <select
-                  value={p.status}
-                  onChange={(e) => statusMutation.mutate({ id: p.id, status: e.target.value })}
-                  className={`text-xs font-medium px-2 py-1 rounded-full border-0 cursor-pointer ${STATUS_COLORS[p.status] ?? 'bg-gray-100 text-gray-700'}`}
-                >
-                  {PEDIDO_STATUS.map((s) => (
-                    <option key={s} value={s}>{s.replace('_', ' ')}</option>
-                  ))}
-                </select>
-              ) : '—'}
+              <div className="flex items-center gap-1.5">
+                {p.status ? (
+                  <select
+                    value={p.status}
+                    onChange={(e) => statusMutation.mutate({ id: p.id, status: e.target.value })}
+                    className={`text-xs font-medium px-2 py-1 rounded-full border-0 cursor-pointer ${STATUS_COLORS[p.status] ?? 'bg-gray-100 text-gray-700'}`}
+                  >
+                    {PEDIDO_STATUS.map((s) => (
+                      <option key={s} value={s}>{s.replace('_', ' ')}</option>
+                    ))}
+                  </select>
+                ) : '—'}
+                {p.status === 'ENTREGUE' && pedidosNaoPagosIds.has(p.id) && (
+                  <span title="Entregue mas ainda não pago" className="flex-shrink-0">
+                    <CircleDollarSign size={16} className="text-red-500" />
+                  </span>
+                )}
+              </div>
             </td>
             <td className="px-4 py-3 font-medium text-gray-900">
               {formatCurrency(p.valorTotal)}
