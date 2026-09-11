@@ -130,6 +130,33 @@ export default function Vendas() {
         </p>
       </GuiaCard>
 
+      <GuiaCard
+        step={6}
+        title="Registre os pagamentos e emita o recibo"
+        dica="Um pedido ENTREGUE que ainda não foi pago (nem em parte) mostra um ícone de cifrão vermelho ao lado do status, na própria lista de Pedidos — dá pra ver quem está devendo sem abrir pedido por pedido."
+      >
+        <p>
+          Dentro do pedido, o card <span className="font-medium text-gray-800">Pagamento</span> mostra o total do pedido,
+          quanto já foi pago e o saldo. Clique em{' '}
+          <span className="font-medium text-gray-800">Registrar Pagamento</span> pra lançar um valor recebido — informe o
+          valor, a data e a{' '}
+          <span className="font-medium text-gray-800">forma de pagamento</span> (Pix, dinheiro, cartão...). Um pedido pode
+          ter vários pagamentos ao longo do tempo — por exemplo, metade na confirmação e o restante na entrega.
+        </p>
+        <p>
+          As formas de pagamento aceitas ficam em{' '}
+          <span className="font-medium text-gray-800">Vendas → Formas de Pagamento</span> — o sistema já vem com Dinheiro,
+          Pix, Cartão de Crédito, Cartão de Débito, Transferência e Outros cadastrados, mas você pode ajustar essa lista
+          livremente.
+        </p>
+        <p>
+          O botão <span className="font-medium text-gray-800">Baixar Recibo</span>, no mesmo card, gera um PDF único do
+          pedido — com os itens, todos os pagamentos já recebidos (com a forma de cada um) e o saldo restante, se houver.
+          Ele só fica disponível depois do primeiro pagamento registrado, e serve tanto pra você guardar quanto pro
+          cliente usar como comprovante (inclusive pra pedir reembolso ao empregador, se for o caso).
+        </p>
+      </GuiaCard>
+
       <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl text-sm text-emerald-800">
         <p className="font-medium">Muitos pedidos abertos ao mesmo tempo?</p>
         <p className="mt-1">

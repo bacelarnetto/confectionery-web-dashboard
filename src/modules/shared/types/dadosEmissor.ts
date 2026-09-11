@@ -6,6 +6,7 @@ export interface DadosEmissor {
   endereco?: string
   telefone?: string
   email?: string
+  temLogo: boolean
   createdBy?: string
   createdOn?: string
   updatedBy?: string

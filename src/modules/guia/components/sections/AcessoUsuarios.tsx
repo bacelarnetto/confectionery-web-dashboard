@@ -72,6 +72,23 @@ export default function AcessoUsuarios() {
         </p>
       </GuiaCard>
 
+      <GuiaCard step={5} title="Dados da Empresa e o logo nos documentos (só para Admin)">
+        <p>
+          Em{' '}
+          <span className="inline-flex items-center gap-1 align-middle text-xs font-medium text-gray-600 bg-gray-100 rounded px-2 py-0.5">
+            <Users size={12} /> Administração → Dados da Empresa
+          </span>
+          , cadastre razão social (obrigatória), nome fantasia, CNPJ, endereço, telefone e e-mail. Esses dados aparecem no
+          cabeçalho dos documentos gerados pelo sistema, como o recibo de pedido.
+        </p>
+        <p>
+          Depois de salvar os dados pela primeira vez, a mesma tela libera o envio do{' '}
+          <span className="font-medium text-gray-800">logo da confeitaria</span> (PNG ou JPEG, até 2MB) — ele passa a
+          aparecer ao lado do nome da empresa em todo documento novo gerado a partir daí. Dá pra trocar ou remover o logo
+          a qualquer momento, sem afetar o resto do cadastro.
+        </p>
+      </GuiaCard>
+
       <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl text-sm text-emerald-800">
         <p className="font-medium">Por que isso importa?</p>
         <p className="mt-1">
