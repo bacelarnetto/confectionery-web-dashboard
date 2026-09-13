@@ -53,7 +53,7 @@ export default function GuiaPage() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Guia do Usuário</h1>
             <p className="mt-1 text-sm text-gray-500">
-              Um manual pensado para a sua confeitaria — direto ao ponto, sem mistério.
+              Do estoque ao caixa, um passo a passo claro para sua confeitaria rodar sem imprevistos.
             </p>
           </div>
         </div>
