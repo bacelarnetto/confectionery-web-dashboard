@@ -155,6 +155,11 @@ export default function Vendas() {
           Ele só fica disponível depois do primeiro pagamento registrado, e serve tanto pra você guardar quanto pro
           cliente usar como comprovante (inclusive pra pedir reembolso ao empregador, se for o caso).
         </p>
+        <p>
+          Pra ver todo saldo pendente de uma vez — de pedidos e de contas avulsas — sem abrir um por um, use{' '}
+          <span className="font-medium text-gray-800">Financeiro → Contas a Receber</span>. A lista lá também é paginada
+          de verdade agora, então dá pra navegar tranquilo mesmo com muitas pendências em aberto.
+        </p>
       </GuiaCard>
 
       <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl text-sm text-emerald-800">

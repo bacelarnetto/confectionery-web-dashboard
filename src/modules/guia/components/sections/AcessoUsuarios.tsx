@@ -94,6 +94,15 @@ export default function AcessoUsuarios() {
         </p>
       </GuiaCard>
 
+      <GuiaCard step={6} title="Navegando pelas listas">
+        <p>
+          Toda tela de lista do sistema (Pedidos, Clientes, Insumos, Compras, Contas a Receber e por aí vai) mostra, no
+          rodapé da tabela, quantos registros existem no total e um seletor{' '}
+          <span className="font-medium text-gray-800">“Itens por página”</span>, com as opções 20, 50 e 100. Escolha um
+          número maior pra ver mais linhas de uma vez, sem precisar clicar em “próxima página” toda hora.
+        </p>
+      </GuiaCard>
+
       <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl text-sm text-emerald-800">
         <p className="font-medium">Por que isso importa?</p>
         <p className="mt-1">
