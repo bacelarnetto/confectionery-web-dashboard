@@ -61,7 +61,7 @@ export default function GastoFormPage() {
   const numericId = Number(id ?? 0)
 
   const { data: gasto, isLoading } = useGasto(numericId)
-  const { data: tiposData } = useTiposGasto(0, 1000)
+  const { data: tiposData } = useTiposGasto(0, 100)
   const createMutation = useCreateGasto()
   const updateMutation = useUpdateGasto()
 
@@ -102,12 +102,12 @@ export default function GastoFormPage() {
 
     if (isEditing) {
       updateMutation.mutate(
-        { id: numericId, data: { ...base, updatedBy: 'netto' } },
+        { id: numericId, data: { ...base, updatedBy: '' } },
         { onSuccess: () => navigate('/financeiro/gastos') },
       )
     } else {
       createMutation.mutate(
-        { ...base, createdBy: 'netto' },
+        { ...base, createdBy: '' },
         { onSuccess: () => navigate('/financeiro/gastos') },
       )
     }

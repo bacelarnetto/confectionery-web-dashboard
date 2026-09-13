@@ -111,7 +111,7 @@ export default function ProdutoFormPage() {
             categoriaProdutoId: Number(produtoForm.categoriaProdutoId),
             nome: produtoForm.nome,
             descricao: produtoForm.descricao || undefined,
-            updatedBy: 'netto',
+            updatedBy: '',
           },
         },
         { onSuccess: () => navigate('/estoque-produtos/produtos') },
@@ -122,7 +122,7 @@ export default function ProdutoFormPage() {
           categoriaProdutoId: Number(produtoForm.categoriaProdutoId),
           nome: produtoForm.nome,
           descricao: produtoForm.descricao || undefined,
-          createdBy: 'netto',
+          createdBy: '',
         },
         {
           onSuccess: (created) => navigate(`/estoque-produtos/produtos/${created.id}/editar`),

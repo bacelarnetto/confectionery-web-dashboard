@@ -1,6 +1,7 @@
 import api from '../../../lib/axios'
 import { Movimentacao } from '../types/movimentacao'
 import { PageResponse } from './categoriaInsumoService'
+import { normalizePage, RawPage } from '../../../lib/pagination'
 
 const movimentacaoService = {
   getAll(
@@ -9,8 +10,8 @@ const movimentacaoService = {
     filters?: { tipo?: string }
   ): Promise<PageResponse<Movimentacao>> {
     return api
-      .get<PageResponse<Movimentacao>>('/movimentacao', { params: { page, size, ...filters } })
-      .then((res) => res.data)
+      .get<RawPage<Movimentacao>>('/movimentacao', { params: { page, size, ...filters } })
+      .then((res) => normalizePage(res.data))
   },
 
   getBySaidaId(itemSaidaInsumoId: number): Promise<Movimentacao[]> {

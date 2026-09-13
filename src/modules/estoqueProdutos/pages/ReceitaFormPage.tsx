@@ -153,7 +153,7 @@ export default function ReceitaFormPage() {
             modoPreparo: form.modoPreparo || undefined,
             tempoPreparo: form.tempoPreparo || undefined,
             ingredientes: validIngredientes,
-            updatedBy: 'netto',
+            updatedBy: '',
           },
         },
         { onSuccess: () => navigate('/estoque-produtos/receitas'), onError: tratarErro },
@@ -179,7 +179,7 @@ export default function ReceitaFormPage() {
           modoPreparo: form.modoPreparo || undefined,
           tempoPreparo: form.tempoPreparo || undefined,
           ingredientes: validIngredientes,
-          createdBy: 'netto',
+          createdBy: '',
         },
         { onSuccess: () => navigate('/estoque-produtos/receitas'), onError: tratarErro },
       )

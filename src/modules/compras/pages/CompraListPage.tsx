@@ -40,6 +40,7 @@ function formatDate(dateStr: string) {
 export default function CompraListPage() {
   const navigate = useNavigate()
   const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(20)
   const [filters, setFilters] = useState({
     fornecedorId: '',
     status: '',
@@ -57,8 +58,8 @@ export default function CompraListPage() {
     ...(debouncedFilters.dataFinal ? { dataFinal: debouncedFilters.dataFinal } : {}),
   }
 
-  const { data, isLoading } = useCompras(page, 20, Object.keys(filterParams).length > 0 ? filterParams : undefined)
-  const { data: insumosData } = useInsumos(0, 1000)
+  const { data, isLoading } = useCompras(page, pageSize, Object.keys(filterParams).length > 0 ? filterParams : undefined)
+  const { data: insumosData } = useInsumos(0, 100)
   const deleteMutation = useDeleteCompra()
   const pdfMutation = useDownloadPdfCompra()
   const entradaMutation = useGerarEntradaInsumoCompra()
@@ -122,7 +123,7 @@ export default function CompraListPage() {
       compraId: compra.id,
       usuarioId: 1,
       valorTotal: valorTotalItens,
-      createdBy: 'netto',
+      createdBy: '',
       itens: itensComprados.map((i: any) => ({
         insumoId: i.insumoId,
         quantidade: i.quantidade,
@@ -238,6 +239,9 @@ export default function CompraListPage() {
         page={page}
         totalPages={totalPages}
         onPageChange={setPage}
+        totalElements={data?.totalElements}
+        pageSize={pageSize}
+        onPageSizeChange={(size) => { setPageSize(size); setPage(0) }}
       >
         {compras.map((c) => (
           <tr key={c.id} className="hover:bg-gray-50 transition-colors">

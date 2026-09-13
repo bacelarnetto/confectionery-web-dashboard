@@ -1,17 +1,12 @@
 import api from '../../../lib/axios'
 import { Complemento, ComplementoInsertForm, ComplementoUpdateForm } from '../types/complemento'
+import { normalizePage, RawPage, PageResponse } from '../../../lib/pagination'
 
-export interface PageResponse<T> {
-  content: T[]
-  totalElements: number
-  totalPages: number
-  number: number
-  size: number
-}
+export type { PageResponse }
 
 const complementoService = {
   getAll(page = 0, size = 20, filters?: { nome?: string }): Promise<PageResponse<Complemento>> {
-    return api.get('/complemento', { params: { page, size, ...filters } }).then((r) => r.data)
+    return api.get<RawPage<Complemento>>('/complemento', { params: { page, size, ...filters } }).then((r) => normalizePage(r.data))
   },
   getById(id: number): Promise<Complemento> {
     return api.get(`/complemento/${id}`).then((r) => r.data)
@@ -26,7 +21,7 @@ const complementoService = {
     return api.put(`/complemento/${id}`, data).then((r) => r.data)
   },
   remove(id: number): Promise<void> {
-    return api.delete(`/complemento/${id}`, { headers: { usuario: 'netto' } }).then(() => undefined)
+    return api.delete(`/complemento/${id}`, { headers: { usuario: '' } }).then(() => undefined)
   },
   associarProduto(produtoId: number, complementoId: number): Promise<void> {
     return api.post(`/complemento/produto/${produtoId}/${complementoId}`).then(() => undefined)

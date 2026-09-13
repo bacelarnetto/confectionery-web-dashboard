@@ -12,13 +12,14 @@ const TABLE_HEADERS = ['ID', 'Nome', 'Categoria', 'Descrição', 'Criado por', '
 export default function ProdutoListPage() {
   const navigate = useNavigate()
   const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(20)
   const [filters, setFilters] = useState({ nome: '' })
   const [showFilters, setShowFilters] = useState(false)
   const debouncedFilters = useDebounce(filters)
 
   const activeFilters = debouncedFilters.nome ? { nome: debouncedFilters.nome } : undefined
 
-  const { data, isLoading } = useProdutos(page, 20, activeFilters)
+  const { data, isLoading } = useProdutos(page, pageSize, activeFilters)
   const deleteMutation = useDeleteProduto()
 
   const produtos = data?.content ?? []
@@ -101,6 +102,9 @@ export default function ProdutoListPage() {
         page={page}
         totalPages={totalPages}
         onPageChange={setPage}
+        totalElements={data?.totalElements}
+        pageSize={pageSize}
+        onPageSizeChange={(size) => { setPageSize(size); setPage(0) }}
       >
         {produtos.map((p) => (
           <tr key={p.id} className="hover:bg-gray-50 transition-colors">

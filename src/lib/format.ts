@@ -8,6 +8,22 @@ export function formatNumberBR(v: number | null | undefined, decimals = 2): stri
   return v.toLocaleString('pt-BR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
 }
 
+// F8 (segurança): CPF mascarado por padrão nas listagens -- só os 6 dígitos do meio ficam
+// visíveis, o suficiente pra reconhecer o cliente sem expor o documento inteiro em tela.
+export function maskCpf(cpf: string | null | undefined): string {
+  if (!cpf) return '—'
+  const digits = cpf.replace(/\D/g, '')
+  if (digits.length !== 11) return cpf
+  return `***.${digits.slice(3, 6)}.${digits.slice(6, 9)}-**`
+}
+
+export function formatCpf(cpf: string | null | undefined): string {
+  if (!cpf) return '—'
+  const digits = cpf.replace(/\D/g, '')
+  if (digits.length !== 11) return cpf
+  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`
+}
+
 /**
  * Formata progressivamente um telefone BR (fixo de 10 dígitos ou celular de 11) — funciona
  * tanto pra máscara de digitação (retorna '' se vazio) quanto pra exibição em lista (dados

@@ -6,10 +6,11 @@ import {
   PrecificacaoProdutoSimulacao,
 } from '../types/precificacaoProduto'
 import { PageResponse } from './produtoService'
+import { normalizePage, RawPage } from '../../../lib/pagination'
 
 const precificacaoProdutoService = {
   getAll(page = 0, size = 20, produtoId?: number): Promise<PageResponse<PrecificacaoProduto>> {
-    return api.get('/precificacao-produto', { params: { page, size, produtoId } }).then((r) => r.data)
+    return api.get<RawPage<PrecificacaoProduto>>('/precificacao-produto', { params: { page, size, produtoId } }).then((r) => normalizePage(r.data))
   },
   getVigenteByProdutoId(produtoId: number): Promise<PrecificacaoProduto | null> {
     return api.get(`/precificacao-produto/vigente/${produtoId}`).then((r) => r.data).catch(() => null)

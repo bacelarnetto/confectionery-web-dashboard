@@ -145,7 +145,7 @@ export default function DadosEmissorFormPage() {
       endereco: form.endereco || undefined,
       telefone: form.telefone || undefined,
       email: form.email || undefined,
-      usuario: 'netto',
+      usuario: '',
     })
   }
 

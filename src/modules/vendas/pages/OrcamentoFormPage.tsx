@@ -65,7 +65,7 @@ export default function OrcamentoFormPage() {
 
   const { data: orcamento, isLoading } = useOrcamento(numericId)
   const { data: clientesData } = useClientes(0, 100)
-  const { data: produtosData } = useProdutos(0, 200)
+  const { data: produtosData } = useProdutos(0, 100)
   const createMutation = useCreateOrcamento()
   const updateMutation = useUpdateOrcamento()
   const statusMutation = useUpdateOrcamentoStatus()
@@ -209,7 +209,7 @@ export default function OrcamentoFormPage() {
             valorFrete: form.valorFrete ? Number(form.valorFrete) : undefined,
             observacao: form.observacao || undefined,
             itens: buildItens(),
-            updatedBy: 'netto',
+            updatedBy: '',
           },
         },
         { onError: tratarErro },
@@ -223,7 +223,7 @@ export default function OrcamentoFormPage() {
           valorFrete: form.valorFrete ? Number(form.valorFrete) : undefined,
           observacao: form.observacao || undefined,
           itens: buildItens(),
-          createdBy: 'netto',
+          createdBy: '',
         },
         { onSuccess: () => navigate('/vendas/orcamentos'), onError: tratarErro },
       )

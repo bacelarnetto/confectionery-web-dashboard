@@ -29,13 +29,14 @@ function formatData(dateStr?: string) {
 export default function GastoListPage() {
   const navigate = useNavigate()
   const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(20)
   const [mes, setMes] = useState(mesAtual())
   const [tipoGastoId, setTipoGastoId] = useState('')
   const [showFilters, setShowFilters] = useState(false)
   const [repetirTarget, setRepetirTarget] = useState<{ id: number; descricao: string } | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; descricao: string } | null>(null)
 
-  const { data: tiposData } = useTiposGasto(0, 1000)
+  const { data: tiposData } = useTiposGasto(0, 100)
   const tipos = tiposData?.content ?? []
 
   const hasFilters = !!mes || !!tipoGastoId
@@ -47,7 +48,7 @@ export default function GastoListPage() {
         }
       : undefined
 
-  const { data, isLoading } = useGastos(page, 20, filterParams)
+  const { data, isLoading } = useGastos(page, pageSize, filterParams)
   const deleteMutation = useDeleteGasto()
   const repetirMutation = useRepetirGasto()
 
@@ -156,6 +157,9 @@ export default function GastoListPage() {
         page={page}
         totalPages={totalPages}
         onPageChange={setPage}
+        totalElements={data?.totalElements}
+        pageSize={pageSize}
+        onPageSizeChange={(size) => { setPageSize(size); setPage(0) }}
       >
         {gastos.map((g) => (
           <tr key={g.id} className="hover:bg-gray-50 transition-colors">

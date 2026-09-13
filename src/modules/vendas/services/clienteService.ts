@@ -1,23 +1,18 @@
 import api from '../../../lib/axios'
 import { Cliente, ClienteInsertForm, ClienteUpdateForm, PedidoResumo, ClienteTotalGasto } from '../types/cliente'
+import { normalizePage, RawPage, PageResponse } from '../../../lib/pagination'
 
-export interface PageResponse<T> {
-  content: T[]
-  totalElements: number
-  totalPages: number
-  number: number
-  size: number
-}
+export type { PageResponse }
 
 const clienteService = {
   getAll(page = 0, size = 20, filters?: { nome?: string }): Promise<PageResponse<Cliente>> {
-    return api.get('/cliente', { params: { page, size, ...filters } }).then((r) => r.data)
+    return api.get<RawPage<Cliente>>('/cliente', { params: { page, size, ...filters } }).then((r) => normalizePage(r.data))
   },
   getById(id: number): Promise<Cliente> {
     return api.get(`/cliente/${id}`).then((r) => r.data)
   },
   getPedidos(id: number, page = 0, size = 20): Promise<PageResponse<PedidoResumo>> {
-    return api.get(`/cliente/${id}/pedidos`, { params: { page, size } }).then((r) => r.data)
+    return api.get<RawPage<PedidoResumo>>(`/cliente/${id}/pedidos`, { params: { page, size } }).then((r) => normalizePage(r.data))
   },
   getTotalGasto(id: number): Promise<ClienteTotalGasto> {
     return api.get(`/cliente/${id}/total-gasto`).then((r) => r.data)
@@ -29,7 +24,7 @@ const clienteService = {
     return api.put(`/cliente/${id}`, data).then((r) => r.data)
   },
   remove(id: number): Promise<void> {
-    return api.delete(`/cliente/${id}`, { headers: { usuario: 'netto' } }).then(() => undefined)
+    return api.delete(`/cliente/${id}`, { headers: { usuario: '' } }).then(() => undefined)
   },
 }
 

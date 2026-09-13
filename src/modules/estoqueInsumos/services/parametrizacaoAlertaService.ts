@@ -31,7 +31,7 @@ const parametrizacaoAlertaService = {
 
   remove(id: number): Promise<void> {
     return api
-      .delete(`/parametrizacao-alerta/${id}`, { headers: { usuario: 'netto' } })
+      .delete(`/parametrizacao-alerta/${id}`, { headers: { usuario: '' } })
       .then(() => undefined)
   },
 }

@@ -12,6 +12,7 @@ const TABLE_HEADERS = ['ID', 'Nome', 'Descrição', 'Criado por', 'Ações']
 export default function CategoriaProdutoListPage() {
   const navigate = useNavigate()
   const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(20)
   const [filters, setFilters] = useState({ id: '', nome: '' })
   const [showFilters, setShowFilters] = useState(false)
   const debouncedFilters = useDebounce(filters)
@@ -24,7 +25,7 @@ export default function CategoriaProdutoListPage() {
         }
       : undefined
 
-  const { data, isLoading } = useCategoriasProduto(page, 20, activeFilters)
+  const { data, isLoading } = useCategoriasProduto(page, pageSize, activeFilters)
   const deleteMutation = useDeleteCategoriaProduto()
 
   const categorias = data?.content ?? []
@@ -126,6 +127,9 @@ export default function CategoriaProdutoListPage() {
         page={page}
         totalPages={totalPages}
         onPageChange={setPage}
+        totalElements={data?.totalElements}
+        pageSize={pageSize}
+        onPageSizeChange={(size) => { setPageSize(size); setPage(0) }}
       >
         {categorias.map((c) => (
           <tr key={c.id} className="hover:bg-gray-50 transition-colors">

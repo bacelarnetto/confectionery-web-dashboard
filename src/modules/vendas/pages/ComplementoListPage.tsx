@@ -14,13 +14,14 @@ const TABLE_HEADERS = ['ID', 'Categoria', 'Nome', 'Insumo', 'Custo (R$)', 'Venda
 export default function ComplementoListPage() {
   const navigate = useNavigate()
   const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(20)
   const [filters, setFilters] = useState({ nome: '' })
   const [showFilters, setShowFilters] = useState(false)
   const debouncedFilters = useDebounce(filters)
 
   const activeFilters = debouncedFilters.nome ? { nome: debouncedFilters.nome } : undefined
 
-  const { data, isLoading } = useComplementos(page, 20, activeFilters)
+  const { data, isLoading } = useComplementos(page, pageSize, activeFilters)
   const deleteMutation = useDeleteComplemento()
 
   const complementos = data?.content ?? []
@@ -93,6 +94,9 @@ export default function ComplementoListPage() {
         page={page}
         totalPages={totalPages}
         onPageChange={setPage}
+        totalElements={data?.totalElements}
+        pageSize={pageSize}
+        onPageSizeChange={(size) => { setPageSize(size); setPage(0) }}
       >
         {complementos.map((c) => (
           <tr key={c.id} className="hover:bg-gray-50 transition-colors">

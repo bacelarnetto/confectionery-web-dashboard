@@ -13,6 +13,7 @@ const TABLE_HEADERS = ['ID', 'Nome', 'Valor', 'Marca', 'Unidade', 'Categoria', '
 export default function InsumoListPage() {
   const navigate = useNavigate()
   const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(20)
   const [filters, setFilters] = useState({
     id: '',
     nome: '',
@@ -27,7 +28,7 @@ export default function InsumoListPage() {
     ...(debouncedFilters.categoriaId ? { categoriaId: Number(debouncedFilters.categoriaId) } : {}),
   }
 
-  const { data, isLoading } = useInsumos(page, 20, Object.keys(filterParams).length > 0 ? filterParams : undefined)
+  const { data, isLoading } = useInsumos(page, pageSize, Object.keys(filterParams).length > 0 ? filterParams : undefined)
   const deleteMutation = useDeleteInsumo()
 
   const insumos = data?.content ?? []
@@ -139,6 +140,9 @@ export default function InsumoListPage() {
         page={page}
         totalPages={totalPages}
         onPageChange={setPage}
+        totalElements={data?.totalElements}
+        pageSize={pageSize}
+        onPageSizeChange={(size) => { setPageSize(size); setPage(0) }}
       >
         {insumos.map((i) => (
           <tr key={i.id} className="hover:bg-gray-50 transition-colors">

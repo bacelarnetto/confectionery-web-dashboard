@@ -9,20 +9,13 @@ import { usePedidos, useUpdatePedidoStatus } from '../hooks/usePedidos'
 import { useDebounce } from '../../../hooks/useDebounce'
 import { PEDIDO_STATUS } from '../types/pedido'
 import { formatCurrency } from '../../../lib/format'
-import { useContasReceber } from '../../financeiro/hooks/useFinanceiro'
+import { useTodasContasReceberPendentes } from '../../financeiro/hooks/useFinanceiro'
+import RegistrarPagamentoModal from '../components/RegistrarPagamentoModal'
+import { STATUS_COLORS, STATUS_QUE_SUGEREM_PAGAMENTO } from '../lib/pedidoStatus'
 
 const STATUS_TERMINAIS = ['CANCELADO', 'ENTREGUE']
 
 const TABLE_HEADERS = ['ID', 'Cliente', 'Status', 'Valor Total', 'Frete', 'Retirada', 'Criado em', 'Entrega', 'Ações']
-
-const STATUS_COLORS: Record<string, string> = {
-  RASCUNHO: 'bg-gray-100 text-gray-600',
-  CONFIRMADO: 'bg-blue-100 text-blue-800',
-  EM_PRODUCAO: 'bg-purple-100 text-purple-800',
-  PRONTO: 'bg-green-100 text-green-800',
-  ENTREGUE: 'bg-gray-100 text-gray-700',
-  CANCELADO: 'bg-red-100 text-red-800',
-}
 
 function formatDate(dateStr: string | undefined): string {
   if (!dateStr) return '—'
@@ -32,6 +25,7 @@ function formatDate(dateStr: string | undefined): string {
 export default function PedidoListPage() {
   const navigate = useNavigate()
   const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(20)
   const [filters, setFilters] = useState({ clienteId: '', status: '' })
   const [showFilters, setShowFilters] = useState(false)
   const debouncedFilters = useDebounce(filters)
@@ -44,14 +38,17 @@ export default function PedidoListPage() {
         }
       : undefined
 
-  const { data, isLoading } = usePedidos(page, 20, activeFilters)
+  const { data, isLoading } = usePedidos(page, pageSize, activeFilters)
   const statusMutation = useUpdatePedidoStatus()
 
   // Contas a receber pendentes (ABERTO/PARCIAL) já vêm agregadas do financeiro -- evita 1 fetch de
   // pagamentos por linha da lista. Usado só pra marcar visualmente pedido ENTREGUE ainda não pago.
-  const { data: contasReceber } = useContasReceber(true)
+  const { data: contasReceber } = useTodasContasReceberPendentes()
   const pedidosNaoPagosIds = useMemo(
-    () => new Set((contasReceber ?? []).filter((c) => c.origem === 'PEDIDO' && c.pedidoId != null).map((c) => c.pedidoId!)),
+    () =>
+      new Set(
+        (contasReceber ?? []).filter((c) => c.origem === 'PEDIDO' && c.pedidoId != null).map((c) => c.pedidoId!),
+      ),
     [contasReceber],
   )
 
@@ -59,6 +56,20 @@ export default function PedidoListPage() {
   const totalPages = data?.totalPages ?? 0
 
   const [cancelTarget, setCancelTarget] = useState<{ id: number; nome: string } | null>(null)
+  const [pagamentoPrompt, setPagamentoPrompt] = useState<{ pedidoId: number; percentualSugerido?: number } | null>(null)
+
+  function handleStatusChange(pedidoId: number, status: string) {
+    statusMutation.mutate(
+      { id: pedidoId, status },
+      {
+        onSuccess: () => {
+          if (status in STATUS_QUE_SUGEREM_PAGAMENTO) {
+            setPagamentoPrompt({ pedidoId, percentualSugerido: STATUS_QUE_SUGEREM_PAGAMENTO[status] })
+          }
+        },
+      },
+    )
+  }
 
   function handleFilterChange(key: string, value: string) {
     setFilters((prev) => ({ ...prev, [key]: value }))
@@ -157,6 +168,9 @@ export default function PedidoListPage() {
         page={page}
         totalPages={totalPages}
         onPageChange={setPage}
+        totalElements={data?.totalElements}
+        pageSize={pageSize}
+        onPageSizeChange={(size) => { setPageSize(size); setPage(0) }}
       >
         {pedidos.map((p) => (
           <tr key={p.id} className="hover:bg-gray-50 transition-colors">
@@ -167,7 +181,7 @@ export default function PedidoListPage() {
                 {p.status ? (
                   <select
                     value={p.status}
-                    onChange={(e) => statusMutation.mutate({ id: p.id, status: e.target.value })}
+                    onChange={(e) => handleStatusChange(p.id, e.target.value)}
                     className={`text-xs font-medium px-2 py-1 rounded-full border-0 cursor-pointer ${STATUS_COLORS[p.status] ?? 'bg-gray-100 text-gray-700'}`}
                   >
                     {PEDIDO_STATUS.map((s) => (
@@ -247,6 +261,16 @@ export default function PedidoListPage() {
           </Button>
         </div>
       </Modal>
+
+      {pagamentoPrompt && (
+        <RegistrarPagamentoModal
+          pedidoId={pagamentoPrompt.pedidoId}
+          open
+          onClose={() => setPagamentoPrompt(null)}
+          percentualSugerido={pagamentoPrompt.percentualSugerido}
+          title={pagamentoPrompt.percentualSugerido != null ? 'Registrar adiantamento' : 'Registrar pagamento'}
+        />
+      )}
     </div>
   )
 }

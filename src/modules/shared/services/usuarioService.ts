@@ -1,19 +1,14 @@
 import api from '../../../lib/axios'
 import { Usuario, UsuarioInsertForm, UsuarioUpdateForm } from '../types/usuario'
+import { normalizePage, RawPage, PageResponse } from '../../../lib/pagination'
 
-export interface PageResponse<T> {
-  content: T[]
-  totalElements: number
-  totalPages: number
-  number: number
-  size: number
-}
+export type { PageResponse }
 
 const usuarioService = {
   getAll(page = 0, size = 20): Promise<PageResponse<Usuario>> {
     return api
-      .get<PageResponse<Usuario>>('/usuario', { params: { page, size } })
-      .then((res) => res.data)
+      .get<RawPage<Usuario>>('/usuario', { params: { page, size } })
+      .then((res) => normalizePage(res.data))
   },
 
   getById(id: number): Promise<Usuario> {
@@ -30,7 +25,7 @@ const usuarioService = {
 
   remove(id: number): Promise<void> {
     return api
-      .delete(`/usuario/${id}`, { headers: { usuario: 'netto' } })
+      .delete(`/usuario/${id}`, { headers: { usuario: '' } })
       .then(() => undefined)
   },
 }

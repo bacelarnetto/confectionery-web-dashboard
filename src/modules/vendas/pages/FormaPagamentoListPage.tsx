@@ -12,10 +12,11 @@ const TABLE_HEADERS = ['ID', 'Nome', 'Ações']
 export default function FormaPagamentoListPage() {
   const navigate = useNavigate()
   const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(20)
   const [nomeFilter, setNomeFilter] = useState('')
   const [showFilters, setShowFilters] = useState(false)
   const debouncedNome = useDebounce(nomeFilter)
-  const { data, isLoading } = useFormasPagamento(page, 20, debouncedNome || undefined)
+  const { data, isLoading } = useFormasPagamento(page, pageSize, debouncedNome || undefined)
   const deleteMutation = useDeleteFormaPagamento()
 
   const formas = data?.content ?? []
@@ -92,6 +93,9 @@ export default function FormaPagamentoListPage() {
         page={page}
         totalPages={totalPages}
         onPageChange={setPage}
+        totalElements={data?.totalElements}
+        pageSize={pageSize}
+        onPageSizeChange={(size) => { setPageSize(size); setPage(0) }}
       >
         {formas.map((f) => (
           <tr key={f.id} className="hover:bg-gray-50 transition-colors">

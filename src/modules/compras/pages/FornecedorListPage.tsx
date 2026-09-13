@@ -13,6 +13,7 @@ const TABLE_HEADERS = ['ID', 'Nome', 'CNPJ', 'Telefone', 'E-mail', 'Ações']
 export default function FornecedorListPage() {
   const navigate = useNavigate()
   const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(20)
   const [filters, setFilters] = useState({ id: '', nome: '', cnpj: '' })
   const [showFilters, setShowFilters] = useState(false)
   const debouncedFilters = useDebounce(filters)
@@ -24,7 +25,7 @@ export default function FornecedorListPage() {
           ...(debouncedFilters.cnpj ? { cnpj: debouncedFilters.cnpj } : {}),
         }
       : undefined
-  const { data, isLoading } = useFornecedores(page, 20, activeFilters)
+  const { data, isLoading } = useFornecedores(page, pageSize, activeFilters)
   const deleteMutation = useDeleteFornecedor()
 
   const fornecedores = data?.content ?? []
@@ -136,6 +137,9 @@ export default function FornecedorListPage() {
         page={page}
         totalPages={totalPages}
         onPageChange={setPage}
+        totalElements={data?.totalElements}
+        pageSize={pageSize}
+        onPageSizeChange={(size) => { setPageSize(size); setPage(0) }}
       >
         {fornecedores.map((f) => (
           <tr key={f.id} className="hover:bg-gray-50 transition-colors">

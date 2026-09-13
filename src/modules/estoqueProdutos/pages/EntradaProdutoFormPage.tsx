@@ -56,7 +56,7 @@ const inputClass =
 
 export default function EntradaProdutoFormPage() {
   const navigate = useNavigate()
-  const { data: produtosData } = useProdutos(0, 200)
+  const { data: produtosData } = useProdutos(0, 100)
   const { data: fornecedoresData } = useFornecedores(0, 100)
   const createMutation = useCreateEntradaProduto()
 
@@ -127,7 +127,7 @@ export default function EntradaProdutoFormPage() {
         dataRecebimento: form.dataRecebimento ? new Date(`${form.dataRecebimento}T00:00:00`).toISOString() : undefined,
         observacao: form.observacao || undefined,
         itens: buildItens(),
-        createdBy: 'netto',
+        createdBy: '',
       },
       { onSuccess: () => navigate('/estoque-produtos/entradas'), onError: tratarErro },
     )

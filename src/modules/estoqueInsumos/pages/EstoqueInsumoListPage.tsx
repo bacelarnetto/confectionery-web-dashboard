@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { ChevronLeft, ChevronRight, Search, X, PiggyBank } from 'lucide-react'
+import { Search, X, PiggyBank } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
-import Table from '../../../components/ui/Table'
+import PageableTable from '../../../components/ui/PageableTable'
 import { useEstoqueInsumos, useEstoqueValorizado } from '../hooks/useEstoqueInsumos'
 import { useDebounce } from '../../../hooks/useDebounce'
 
@@ -9,22 +9,6 @@ const TABLE_HEADERS = ['ID', 'Insumo', 'Quantidade', 'Valor Imobilizado', 'Últi
 
 function formatCurrency(v: number) {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-}
-
-function SkeletonRows() {
-  return (
-    <>
-      {Array.from({ length: 5 }).map((_, i) => (
-        <tr key={i} className="animate-pulse">
-          {Array.from({ length: 5 }).map((_, j) => (
-            <td key={j} className="px-4 py-3">
-              <div className="h-4 bg-gray-200 rounded w-3/4" />
-            </td>
-          ))}
-        </tr>
-      ))}
-    </>
-  )
 }
 
 function formatDate(dateStr: string | undefined): string {
@@ -41,6 +25,7 @@ function formatDate(dateStr: string | undefined): string {
 
 export default function EstoqueInsumoListPage() {
   const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(20)
   const [filters, setFilters] = useState({
     insumoId: '',
     categoriaId: '',
@@ -53,7 +38,7 @@ export default function EstoqueInsumoListPage() {
     ...(debouncedFilters.categoriaId ? { categoriaId: Number(debouncedFilters.categoriaId) } : {}),
   }
 
-  const { data, isLoading } = useEstoqueInsumos(page, 20, Object.keys(filterParams).length > 0 ? filterParams : undefined)
+  const { data, isLoading } = useEstoqueInsumos(page, pageSize, Object.keys(filterParams).length > 0 ? filterParams : undefined)
   const { data: valorizadoData } = useEstoqueValorizado()
 
   const estoque = data?.content ?? []
@@ -144,54 +129,38 @@ export default function EstoqueInsumoListPage() {
         )}
       </div>
 
-      <Table headers={TABLE_HEADERS} isEmpty={!isLoading && estoque.length === 0}>
-        {isLoading ? (
-          <SkeletonRows />
-        ) : (
-          estoque.map((e) => (
-            <tr key={e.id} className="hover:bg-gray-50 transition-colors">
-              <td className="px-4 py-3 font-medium text-gray-900">#{e.id}</td>
-              <td className="px-4 py-3 text-gray-600">
-                {e.insumoNome} <span className="text-xs text-gray-400">({e.insumoId})</span>
-              </td>
-              <td className="px-4 py-3 text-gray-900 font-medium">
-                {e.quantidade.toFixed(2)}
-              </td>
-              <td className="px-4 py-3 text-emerald-700 font-medium">
-                {valorizadoPorInsumo.has(e.insumoId) ? formatCurrency(valorizadoPorInsumo.get(e.insumoId)!.valorTotal) : '—'}
-              </td>
-              <td className="px-4 py-3 text-gray-600">
-                {formatDate(e.updatedOn || e.createdOn)}
-              </td>
-              <td className="px-4 py-3 text-gray-600">
-                {e.updatedBy || e.createdBy || '—'}
-              </td>
-            </tr>
-          ))
-        )}
-      </Table>
-
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-3 mt-4">
-          <button
-            onClick={() => setPage((p) => Math.max(0, p - 1))}
-            disabled={page === 0}
-            className="p-1.5 rounded-md text-gray-400 hover:text-gray-700 disabled:opacity-40 transition-colors"
-          >
-            <ChevronLeft size={18} />
-          </button>
-          <span className="text-sm text-gray-600">
-            Página {page + 1} de {totalPages}
-          </span>
-          <button
-            onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-            disabled={page >= totalPages - 1}
-            className="p-1.5 rounded-md text-gray-400 hover:text-gray-700 disabled:opacity-40 transition-colors"
-          >
-            <ChevronRight size={18} />
-          </button>
-        </div>
-      )}
+      <PageableTable
+        headers={TABLE_HEADERS}
+        isLoading={isLoading}
+        isEmpty={!isLoading && estoque.length === 0}
+        page={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+        totalElements={data?.totalElements}
+        pageSize={pageSize}
+        onPageSizeChange={(size) => { setPageSize(size); setPage(0) }}
+      >
+        {estoque.map((e) => (
+          <tr key={e.id} className="hover:bg-gray-50 transition-colors">
+            <td className="px-4 py-3 font-medium text-gray-900">#{e.id}</td>
+            <td className="px-4 py-3 text-gray-600">
+              {e.insumoNome} <span className="text-xs text-gray-400">({e.insumoId})</span>
+            </td>
+            <td className="px-4 py-3 text-gray-900 font-medium">
+              {e.quantidade.toFixed(2)}
+            </td>
+            <td className="px-4 py-3 text-emerald-700 font-medium">
+              {valorizadoPorInsumo.has(e.insumoId) ? formatCurrency(valorizadoPorInsumo.get(e.insumoId)!.valorTotal) : '—'}
+            </td>
+            <td className="px-4 py-3 text-gray-600">
+              {formatDate(e.updatedOn || e.createdOn)}
+            </td>
+            <td className="px-4 py-3 text-gray-600">
+              {e.updatedBy || e.createdBy || '—'}
+            </td>
+          </tr>
+        ))}
+      </PageableTable>
     </div>
   )
 }

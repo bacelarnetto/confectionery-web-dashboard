@@ -1,19 +1,14 @@
 import api from '../../../lib/axios'
 import { CategoriaInsumo, CategoriaInsumoInsertForm, CategoriaInsumoUpdateForm } from '../types/categoriaInsumo'
+import { normalizePage, RawPage, PageResponse } from '../../../lib/pagination'
 
-export interface PageResponse<T> {
-  content: T[]
-  totalElements: number
-  totalPages: number
-  number: number
-  size: number
-}
+export type { PageResponse }
 
 const categoriaInsumoService = {
   getAll(page = 0, size = 20, filters?: { id?: number; nome?: string }): Promise<PageResponse<CategoriaInsumo>> {
     return api
-      .get<PageResponse<CategoriaInsumo>>('/categoria-insumo', { params: { page, size, ...filters } })
-      .then((res) => res.data)
+      .get<RawPage<CategoriaInsumo>>('/categoria-insumo', { params: { page, size, ...filters } })
+      .then((res) => normalizePage(res.data))
   },
 
   getById(id: number): Promise<CategoriaInsumo> {
@@ -30,7 +25,7 @@ const categoriaInsumoService = {
 
   remove(id: number): Promise<void> {
     return api
-      .delete(`/categoria-insumo/${id}`, { headers: { usuario: 'netto' } })
+      .delete(`/categoria-insumo/${id}`, { headers: { usuario: '' } })
       .then(() => undefined)
   },
 }

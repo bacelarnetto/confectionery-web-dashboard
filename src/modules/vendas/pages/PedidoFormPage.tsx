@@ -10,6 +10,7 @@ import ComplementoPicker, { ComplementoResolvido } from '../components/Complemen
 import ResumoValoresCard from '../components/ResumoValoresCard'
 import PedidoPagamentoCard from '../components/PedidoPagamentoCard'
 import { calcularResumo } from '../lib/resumoValores'
+import { formatEndereco } from '../lib/endereco'
 import { useProdutos } from '../../estoqueProdutos/hooks/useProdutos'
 import precificacaoProdutoService from '../../estoqueProdutos/services/precificacaoProdutoService'
 import complementoService from '../services/complementoService'
@@ -70,7 +71,7 @@ export default function PedidoFormPage() {
 
   const { data: pedido, isLoading } = usePedido(numericId)
   const { data: clientesData } = useClientes(0, 100)
-  const { data: produtosData } = useProdutos(0, 200)
+  const { data: produtosData } = useProdutos(0, 100)
   const createMutation = useCreatePedido()
   const updateMutation = useUpdatePedido()
 
@@ -82,6 +83,7 @@ export default function PedidoFormPage() {
   const clientes = clientesData?.content ?? []
   const produtos = produtosData?.content ?? []
   const selectedCliente = clientes.find((c) => c.id === Number(form.clienteId))
+  const enderecoSelecionado = selectedCliente?.enderecos?.find((e) => e.id === Number(form.enderecoId))
 
   async function handleProdutoChange(index: number, produtoId: string) {
     handleItemChange(index, 'produtoId', produtoId)
@@ -155,8 +157,9 @@ export default function PedidoFormPage() {
 
   function handleRetirarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const retirar = e.target.checked
-    // Cliente retira no local -> não tem frete; limpa pra não deixar um valor esquecido no submit.
-    setForm((prev) => ({ ...prev, retirar, valorFrete: retirar ? '' : prev.valorFrete }))
+    // Cliente retira no local -> não tem frete nem endereço; limpa os dois pra não deixar um
+    // valor esquecido no submit (o campo de endereço nem aparece mais na tela nesse caso).
+    setForm((prev) => ({ ...prev, retirar, valorFrete: retirar ? '' : prev.valorFrete, enderecoId: retirar ? '' : prev.enderecoId }))
   }
 
   function handleItemChange(index: number, field: keyof ItemForm, value: string | number[] | ComplementoResolvido[]) {
@@ -217,12 +220,12 @@ export default function PedidoFormPage() {
     }
     if (isEditing) {
       updateMutation.mutate(
-        { id: numericId, data: { ...base, enderecoId: form.enderecoId ? Number(form.enderecoId) : undefined, updatedBy: 'netto' } },
+        { id: numericId, data: { ...base, enderecoId: form.enderecoId ? Number(form.enderecoId) : undefined, updatedBy: '' } },
         { onSuccess: () => navigate('/vendas/pedidos'), onError: tratarErro },
       )
     } else {
       createMutation.mutate(
-        { clienteId: Number(form.clienteId), enderecoId: form.enderecoId ? Number(form.enderecoId) : undefined, ...base, createdBy: 'netto' },
+        { clienteId: Number(form.clienteId), enderecoId: form.enderecoId ? Number(form.enderecoId) : undefined, ...base, createdBy: '' },
         { onSuccess: () => navigate('/vendas/pedidos'), onError: tratarErro },
       )
     }
@@ -271,13 +274,18 @@ export default function PedidoFormPage() {
               </select>
             </Field>
 
-            <Field label="Endereço de Entrega">
-              <EnderecoClienteField
-                cliente={selectedCliente}
-                value={form.enderecoId}
-                onChange={(value) => setForm((prev) => ({ ...prev, enderecoId: value }))}
-              />
-            </Field>
+            {!form.retirar && (
+              <Field label="Endereço de Entrega">
+                <EnderecoClienteField
+                  cliente={selectedCliente}
+                  value={form.enderecoId}
+                  onChange={(value) => setForm((prev) => ({ ...prev, enderecoId: value }))}
+                />
+                {enderecoSelecionado && (
+                  <p className="text-xs text-gray-500 mt-1.5">{formatEndereco(enderecoSelecionado)}</p>
+                )}
+              </Field>
+            )}
 
             <Field label="Data de Entrega">
               <input

@@ -56,9 +56,9 @@ export default function FabricacaoFormPage() {
         receitaId: Number(form.receitaId),
         quantidade: Number(form.quantidade),
         observacao: form.observacao || undefined,
-        dataFabricacao: form.dataFabricacao || undefined,
-        dataValidade: form.dataValidade || undefined,
-        createdBy: 'netto',
+        dataFabricacao: form.dataFabricacao ? new Date(`${form.dataFabricacao}T00:00:00`).toISOString() : undefined,
+        dataValidade: form.dataValidade ? new Date(`${form.dataValidade}T00:00:00`).toISOString() : undefined,
+        createdBy: '',
       },
       { onSuccess: () => navigate('/estoque-produtos/fabricacoes') },
     )

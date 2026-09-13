@@ -41,7 +41,7 @@ export default function CompraFormPage() {
   const fornecedores = fornecedoresPage?.content ?? []
 
   // Busca lista de insumos
-  const { data: insumosPage } = useInsumos(0, 500)
+  const { data: insumosPage } = useInsumos(0, 100)
   const insumos = insumosPage?.content ?? []
 
   const createMutation = useCreateCompra()
@@ -103,7 +103,7 @@ export default function CompraFormPage() {
             fornecedorId: fornecedorId ? Number(fornecedorId) : undefined,
             status,
             itens: parsedItens,
-            updatedBy: 'netto',
+            updatedBy: '',
           },
         },
         { onSuccess: () => navigate('/compras/compras') },
@@ -114,7 +114,7 @@ export default function CompraFormPage() {
           fornecedorId: fornecedorId ? Number(fornecedorId) : undefined,
           status,
           itens: parsedItens,
-          createdBy: 'netto',
+          createdBy: '',
         },
         { onSuccess: () => navigate('/compras/compras') },
       )

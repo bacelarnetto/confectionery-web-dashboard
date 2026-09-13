@@ -14,7 +14,7 @@ export default function ParametrizacaoAlertaProdutoFormPage() {
   const isEdit = !!id
 
   const { data: existing } = useParametrizacaoAlertaProduto(isEdit ? Number(id) : 0)
-  const { data: produtosData } = useProdutos(0, 200)
+  const { data: produtosData } = useProdutos(0, 100)
   const createMutation = useCreateParametrizacaoAlertaProduto()
   const updateMutation = useUpdateParametrizacaoAlertaProduto()
 

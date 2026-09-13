@@ -1,19 +1,14 @@
 import api from '../../../lib/axios'
 import { Fornecedor, FornecedorInsertForm, FornecedorUpdateForm } from '../types/fornecedor'
+import { normalizePage, RawPage, PageResponse } from '../../../lib/pagination'
 
-export interface PageResponse<T> {
-  content: T[]
-  totalElements: number
-  totalPages: number
-  number: number
-  size: number
-}
+export type { PageResponse }
 
 const fornecedorService = {
   getAll(page = 0, size = 20, filters?: { id?: number; nome?: string; cnpj?: string }): Promise<PageResponse<Fornecedor>> {
     return api
-      .get<PageResponse<Fornecedor>>('/fornecedor', { params: { page, size, ...filters } })
-      .then((res) => res.data)
+      .get<RawPage<Fornecedor>>('/fornecedor', { params: { page, size, ...filters } })
+      .then((res) => normalizePage(res.data))
   },
 
   getById(id: number): Promise<Fornecedor> {
@@ -30,7 +25,7 @@ const fornecedorService = {
 
   remove(id: number): Promise<void> {
     return api
-      .delete(`/fornecedor/${id}`, { headers: { usuario: 'netto' } })
+      .delete(`/fornecedor/${id}`, { headers: { usuario: '' } })
       .then(() => undefined)
   },
 }

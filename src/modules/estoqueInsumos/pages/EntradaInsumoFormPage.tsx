@@ -191,7 +191,7 @@ export default function EntradaInsumoFormPage() {
             usuarioId: Number(form.usuarioId),
             valorTotal: Number(form.valorTotal),
             ...optional,
-            updatedBy: 'netto',
+            updatedBy: '',
             itens: entrada?.itens.map((item, index) => ({
               ...item,
               ...itens[index],
@@ -206,7 +206,7 @@ export default function EntradaInsumoFormPage() {
           usuarioId: Number(form.usuarioId),
           valorTotal: Number(form.valorTotal),
           ...optional,
-          createdBy: 'netto',
+          createdBy: '',
           itens,
         },
         { onSuccess: () => navigate('/estoque-insumos/entradas'), onError: tratarErro },

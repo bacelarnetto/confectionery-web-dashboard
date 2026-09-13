@@ -32,21 +32,31 @@ export function getLastRequestId(): string | undefined {
 //
 // Também sobrescreve createdBy/updatedBy (corpo) e o header "usuario" (usado pelos DELETEs, ver
 // doc/defesa-arquitetura-autenticacao.md §12.1) com o usuário autenticado de verdade, aqui e só
-// aqui — em vez de caçar as ~30 telas que ainda montam esses campos com o placeholder 'netto' de
-// antes do login existir. Continuam sendo campos livres no contrato do backend (Fase 3 do B12,
-// que os removeria de vez, ainda não foi implementada), então até lá isso é reforçado no cliente.
+// aqui — em vez de caçar as telas que ainda montam esses campos com um placeholder qualquer.
+// Continuam sendo campos livres no contrato do backend (Fase 3 do B12, que os removeria de vez,
+// ainda não foi implementada), então até lá isso é reforçado no cliente.
+//
+// F8 (auditoria de segurança): sem access_token, os campos são REMOVIDOS em vez de deixar
+// passar o que a tela colocou lá -- identidade forjada (ex: placeholder chegando intacto ao
+// backend) é pior que identidade ausente. O backend rejeita o que faltar (B12 Fase 3).
 api.interceptors.request.use(async (config) => {
   const user = await userManager.getUser()
-  if (!user?.access_token) return config
+  const autenticado = !!user?.access_token
 
-  config.headers.Authorization = `Bearer ${user.access_token}`
-  config.headers.usuario = getUsername(user)
+  if (autenticado) {
+    config.headers.Authorization = `Bearer ${user.access_token}`
+    config.headers.usuario = getUsername(user)
+  } else {
+    delete config.headers.usuario
+  }
 
   if (config.data && typeof config.data === 'object' && !(config.data instanceof FormData)) {
-    if ('createdBy' in config.data) config.data.createdBy = getUsername(user)
-    if ('updatedBy' in config.data) config.data.updatedBy = getUsername(user)
-    // PUT /dados-emissor usa "usuario" no corpo (em vez de updatedBy) -- mesmo motivo, mesmo tratamento.
-    if ('usuario' in config.data) config.data.usuario = getUsername(user)
+    for (const campo of ['createdBy', 'updatedBy', 'usuario'] as const) {
+      if (campo in config.data) {
+        if (autenticado) config.data[campo] = getUsername(user)
+        else delete config.data[campo]
+      }
+    }
   }
 
   return config
@@ -66,11 +76,15 @@ api.interceptors.response.use(
     const requestId = data?.requestId ?? error.response?.headers?.['x-request-id']
     if (requestId) lastRequestId = requestId
 
-    console.error(`[API Error] ${error.request.method?.toUpperCase() || 'GET'} ${url}`, {
-      status,
-      data,
-      requestId,
-    })
+    // Só em dev -- em produção o corpo da resposta (que pode conter mensagens de negócio ou
+    // outros detalhes) não deveria ir pro console do navegador de quem estiver usando o sistema.
+    if (import.meta.env.DEV) {
+      console.error(`[API Error] ${error.request.method?.toUpperCase() || 'GET'} ${url}`, {
+        status,
+        data,
+        requestId,
+      })
+    }
 
     // 401 aqui significa que o access token expirou e o renew silencioso não deu conta a tempo
     // (ou foi revogado) — não tem "tentar de novo", o usuário precisa logar de novo. Guarda pra

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import pedidoService from '../services/pedidoService'
 import { PedidoInsertForm, PedidoUpdateForm, PagamentoPedidoInsertForm } from '../types/pedido'
+import { downloadBlob, parseFilenameFromContentDisposition } from '../../../lib/download'
 
 const QUERY_KEY = ['pedidos']
 
@@ -77,15 +78,9 @@ export function useRegistrarPagamentoPedido() {
 export function useDownloadReciboPagamento() {
   return useMutation({
     mutationFn: (pedidoId: number) => pedidoService.getReciboPagamentoPdf(pedidoId),
-    onSuccess: (data, pedidoId) => {
-      const url = window.URL.createObjectURL(new Blob([data], { type: 'application/pdf' }))
-      const link = document.createElement('a')
-      link.href = url
-      link.setAttribute('download', `recibo-pedido-${pedidoId}.pdf`)
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-      window.URL.revokeObjectURL(url)
+    onSuccess: ({ blob, contentDisposition }, pedidoId) => {
+      const filename = parseFilenameFromContentDisposition(contentDisposition) ?? `recibo-pedido-${pedidoId}.pdf`
+      downloadBlob(blob, filename)
       toast.success('Download em andamento...')
     },
     onError: () => {

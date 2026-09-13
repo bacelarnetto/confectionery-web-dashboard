@@ -1,15 +1,9 @@
-import { useState, useEffect, FormEvent } from 'react'
+import { useState, useEffect } from 'react'
 import { HandCoins, Download } from 'lucide-react'
-import Modal from '../../../components/ui/Modal'
 import Button from '../../../components/ui/Button'
 import { Pedido } from '../types/pedido'
-import {
-  usePagamentosPedido,
-  useRegistrarPagamentoPedido,
-  useUpdateMotivoPendenciaPedido,
-  useDownloadReciboPagamento,
-} from '../hooks/usePedidos'
-import { useFormasPagamento } from '../hooks/useFormasPagamento'
+import { usePagamentosPedido, useUpdateMotivoPendenciaPedido, useDownloadReciboPagamento } from '../hooks/usePedidos'
+import RegistrarPagamentoModal from './RegistrarPagamentoModal'
 import { formatCurrency } from '../../../lib/format'
 
 const inputClass =
@@ -26,11 +20,6 @@ function formatData(dateStr?: string) {
   }
 }
 
-function hoje(): string {
-  const now = new Date()
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
-}
-
 interface Props {
   pedidoId: number
   pedido: Pedido
@@ -38,17 +27,10 @@ interface Props {
 
 export default function PedidoPagamentoCard({ pedidoId, pedido }: Props) {
   const { data: pagamentos, isLoading } = usePagamentosPedido(pedidoId)
-  const registrarMutation = useRegistrarPagamentoPedido()
   const updateMotivoMutation = useUpdateMotivoPendenciaPedido()
   const downloadReciboMutation = useDownloadReciboPagamento()
-  const { data: formasPagamentoData } = useFormasPagamento(0, 100)
-  const formasPagamento = formasPagamentoData?.content ?? []
 
   const [showModal, setShowModal] = useState(false)
-  const [valor, setValor] = useState('')
-  const [dataPagamento, setDataPagamento] = useState(hoje())
-  const [formaPagamentoId, setFormaPagamentoId] = useState('')
-  const [observacao, setObservacao] = useState('')
   const [motivo, setMotivo] = useState('')
 
   useEffect(() => {
@@ -58,31 +40,6 @@ export default function PedidoPagamentoCard({ pedidoId, pedido }: Props) {
   const listaPagamentos = pagamentos ?? []
   const totalPago = listaPagamentos.reduce((acc, p) => acc + (p.valor ?? 0), 0)
   const saldo = (pedido.valorTotal ?? 0) - totalPago
-
-  function openModal() {
-    setValor(saldo > 0 ? String(saldo) : '')
-    setDataPagamento(hoje())
-    setFormaPagamentoId('')
-    setObservacao('')
-    setShowModal(true)
-  }
-
-  function handleSubmitPagamento(e: FormEvent) {
-    e.preventDefault()
-    registrarMutation.mutate(
-      {
-        id: pedidoId,
-        data: {
-          valor: Number(valor),
-          dataPagamento: new Date(`${dataPagamento}T00:00:00`).toISOString(),
-          formaPagamentoId: Number(formaPagamentoId),
-          observacao: observacao || undefined,
-          createdBy: 'netto',
-        },
-      },
-      { onSettled: () => setShowModal(false) },
-    )
-  }
 
   function handleSalvarMotivo() {
     updateMotivoMutation.mutate({ id: pedidoId, motivoPendencia: motivo || undefined })
@@ -106,8 +63,8 @@ export default function PedidoPagamentoCard({ pedidoId, pedido }: Props) {
             </button>
             <button
               type="button"
-              onClick={openModal}
-              disabled={saldo <= 0 || registrarMutation.isPending}
+              onClick={() => setShowModal(true)}
+              disabled={saldo <= 0}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-emerald-600 rounded-lg shadow-sm hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-emerald-600"
             >
               <HandCoins size={14} />
@@ -181,76 +138,7 @@ export default function PedidoPagamentoCard({ pedidoId, pedido }: Props) {
         </div>
       </div>
 
-      <Modal open={showModal} onClose={() => setShowModal(false)} title="Registrar pagamento">
-        <form onSubmit={handleSubmitPagamento} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Valor (R$) <span className="text-red-500 ml-0.5">*</span>
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              max={saldo}
-              value={valor}
-              onChange={(e) => setValor(e.target.value)}
-              required
-              className={inputClass}
-              placeholder="0.00"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Data do pagamento <span className="text-red-500 ml-0.5">*</span>
-            </label>
-            <input
-              type="date"
-              value={dataPagamento}
-              onChange={(e) => setDataPagamento(e.target.value)}
-              required
-              className={inputClass}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Forma de pagamento <span className="text-red-500 ml-0.5">*</span>
-            </label>
-            <select
-              value={formaPagamentoId}
-              onChange={(e) => setFormaPagamentoId(e.target.value)}
-              required
-              className={inputClass}
-            >
-              <option value="">Selecione...</option>
-              {formasPagamento.map((f) => (
-                <option key={f.id} value={f.id}>{f.nome}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Observação</label>
-            <input
-              value={observacao}
-              onChange={(e) => setObservacao(e.target.value)}
-              className={inputClass}
-              placeholder="Opcional"
-            />
-          </div>
-          <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setShowModal(false)}
-              disabled={registrarMutation.isPending}
-              className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-60"
-            >
-              Cancelar
-            </button>
-            <Button type="submit" isLoading={registrarMutation.isPending}>
-              Registrar
-            </Button>
-          </div>
-        </form>
-      </Modal>
+      <RegistrarPagamentoModal pedidoId={pedidoId} open={showModal} onClose={() => setShowModal(false)} />
     </>
   )
 }

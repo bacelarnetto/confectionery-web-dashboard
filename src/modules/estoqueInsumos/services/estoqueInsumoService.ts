@@ -1,6 +1,7 @@
 import api from '../../../lib/axios'
 import { EstoqueInsumo, EstoqueValorizado } from '../types/estoqueInsumo'
 import { PageResponse } from './categoriaInsumoService'
+import { normalizePage, RawPage } from '../../../lib/pagination'
 
 const estoqueInsumoService = {
   getAll(
@@ -12,8 +13,8 @@ const estoqueInsumoService = {
     }
   ): Promise<PageResponse<EstoqueInsumo>> {
     return api
-      .get<PageResponse<EstoqueInsumo>>('/estoque-insumo', { params: { page, size, ...filters } })
-      .then((res) => res.data)
+      .get<RawPage<EstoqueInsumo>>('/estoque-insumo', { params: { page, size, ...filters } })
+      .then((res) => normalizePage(res.data))
   },
 
   getByInsumoId(insumoId: number): Promise<EstoqueInsumo> {

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import orcamentoService from '../services/orcamentoService'
 import { OrcamentoInsertForm, OrcamentoUpdateForm } from '../types/orcamento'
+import { downloadBlob, parseFilenameFromContentDisposition } from '../../../lib/download'
 
 const QUERY_KEY = ['orcamentos']
 const PEDIDOS_QUERY_KEY = ['pedidos']
@@ -56,15 +57,9 @@ export function useUpdateOrcamentoStatus() {
 export function useDownloadOrcamentoPdf() {
   return useMutation({
     mutationFn: (id: number) => orcamentoService.getPdf(id),
-    onSuccess: (data, id) => {
-      const url = window.URL.createObjectURL(new Blob([data], { type: 'application/pdf' }))
-      const link = document.createElement('a')
-      link.href = url
-      link.setAttribute('download', `orcamento-${id}.pdf`)
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-      window.URL.revokeObjectURL(url)
+    onSuccess: ({ blob, contentDisposition }, id) => {
+      const filename = parseFilenameFromContentDisposition(contentDisposition) ?? `orcamento-${id}.pdf`
+      downloadBlob(blob, filename)
       toast.success('Download em andamento...')
     },
     onError: () => {

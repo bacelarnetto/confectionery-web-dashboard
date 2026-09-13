@@ -12,6 +12,7 @@ const TABLE_HEADERS = ['ID', 'Nome', 'Descrição', 'Criado por', 'Ações']
 export default function CategoriaInsumoListPage() {
   const navigate = useNavigate()
   const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(20)
   const [filters, setFilters] = useState({ id: '', nome: '' })
   const [showFilters, setShowFilters] = useState(false)
   const debouncedFilters = useDebounce(filters)
@@ -24,7 +25,7 @@ export default function CategoriaInsumoListPage() {
         }
       : undefined
       
-  const { data, isLoading } = useCategoriasInsumo(page, 20, activeFilters)
+  const { data, isLoading } = useCategoriasInsumo(page, pageSize, activeFilters)
   const deleteMutation = useDeleteCategoriaInsumo()
 
   const categorias = data?.content ?? []
@@ -126,6 +127,9 @@ export default function CategoriaInsumoListPage() {
         page={page}
         totalPages={totalPages}
         onPageChange={setPage}
+        totalElements={data?.totalElements}
+        pageSize={pageSize}
+        onPageSizeChange={(size) => { setPageSize(size); setPage(0) }}
       >
         {categorias.map((c) => (
           <tr key={c.id} className="hover:bg-gray-50 transition-colors">

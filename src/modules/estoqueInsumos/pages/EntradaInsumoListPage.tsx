@@ -13,6 +13,7 @@ const TABLE_HEADERS = ['ID', 'Compra ID', 'Valor Total', 'NF', 'Usuário', 'Cria
 export default function EntradaInsumoListPage() {
   const navigate = useNavigate()
   const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(20)
   const [filters, setFilters] = useState({
     compraId: '',
     dataInicial: '',
@@ -27,7 +28,7 @@ export default function EntradaInsumoListPage() {
     ...(debouncedFilters.dataFinal ? { dataFinal: debouncedFilters.dataFinal } : {}),
   }
 
-  const { data, isLoading } = useEntradasInsumo(page, 20, Object.keys(filterParams).length > 0 ? filterParams : undefined)
+  const { data, isLoading } = useEntradasInsumo(page, pageSize, Object.keys(filterParams).length > 0 ? filterParams : undefined)
   const deleteMutation = useDeleteEntradaInsumo()
 
   const entradas = data?.content ?? []
@@ -137,6 +138,9 @@ export default function EntradaInsumoListPage() {
         page={page}
         totalPages={totalPages}
         onPageChange={setPage}
+        totalElements={data?.totalElements}
+        pageSize={pageSize}
+        onPageSizeChange={(size) => { setPageSize(size); setPage(0) }}
       >
         {entradas.map((e) => (
           <tr key={e.id} className="hover:bg-gray-50 transition-colors">

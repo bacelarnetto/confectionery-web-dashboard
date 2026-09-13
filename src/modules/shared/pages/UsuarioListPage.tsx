@@ -12,7 +12,8 @@ const TABLE_HEADERS = ['Nome', 'Email', 'Perfil', 'Ações']
 export default function UsuarioListPage() {
   const navigate = useNavigate()
   const [page, setPage] = useState(0)
-  const { data, isLoading } = useUsuarios(page)
+  const [pageSize, setPageSize] = useState(20)
+  const { data, isLoading } = useUsuarios(page, pageSize)
   const deleteMutation = useDeleteUsuario()
 
   const usuarios = data?.content ?? []
@@ -49,6 +50,9 @@ export default function UsuarioListPage() {
         page={page}
         totalPages={totalPages}
         onPageChange={setPage}
+        totalElements={data?.totalElements}
+        pageSize={pageSize}
+        onPageSizeChange={(size) => { setPageSize(size); setPage(0) }}
       >
         {usuarios.map((u) => (
           <tr key={u.id} className="hover:bg-gray-50 transition-colors">

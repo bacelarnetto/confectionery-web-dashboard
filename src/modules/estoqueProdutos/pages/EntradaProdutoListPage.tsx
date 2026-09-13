@@ -16,8 +16,9 @@ function formatDate(dateStr: string | undefined): string {
 export default function EntradaProdutoListPage() {
   const navigate = useNavigate()
   const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(20)
 
-  const { data, isLoading } = useEntradasProduto(page, 20)
+  const { data, isLoading } = useEntradasProduto(page, pageSize)
 
   const entradas = data?.content ?? []
   const totalPages = data?.totalPages ?? 0
@@ -44,6 +45,9 @@ export default function EntradaProdutoListPage() {
         page={page}
         totalPages={totalPages}
         onPageChange={setPage}
+        totalElements={data?.totalElements}
+        pageSize={pageSize}
+        onPageSizeChange={(size) => { setPageSize(size); setPage(0) }}
       >
         {entradas.map((e) => {
           const valorTotal = e.itens.reduce((acc, it) => acc + (it.valorCustoTotal ?? it.valorCustoUnitario * it.quantidade), 0)

@@ -1,6 +1,7 @@
 import api from '../../../lib/axios'
 import { SaidaInsumo, SaidaInsumoInsertForm } from '../types/saidaInsumo'
 import { PageResponse } from './categoriaInsumoService'
+import { normalizePage, RawPage } from '../../../lib/pagination'
 
 const saidaInsumoService = {
   getAll(
@@ -13,8 +14,8 @@ const saidaInsumoService = {
     }
   ): Promise<PageResponse<SaidaInsumo>> {
     return api
-      .get<PageResponse<SaidaInsumo>>('/saida-insumo', { params: { page, size, ...filters } })
-      .then((res) => res.data)
+      .get<RawPage<SaidaInsumo>>('/saida-insumo', { params: { page, size, ...filters } })
+      .then((res) => normalizePage(res.data))
   },
 
   getById(id: number): Promise<SaidaInsumo> {
@@ -27,7 +28,7 @@ const saidaInsumoService = {
 
   remove(id: number): Promise<void> {
     return api
-      .delete(`/saida-insumo/${id}`, { headers: { usuario: 'netto' } })
+      .delete(`/saida-insumo/${id}`, { headers: { usuario: '' } })
       .then(() => undefined)
   },
 }

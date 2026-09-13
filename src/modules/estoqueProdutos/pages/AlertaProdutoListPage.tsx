@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { CheckCircle, RefreshCw, ChevronLeft, ChevronRight, Search, X } from 'lucide-react'
+import { CheckCircle, RefreshCw, Search, X } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
-import Table from '../../../components/ui/Table'
+import PageableTable from '../../../components/ui/PageableTable'
 import Modal from '../../../components/ui/Modal'
 import { useAlertasProduto, useResolverAlertaProduto, useVerificarAlertasProduto } from '../hooks/useAlertasProduto'
 
@@ -19,22 +19,9 @@ function formatDate(dateStr?: string) {
   } catch { return dateStr }
 }
 
-function SkeletonRows() {
-  return (
-    <>
-      {Array.from({ length: 5 }).map((_, i) => (
-        <tr key={i} className="animate-pulse">
-          {Array.from({ length: 8 }).map((_, j) => (
-            <td key={j} className="px-4 py-3"><div className="h-4 bg-gray-200 rounded w-3/4" /></td>
-          ))}
-        </tr>
-      ))}
-    </>
-  )
-}
-
 export default function AlertaProdutoListPage() {
   const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(20)
   const [filters, setFilters] = useState<{ ativo?: string; tipoId?: string }>({})
   const [showFilters, setShowFilters] = useState(false)
   const [resolveTarget, setResolveTarget] = useState<{ id: number } | null>(null)
@@ -44,7 +31,7 @@ export default function AlertaProdutoListPage() {
     ...(filters.tipoId ? { tipoId: Number(filters.tipoId) } : {}),
   }
 
-  const { data, isLoading } = useAlertasProduto(page, 20, Object.keys(filterParams).length > 0 ? filterParams : undefined)
+  const { data, isLoading } = useAlertasProduto(page, pageSize, Object.keys(filterParams).length > 0 ? filterParams : undefined)
   const resolverMutation = useResolverAlertaProduto()
   const verificarMutation = useVerificarAlertasProduto()
 
@@ -134,57 +121,53 @@ export default function AlertaProdutoListPage() {
         )}
       </div>
 
-      <Table headers={TABLE_HEADERS} isEmpty={!isLoading && alertas.length === 0}>
-        {isLoading ? <SkeletonRows /> : (
-          alertas.map((a) => {
-            const tipo = TIPO_LABELS[a.tipoId] ?? { label: String(a.tipoId), color: 'bg-gray-100 text-gray-700' }
-            return (
-              <tr key={a.id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-4 py-3 text-gray-500 font-mono text-xs">#{a.id}</td>
-                <td className="px-4 py-3">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${tipo.color}`}>{tipo.label}</span>
-                </td>
-                <td className="px-4 py-3 font-medium text-gray-900">{a.produtoNome ?? `#${a.produtoId}`}</td>
-                <td className="px-4 py-3 text-gray-600">{a.quantidadeAtualEstoque ?? '—'}</td>
-                <td className="px-4 py-3 text-gray-500 text-sm">
-                  {a.tipoId === 1
-                    ? `Vence: ${formatDate(a.dataValidade)}`
-                    : `Mín: ${a.quantidadeMinimaEstoque}`}
-                </td>
-                <td className="px-4 py-3 text-gray-500 text-sm">{formatDate(a.data)}</td>
-                <td className="px-4 py-3">
-                  {a.ativo
-                    ? <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">Ativo</span>
-                    : <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">Resolvido</span>}
-                </td>
-                <td className="px-4 py-3">
-                  {a.ativo && (
-                    <button
-                      onClick={() => setResolveTarget({ id: a.id })}
-                      className="p-1.5 rounded-md text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
-                      title="Resolver"
-                    >
-                      <CheckCircle size={15} />
-                    </button>
-                  )}
-                </td>
-              </tr>
-            )
-          })
-        )}
-      </Table>
-
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-3 mt-4">
-          <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0} className="p-1.5 rounded-md text-gray-400 hover:text-gray-700 disabled:opacity-40">
-            <ChevronLeft size={18} />
-          </button>
-          <span className="text-sm text-gray-600">Página {page + 1} de {totalPages}</span>
-          <button onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1} className="p-1.5 rounded-md text-gray-400 hover:text-gray-700 disabled:opacity-40">
-            <ChevronRight size={18} />
-          </button>
-        </div>
-      )}
+      <PageableTable
+        headers={TABLE_HEADERS}
+        isLoading={isLoading}
+        isEmpty={!isLoading && alertas.length === 0}
+        page={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+        totalElements={data?.totalElements}
+        pageSize={pageSize}
+        onPageSizeChange={(size) => { setPageSize(size); setPage(0) }}
+      >
+        {alertas.map((a) => {
+          const tipo = TIPO_LABELS[a.tipoId] ?? { label: String(a.tipoId), color: 'bg-gray-100 text-gray-700' }
+          return (
+            <tr key={a.id} className="hover:bg-gray-50 transition-colors">
+              <td className="px-4 py-3 text-gray-500 font-mono text-xs">#{a.id}</td>
+              <td className="px-4 py-3">
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${tipo.color}`}>{tipo.label}</span>
+              </td>
+              <td className="px-4 py-3 font-medium text-gray-900">{a.produtoNome ?? `#${a.produtoId}`}</td>
+              <td className="px-4 py-3 text-gray-600">{a.quantidadeAtualEstoque ?? '—'}</td>
+              <td className="px-4 py-3 text-gray-500 text-sm">
+                {a.tipoId === 1
+                  ? `Vence: ${formatDate(a.dataValidade)}`
+                  : `Mín: ${a.quantidadeMinimaEstoque}`}
+              </td>
+              <td className="px-4 py-3 text-gray-500 text-sm">{formatDate(a.data)}</td>
+              <td className="px-4 py-3">
+                {a.ativo
+                  ? <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">Ativo</span>
+                  : <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">Resolvido</span>}
+              </td>
+              <td className="px-4 py-3">
+                {a.ativo && (
+                  <button
+                    onClick={() => setResolveTarget({ id: a.id })}
+                    className="p-1.5 rounded-md text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+                    title="Resolver"
+                  >
+                    <CheckCircle size={15} />
+                  </button>
+                )}
+              </td>
+            </tr>
+          )
+        })}
+      </PageableTable>
 
       <Modal open={!!resolveTarget} onClose={() => setResolveTarget(null)} title="Resolver alerta">
         <p className="text-sm text-gray-600 mb-5">Confirma a resolução do alerta <span className="font-semibold">#{resolveTarget?.id}</span>?</p>

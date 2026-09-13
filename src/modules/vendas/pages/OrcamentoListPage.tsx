@@ -23,7 +23,8 @@ function isVencida(dataValidade: string | undefined): boolean {
 export default function OrcamentoListPage() {
   const navigate = useNavigate()
   const [page, setPage] = useState(0)
-  const { data, isLoading } = useOrcamentos(page)
+  const [pageSize, setPageSize] = useState(20)
+  const { data, isLoading } = useOrcamentos(page, pageSize)
   const statusMutation = useUpdateOrcamentoStatus()
   const downloadPdfMutation = useDownloadOrcamentoPdf()
 
@@ -59,6 +60,9 @@ export default function OrcamentoListPage() {
         page={page}
         totalPages={totalPages}
         onPageChange={setPage}
+        totalElements={data?.totalElements}
+        pageSize={pageSize}
+        onPageSizeChange={(size) => { setPageSize(size); setPage(0) }}
       >
         {orcamentos.map((o) => (
           <tr

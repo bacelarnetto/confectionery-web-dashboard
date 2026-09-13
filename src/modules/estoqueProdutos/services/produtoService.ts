@@ -1,17 +1,12 @@
 import api from '../../../lib/axios'
 import { Produto, ProdutoInsertForm, ProdutoUpdateForm } from '../types/produto'
+import { normalizePage, RawPage, PageResponse } from '../../../lib/pagination'
 
-export interface PageResponse<T> {
-  content: T[]
-  totalElements: number
-  totalPages: number
-  number: number
-  size: number
-}
+export type { PageResponse }
 
 const produtoService = {
   getAll(page = 0, size = 20, filters?: { nome?: string }): Promise<PageResponse<Produto>> {
-    return api.get('/produto', { params: { page, size, ...filters } }).then((r) => r.data)
+    return api.get<RawPage<Produto>>('/produto', { params: { page, size, ...filters } }).then((r) => normalizePage(r.data))
   },
   getById(id: number): Promise<Produto> {
     return api.get(`/produto/${id}`).then((r) => r.data)
@@ -23,7 +18,7 @@ const produtoService = {
     return api.put(`/produto/${id}`, data).then((r) => r.data)
   },
   remove(id: number): Promise<void> {
-    return api.delete(`/produto/${id}`, { headers: { usuario: 'netto' } }).then(() => undefined)
+    return api.delete(`/produto/${id}`, { headers: { usuario: '' } }).then(() => undefined)
   },
 }
 

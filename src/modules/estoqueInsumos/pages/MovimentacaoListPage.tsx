@@ -30,12 +30,13 @@ function getTipoBadge(tipo: string) {
 
 export default function MovimentacaoListPage() {
   const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(20)
   const [filters, setFilters] = useState({ tipo: '' })
   const [showFilters, setShowFilters] = useState(false)
 
   const filterParams = filters.tipo ? { tipo: filters.tipo } : undefined
 
-  const { data, isLoading } = useMovimentacoes(page, 20, filterParams)
+  const { data, isLoading } = useMovimentacoes(page, pageSize, filterParams)
 
   const movimentacoes = data?.content ?? []
   const totalPages = data?.totalPages ?? 0
@@ -111,6 +112,9 @@ export default function MovimentacaoListPage() {
         page={page}
         totalPages={totalPages}
         onPageChange={setPage}
+        totalElements={data?.totalElements}
+        pageSize={pageSize}
+        onPageSizeChange={(size) => { setPageSize(size); setPage(0) }}
       >
         {movimentacoes.map((m) => (
           <tr key={m.id} className="hover:bg-gray-50 transition-colors">

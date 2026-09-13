@@ -2,6 +2,7 @@ import api from '../../../lib/axios'
 import { Compra, CompraInsertForm, CompraUpdateForm } from '../types/compra'
 import { PageResponse } from './fornecedorService'
 import { EntradaInsumoInsertForm } from '../../estoqueInsumos/types/entradaInsumo'
+import { normalizePage, RawPage } from '../../../lib/pagination'
 
 const compraService = {
   getAll(
@@ -15,8 +16,8 @@ const compraService = {
     }
   ): Promise<PageResponse<Compra>> {
     return api
-      .get<PageResponse<Compra>>('/compra', { params: { page, size, ...filters } })
-      .then((res) => res.data)
+      .get<RawPage<Compra>>('/compra', { params: { page, size, ...filters } })
+      .then((res) => normalizePage(res.data))
   },
 
   getById(id: number): Promise<Compra> {
@@ -49,7 +50,7 @@ const compraService = {
 
   remove(id: number): Promise<void> {
     return api
-      .delete(`/compra/${id}`, { headers: { usuario: 'netto' } })
+      .delete(`/compra/${id}`, { headers: { usuario: '' } })
       .then(() => undefined)
   },
 }

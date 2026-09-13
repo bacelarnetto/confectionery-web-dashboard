@@ -28,12 +28,12 @@ export default function FormaPagamentoFormPage() {
 
     if (isEditing) {
       updateMutation.mutate(
-        { id: numericId, data: { nome, updatedBy: 'netto' } },
+        { id: numericId, data: { nome, updatedBy: '' } },
         { onSuccess: () => navigate('/vendas/formas-pagamento') },
       )
     } else {
       createMutation.mutate(
-        { nome, createdBy: 'netto' },
+        { nome, createdBy: '' },
         { onSuccess: () => navigate('/vendas/formas-pagamento') },
       )
     }

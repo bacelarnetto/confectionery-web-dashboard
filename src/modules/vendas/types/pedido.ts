@@ -1,3 +1,5 @@
+import { Endereco } from './cliente'
+
 export interface ItemPedidoComplemento {
   id?: number
   complementoId?: number
@@ -22,6 +24,7 @@ export interface Pedido {
   clienteId?: number
   clienteNome?: string
   enderecoId?: number
+  endereco?: Endereco
   status?: string
   dataEntrega?: string
   valorTotal?: number

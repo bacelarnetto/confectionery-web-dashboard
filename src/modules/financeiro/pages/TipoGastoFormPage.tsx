@@ -28,12 +28,12 @@ export default function TipoGastoFormPage() {
 
     if (isEditing) {
       updateMutation.mutate(
-        { id: numericId, data: { nome, updatedBy: 'netto' } },
+        { id: numericId, data: { nome, updatedBy: '' } },
         { onSuccess: () => navigate('/financeiro/tipos-gasto') },
       )
     } else {
       createMutation.mutate(
-        { nome, createdBy: 'netto' },
+        { nome, createdBy: '' },
         { onSuccess: () => navigate('/financeiro/tipos-gasto') },
       )
     }

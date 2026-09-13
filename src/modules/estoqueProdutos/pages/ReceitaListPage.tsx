@@ -12,13 +12,14 @@ const TABLE_HEADERS = ['ID', 'Nome', 'Produto ID', 'Ingredientes', 'Criado por',
 export default function ReceitaListPage() {
   const navigate = useNavigate()
   const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(20)
   const [filters, setFilters] = useState({ nome: '' })
   const [showFilters, setShowFilters] = useState(false)
   const debouncedFilters = useDebounce(filters)
 
   const activeFilters = debouncedFilters.nome ? { nome: debouncedFilters.nome } : undefined
 
-  const { data, isLoading } = useReceitas(page, 20, activeFilters)
+  const { data, isLoading } = useReceitas(page, pageSize, activeFilters)
   const deleteMutation = useDeleteReceita()
 
   const receitas = data?.content ?? []
@@ -103,6 +104,9 @@ export default function ReceitaListPage() {
         page={page}
         totalPages={totalPages}
         onPageChange={setPage}
+        totalElements={data?.totalElements}
+        pageSize={pageSize}
+        onPageSizeChange={(size) => { setPageSize(size); setPage(0) }}
       >
         {receitas.map((r) => (
           <tr key={r.id} className="hover:bg-gray-50 transition-colors">

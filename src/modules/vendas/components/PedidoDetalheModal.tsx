@@ -1,6 +1,13 @@
+import { useState } from 'react'
 import { X, ExternalLink } from 'lucide-react'
 import { useNavigate } from 'react-router'
-import { Pedido } from '../types/pedido'
+import { Pedido, PEDIDO_STATUS } from '../types/pedido'
+import { usePedido, useUpdatePedidoStatus } from '../hooks/usePedidos'
+import { useCliente } from '../hooks/useClientes'
+import PedidoPagamentoCard from './PedidoPagamentoCard'
+import RegistrarPagamentoModal from './RegistrarPagamentoModal'
+import { STATUS_COLORS, STATUS_QUE_SUGEREM_PAGAMENTO } from '../lib/pedidoStatus'
+import { formatEndereco } from '../lib/endereco'
 
 function formatDateTime(iso?: string) {
   if (!iso) return '—'
@@ -19,15 +26,42 @@ interface Props {
 
 export default function PedidoDetalheModal({ pedido, onClose }: Props) {
   const navigate = useNavigate()
+  const statusMutation = useUpdatePedidoStatus()
+  // Puxa a versão ao vivo do pedido -- o `pedido` recebido por prop é a foto de quando o Mural
+  // buscou a lista; sem isso, mudar o status aqui deixaria o seletor mostrando o valor antigo até
+  // fechar e reabrir o modal.
+  const { data: pedidoAtual } = usePedido(pedido.id)
+  const atual = pedidoAtual ?? pedido
+  // Backend já enriquece `atual.endereco`; só busca o cliente à parte como fallback
+  // para pedidos anteriores a esse enriquecimento.
+  const { data: cliente } = useCliente(atual.endereco ? 0 : (atual.clienteId ?? 0))
+  const enderecoEntrega = atual.endereco ?? cliente?.enderecos?.find((e) => e.id === atual.enderecoId)
+
+  const [percentualSugerido, setPercentualSugerido] = useState<number | undefined>()
+  const [showPagamentoPrompt, setShowPagamentoPrompt] = useState(false)
+
+  function handleStatusChange(status: string) {
+    statusMutation.mutate(
+      { id: pedido.id, status },
+      {
+        onSuccess: () => {
+          if (status in STATUS_QUE_SUGEREM_PAGAMENTO) {
+            setPercentualSugerido(STATUS_QUE_SUGEREM_PAGAMENTO[status])
+            setShowPagamentoPrompt(true)
+          }
+        },
+      },
+    )
+  }
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-5 border-b">
-          <h2 className="text-lg font-bold text-gray-800">Detalhes do Pedido #{pedido.id}</h2>
+          <h2 className="text-lg font-bold text-gray-800">Detalhes do Pedido #{atual.id}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-700">
             <X size={20} />
           </button>
@@ -37,33 +71,52 @@ export default function PedidoDetalheModal({ pedido, onClose }: Props) {
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
               <p className="text-gray-500 text-xs">Cliente</p>
-              <p className="font-medium">{pedido.clienteNome ?? `Cliente #${pedido.clienteId ?? '—'}`}</p>
+              <p className="font-medium">{atual.clienteNome ?? `Cliente #${atual.clienteId ?? '—'}`}</p>
             </div>
             <div>
-              <p className="text-gray-500 text-xs">Status</p>
-              <p className="font-medium">{pedido.status}</p>
+              <p className="text-gray-500 text-xs mb-1">Status</p>
+              {atual.status ? (
+                <select
+                  value={atual.status}
+                  onChange={(e) => handleStatusChange(e.target.value)}
+                  className={`text-xs font-medium px-2 py-1 rounded-full border-0 cursor-pointer ${STATUS_COLORS[atual.status] ?? 'bg-gray-100 text-gray-700'}`}
+                >
+                  {PEDIDO_STATUS.map((s) => (
+                    <option key={s} value={s}>{s.replace('_', ' ')}</option>
+                  ))}
+                </select>
+              ) : (
+                '—'
+              )}
             </div>
             <div>
               <p className="text-gray-500 text-xs">Data do pedido</p>
-              <p className="font-medium">{formatDateTime(pedido.createdOn)}</p>
+              <p className="font-medium">{formatDateTime(atual.createdOn)}</p>
             </div>
             <div>
               <p className="text-gray-500 text-xs">Data de entrega</p>
-              <p className="font-semibold text-gray-800">{formatDateTime(pedido.dataEntrega)}</p>
+              <p className="font-semibold text-gray-800">{formatDateTime(atual.dataEntrega)}</p>
             </div>
             <div>
               <p className="text-gray-500 text-xs">Entrega</p>
-              <p className="font-medium">{pedido.retirar ? 'Retirada no local' : 'Entrega'}</p>
+              <p className="font-medium">{atual.retirar ? 'Retirada no local' : 'Entrega'}</p>
             </div>
             <div>
               <p className="text-gray-500 text-xs">Frete</p>
-              <p className="font-medium">{formatCurrency(pedido.valorFrete)}</p>
+              <p className="font-medium">{formatCurrency(atual.valorFrete)}</p>
             </div>
           </div>
 
+          {!atual.retirar && enderecoEntrega && (
+            <div className="text-sm bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+              <p className="text-gray-500 text-xs mb-0.5">Endereço de entrega</p>
+              <p className="font-medium text-gray-800">{formatEndereco(enderecoEntrega)}</p>
+            </div>
+          )}
+
           <div>
             <p className="text-gray-500 text-xs mb-2">Itens</p>
-            {pedido.itens.length === 0 ? (
+            {atual.itens.length === 0 ? (
               <p className="text-sm text-gray-400">Nenhum item</p>
             ) : (
               <table className="w-full text-sm">
@@ -76,7 +129,7 @@ export default function PedidoDetalheModal({ pedido, onClose }: Props) {
                   </tr>
                 </thead>
                 <tbody>
-                  {pedido.itens.map((item, i) => (
+                  {atual.itens.map((item, i) => (
                     <tr key={i} className="border-b last:border-0">
                       <td className="py-1">#{item.produtoId}</td>
                       <td className="text-right py-1">{item.quantidade}</td>
@@ -91,19 +144,29 @@ export default function PedidoDetalheModal({ pedido, onClose }: Props) {
 
           <div className="flex items-center justify-between border-t pt-3">
             <span className="font-bold text-gray-800">Total</span>
-            <span className="font-bold text-lg">{formatCurrency(pedido.valorTotal)}</span>
+            <span className="font-bold text-lg">{formatCurrency(atual.valorTotal)}</span>
           </div>
+
+          <PedidoPagamentoCard pedidoId={atual.id} pedido={atual} />
         </div>
 
         <div className="px-5 pb-5">
           <button
-            onClick={() => { onClose(); navigate(`/vendas/pedidos/${pedido.id}/editar`) }}
+            onClick={() => { onClose(); navigate(`/vendas/pedidos/${atual.id}/editar`) }}
             className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg"
           >
             <ExternalLink size={16} /> Ir para o pedido
           </button>
         </div>
       </div>
+
+      <RegistrarPagamentoModal
+        pedidoId={pedido.id}
+        open={showPagamentoPrompt}
+        onClose={() => setShowPagamentoPrompt(false)}
+        percentualSugerido={percentualSugerido}
+        title={percentualSugerido != null ? 'Registrar adiantamento' : 'Registrar pagamento'}
+      />
     </div>
   )
 }

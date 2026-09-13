@@ -70,6 +70,11 @@ export default function AcessoUsuarios() {
           <span className="font-medium text-gray-800">Estoque</span> por padrão; na edição, deixar o campo em branco mantém
           o perfil que a pessoa já tinha.
         </p>
+        <p>
+          Ainda não existe um "esqueci minha senha" que a própria pessoa aciona sozinha. Se alguém esquecer a senha, quem
+          resolve é o Admin: abre a tela de Usuários, edita a pessoa, digita uma senha nova no campo de senha e salva —
+          a pessoa já consegue logar com a senha nova na hora.
+        </p>
       </GuiaCard>
 
       <GuiaCard step={5} title="Dados da Empresa e o logo nos documentos (só para Admin)">

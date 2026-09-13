@@ -13,6 +13,7 @@ const TABLE_HEADERS = ['ID', 'Tipo ID', 'Valor Total', 'Produto ID', 'Usuário',
 export default function SaidaInsumoListPage() {
   const navigate = useNavigate()
   const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(20)
   const [filters, setFilters] = useState({
     tipoId: '',
     dataInicial: '',
@@ -27,7 +28,7 @@ export default function SaidaInsumoListPage() {
     ...(debouncedFilters.dataFinal ? { dataFinal: debouncedFilters.dataFinal } : {}),
   }
 
-  const { data, isLoading } = useSaidasInsumo(page, 20, Object.keys(filterParams).length > 0 ? filterParams : undefined)
+  const { data, isLoading } = useSaidasInsumo(page, pageSize, Object.keys(filterParams).length > 0 ? filterParams : undefined)
   const deleteMutation = useDeleteSaidaInsumo()
 
   const saidas = data?.content ?? []
@@ -137,6 +138,9 @@ export default function SaidaInsumoListPage() {
         page={page}
         totalPages={totalPages}
         onPageChange={setPage}
+        totalElements={data?.totalElements}
+        pageSize={pageSize}
+        onPageSizeChange={(size) => { setPageSize(size); setPage(0) }}
       >
         {saidas.map((s) => (
           <tr key={s.id} className="hover:bg-gray-50 transition-colors">

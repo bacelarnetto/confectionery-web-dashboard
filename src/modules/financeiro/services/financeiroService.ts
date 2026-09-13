@@ -9,23 +9,18 @@ import {
   RecebimentoAvulsaForm,
 } from '../types/contaReceber'
 import { ResumoMes } from '../types/resumo'
+import { normalizePage, RawPage, PageResponse } from '../../../lib/pagination'
 
-export interface PageResponse<T> {
-  content: T[]
-  totalElements: number
-  totalPages: number
-  number: number
-  size: number
-}
+export type { PageResponse }
 
 const financeiroService = {
   // --- Tipos de gasto (F2) ---
   getTiposGasto(page = 0, size = 50, nome?: string): Promise<PageResponse<TipoGasto>> {
     return api
-      .get<PageResponse<TipoGasto>>('/financeiro/tipos-gasto', {
+      .get<RawPage<TipoGasto>>('/financeiro/tipos-gasto', {
         params: { page, size, ...(nome ? { nome } : {}) },
       })
-      .then((res) => res.data)
+      .then((res) => normalizePage(res.data))
   },
 
   getTipoGasto(id: number): Promise<TipoGasto> {
@@ -42,7 +37,7 @@ const financeiroService = {
 
   deleteTipoGasto(id: number): Promise<void> {
     return api
-      .delete(`/financeiro/tipos-gasto/${id}`, { headers: { usuario: 'netto' } })
+      .delete(`/financeiro/tipos-gasto/${id}`, { headers: { usuario: '' } })
       .then(() => undefined)
   },
 
@@ -53,8 +48,8 @@ const financeiroService = {
     filters?: { mes?: string; tipoGastoId?: number },
   ): Promise<PageResponse<Gasto>> {
     return api
-      .get<PageResponse<Gasto>>('/financeiro/gastos', { params: { page, size, ...filters } })
-      .then((res) => res.data)
+      .get<RawPage<Gasto>>('/financeiro/gastos', { params: { page, size, ...filters } })
+      .then((res) => normalizePage(res.data))
   },
 
   getGasto(id: number): Promise<Gasto> {
@@ -71,7 +66,7 @@ const financeiroService = {
 
   deleteGasto(id: number): Promise<void> {
     return api
-      .delete(`/financeiro/gastos/${id}`, { headers: { usuario: 'netto' } })
+      .delete(`/financeiro/gastos/${id}`, { headers: { usuario: '' } })
       .then(() => undefined)
   },
 
@@ -85,10 +80,12 @@ const financeiroService = {
   },
 
   // --- Contas a receber (F4) ---
-  getContasReceber(apenasPendentes = true): Promise<ContaReceber[]> {
+  getContasReceber(apenasPendentes = true, page = 0, size = 20): Promise<PageResponse<ContaReceber>> {
     return api
-      .get<ContaReceber[]>('/financeiro/contas-a-receber', { params: { apenasPendentes } })
-      .then((res) => res.data)
+      .get<RawPage<ContaReceber>>('/financeiro/contas-a-receber', {
+        params: { apenasPendentes, page, size },
+      })
+      .then((res) => normalizePage(res.data))
   },
 
   getContaAvulsa(id: number): Promise<ContaAvulsa> {
@@ -105,7 +102,7 @@ const financeiroService = {
 
   deleteContaAvulsa(id: number): Promise<void> {
     return api
-      .delete(`/financeiro/contas-a-receber/avulsas/${id}`, { headers: { usuario: 'netto' } })
+      .delete(`/financeiro/contas-a-receber/avulsas/${id}`, { headers: { usuario: '' } })
       .then(() => undefined)
   },
 

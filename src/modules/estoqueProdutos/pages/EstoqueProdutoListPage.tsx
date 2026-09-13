@@ -15,13 +15,14 @@ function formatDate(dateStr: string | undefined): string {
 
 export default function EstoqueProdutoListPage() {
   const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(20)
   const [filters, setFilters] = useState({ produtoId: '' })
   const [showFilters, setShowFilters] = useState(false)
   const debouncedFilters = useDebounce(filters)
 
   const produtoId = debouncedFilters.produtoId ? Number(debouncedFilters.produtoId) : undefined
 
-  const { data, isLoading } = useEstoqueProdutos(page, 20, produtoId)
+  const { data, isLoading } = useEstoqueProdutos(page, pageSize, produtoId)
 
   const estoques = data?.content ?? []
   const totalPages = data?.totalPages ?? 0
@@ -88,6 +89,9 @@ export default function EstoqueProdutoListPage() {
         page={page}
         totalPages={totalPages}
         onPageChange={setPage}
+        totalElements={data?.totalElements}
+        pageSize={pageSize}
+        onPageSizeChange={(size) => { setPageSize(size); setPage(0) }}
       >
         {estoques.map((e) => (
           <tr key={e.id} className="hover:bg-gray-50 transition-colors">

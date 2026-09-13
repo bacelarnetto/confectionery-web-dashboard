@@ -1,19 +1,14 @@
 import api from '../../../lib/axios'
 import { FormaPagamento, FormaPagamentoInsertForm, FormaPagamentoUpdateForm } from '../types/formaPagamento'
+import { normalizePage, RawPage, PageResponse } from '../../../lib/pagination'
 
-export interface PageResponse<T> {
-  content: T[]
-  totalElements: number
-  totalPages: number
-  number: number
-  size: number
-}
+export type { PageResponse }
 
 const formaPagamentoService = {
   getAll(page = 0, size = 50, nome?: string): Promise<PageResponse<FormaPagamento>> {
     return api
-      .get<PageResponse<FormaPagamento>>('/forma-pagamento', { params: { page, size, ...(nome ? { nome } : {}) } })
-      .then((res) => res.data)
+      .get<RawPage<FormaPagamento>>('/forma-pagamento', { params: { page, size, ...(nome ? { nome } : {}) } })
+      .then((res) => normalizePage(res.data))
   },
 
   getById(id: number): Promise<FormaPagamento> {
@@ -29,7 +24,7 @@ const formaPagamentoService = {
   },
 
   remove(id: number): Promise<void> {
-    return api.delete(`/forma-pagamento/${id}`, { headers: { usuario: 'netto' } }).then(() => undefined)
+    return api.delete(`/forma-pagamento/${id}`, { headers: { usuario: '' } }).then(() => undefined)
   },
 }
 

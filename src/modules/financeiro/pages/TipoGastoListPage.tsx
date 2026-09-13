@@ -12,10 +12,11 @@ const TABLE_HEADERS = ['ID', 'Nome', 'Ações']
 export default function TipoGastoListPage() {
   const navigate = useNavigate()
   const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(20)
   const [nomeFilter, setNomeFilter] = useState('')
   const [showFilters, setShowFilters] = useState(false)
   const debouncedNome = useDebounce(nomeFilter)
-  const { data, isLoading } = useTiposGasto(page, 20, debouncedNome || undefined)
+  const { data, isLoading } = useTiposGasto(page, pageSize, debouncedNome || undefined)
   const deleteMutation = useDeleteTipoGasto()
 
   const tipos = data?.content ?? []
@@ -92,6 +93,9 @@ export default function TipoGastoListPage() {
         page={page}
         totalPages={totalPages}
         onPageChange={setPage}
+        totalElements={data?.totalElements}
+        pageSize={pageSize}
+        onPageSizeChange={(size) => { setPageSize(size); setPage(0) }}
       >
         {tipos.map((t) => (
           <tr key={t.id} className="hover:bg-gray-50 transition-colors">

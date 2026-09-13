@@ -1,12 +1,6 @@
 import api from '../../../lib/axios'
 import { AlertaProduto } from '../types/alertaProduto'
-
-interface PageResponse<T> {
-  content: T[]
-  totalPages: number
-  totalElements: number
-  number: number
-}
+import { normalizePage, RawPage, PageResponse } from '../../../lib/pagination'
 
 const alertaProdutoService = {
   getAll(
@@ -15,8 +9,8 @@ const alertaProdutoService = {
     filters?: { ativo?: boolean; tipoId?: number }
   ): Promise<PageResponse<AlertaProduto>> {
     return api
-      .get<PageResponse<AlertaProduto>>('/alerta-produto', { params: { page, size, ...filters } })
-      .then((res) => res.data)
+      .get<RawPage<AlertaProduto>>('/alerta-produto', { params: { page, size, ...filters } })
+      .then((res) => normalizePage(res.data))
   },
 
   getById(id: number): Promise<AlertaProduto> {
@@ -29,7 +23,7 @@ const alertaProdutoService = {
 
   resolver(id: number): Promise<AlertaProduto> {
     return api
-      .put<AlertaProduto>(`/alerta-produto/${id}/resolver`, null, { headers: { usuario: 'netto' } })
+      .put<AlertaProduto>(`/alerta-produto/${id}/resolver`, null, { headers: { usuario: '' } })
       .then((res) => res.data)
   },
 

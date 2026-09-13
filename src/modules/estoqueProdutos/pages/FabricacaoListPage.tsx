@@ -21,8 +21,9 @@ function formatDate(dateStr: string | undefined): string {
 export default function FabricacaoListPage() {
   const navigate = useNavigate()
   const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(20)
 
-  const { data, isLoading } = useFabricacoes(page, 20)
+  const { data, isLoading } = useFabricacoes(page, pageSize)
 
   const fabricacoes = data?.content ?? []
   const totalPages = data?.totalPages ?? 0
@@ -46,6 +47,9 @@ export default function FabricacaoListPage() {
         page={page}
         totalPages={totalPages}
         onPageChange={setPage}
+        totalElements={data?.totalElements}
+        pageSize={pageSize}
+        onPageSizeChange={(size) => { setPageSize(size); setPage(0) }}
       >
         {fabricacoes.map((f) => (
           <tr key={f.id} className="hover:bg-gray-50 transition-colors">

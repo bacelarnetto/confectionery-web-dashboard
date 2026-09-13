@@ -92,7 +92,7 @@ export default function PrecificacaoProdutoForm({ produtoId }: Props) {
       produtoId,
       valorCustoFixo: Number(custoFixo) || 0,
       margemLucro: Number(margemLucro) || 0,
-      createdBy: 'netto',
+      createdBy: '',
     }
 
     if (modo === 'manual') {

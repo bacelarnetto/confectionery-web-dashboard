@@ -101,7 +101,7 @@ export default function SaidaInsumoFormPage() {
         tipoId: Number(form.tipoId),
         valorTotal: Number(form.valorTotal),
         ...optional,
-        createdBy: 'netto',
+        createdBy: '',
         itens,
       },
       { onSuccess: () => navigate('/estoque-insumos/saidas') },

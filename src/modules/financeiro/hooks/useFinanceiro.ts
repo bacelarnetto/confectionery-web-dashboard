@@ -6,6 +6,7 @@ import { GastoInsertForm, GastoUpdateForm } from '../types/gasto'
 import {
   ContaAvulsaInsertForm,
   ContaAvulsaUpdateForm,
+  ContaReceber,
   RecebimentoAvulsaForm,
 } from '../types/contaReceber'
 
@@ -171,10 +172,32 @@ export function useResumoMes(mes: string) {
 
 // --- Contas a receber ---
 
-export function useContasReceber(apenasPendentes = true) {
+export function useContasReceber(apenasPendentes = true, page = 0, size = 20) {
   return useQuery({
-    queryKey: [...CONTAS_KEY, apenasPendentes],
-    queryFn: () => financeiroService.getContasReceber(apenasPendentes),
+    queryKey: [...CONTAS_KEY, apenasPendentes, page, size],
+    queryFn: () => financeiroService.getContasReceber(apenasPendentes, page, size),
+  })
+}
+
+// Lookup interno (não é uma lista paginada visível): precisa cobrir TODAS as pendências pra não
+// deixar de marcar um pedido como não pago. O tamanho de página tem um teto de 100 no backend, então
+// varre todas as páginas em vez de confiar num size grande (que seria truncado silenciosamente).
+export function useTodasContasReceberPendentes() {
+  return useQuery({
+    queryKey: [...CONTAS_KEY, 'todas-pendentes'],
+    queryFn: async () => {
+      const size = 100
+      let page = 0
+      let contas: ContaReceber[] = []
+      let totalPages = 1
+      while (page < totalPages) {
+        const res = await financeiroService.getContasReceber(true, page, size)
+        contas = contas.concat(res.content)
+        totalPages = res.totalPages
+        page += 1
+      }
+      return contas
+    },
   })
 }
 

@@ -10,7 +10,7 @@ export default function ParametrizacaoAlertaFormPage() {
   const isEdit = !!id
 
   const { data: existing } = useParametrizacaoAlerta(isEdit ? Number(id) : 0)
-  const { data: insumosData } = useInsumos(0, 200)
+  const { data: insumosData } = useInsumos(0, 100)
   const createMutation = useCreateParametrizacaoAlerta()
   const updateMutation = useUpdateParametrizacaoAlerta()
 
@@ -46,7 +46,7 @@ export default function ParametrizacaoAlertaFormPage() {
             quantidadeMinimaEstoque: Number(form.quantidadeMinimaEstoque),
             quantidadeMaximaEstoque: Number(form.quantidadeMaximaEstoque),
             quantidadeDiasVencimento: Number(form.quantidadeDiasVencimento),
-            updatedBy: 'netto',
+            updatedBy: '',
           },
         },
         { onSuccess: () => navigate('/estoque-insumos/parametrizacao-alertas') }
@@ -58,7 +58,7 @@ export default function ParametrizacaoAlertaFormPage() {
           quantidadeMinimaEstoque: Number(form.quantidadeMinimaEstoque),
           quantidadeMaximaEstoque: Number(form.quantidadeMaximaEstoque),
           quantidadeDiasVencimento: Number(form.quantidadeDiasVencimento),
-          createdBy: 'netto',
+          createdBy: '',
         },
         { onSuccess: () => navigate('/estoque-insumos/parametrizacao-alertas') }
       )

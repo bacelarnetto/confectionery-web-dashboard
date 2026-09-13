@@ -62,7 +62,9 @@ function Field({
 
 export default function ContaReceberListPage() {
   const [apenasPendentes, setApenasPendentes] = useState(true)
-  const { data, isLoading } = useContasReceber(apenasPendentes)
+  const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(20)
+  const { data, isLoading } = useContasReceber(apenasPendentes, page, pageSize)
   const deleteMutation = useDeleteContaAvulsa()
 
   const [recebimentoTarget, setRecebimentoTarget] = useState<ContaReceber | null>(null)
@@ -70,7 +72,8 @@ export default function ContaReceberListPage() {
   const [motivoTarget, setMotivoTarget] = useState<ContaReceber | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; descricao: string } | null>(null)
 
-  const contas = data ?? []
+  const contas = data?.content ?? []
+  const totalPages = data?.totalPages ?? 0
 
   return (
     <div>
@@ -80,7 +83,7 @@ export default function ContaReceberListPage() {
             <input
               type="checkbox"
               checked={apenasPendentes}
-              onChange={(e) => setApenasPendentes(e.target.checked)}
+              onChange={(e) => { setApenasPendentes(e.target.checked); setPage(0) }}
               className="w-4 h-4 rounded border-gray-300 text-amber-500 focus:ring-amber-400"
             />
             Apenas pendentes
@@ -99,9 +102,12 @@ export default function ContaReceberListPage() {
         headers={TABLE_HEADERS}
         isLoading={isLoading}
         isEmpty={!isLoading && contas.length === 0}
-        page={0}
-        totalPages={1}
-        onPageChange={() => undefined}
+        page={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+        totalElements={data?.totalElements}
+        pageSize={pageSize}
+        onPageSizeChange={(size) => { setPageSize(size); setPage(0) }}
       >
         {contas.map((c) => (
           <tr key={`${c.origem}-${c.idRef}`} className="hover:bg-gray-50 transition-colors">
@@ -229,7 +235,7 @@ function RecebimentoModal({ target, onClose }: { target: ContaReceber | null; on
             dataPagamento: dataIso,
             formaPagamentoId: Number(formaPagamentoId),
             observacao: observacao || undefined,
-            createdBy: 'netto',
+            createdBy: '',
           },
         },
         { onSettled: onClose },
@@ -357,9 +363,9 @@ function AvulsaModal({
       dataVencimento: dataVencimento ? new Date(`${dataVencimento}T00:00:00`).toISOString() : undefined,
     }
     if (isEditing) {
-      updateMutation.mutate({ id: editId, data: { ...payload, updatedBy: 'netto' } }, { onSettled: onClose })
+      updateMutation.mutate({ id: editId, data: { ...payload, updatedBy: '' } }, { onSettled: onClose })
     } else {
-      createMutation.mutate({ ...payload, createdBy: 'netto' }, { onSettled: onClose })
+      createMutation.mutate({ ...payload, createdBy: '' }, { onSettled: onClose })
     }
   }
 

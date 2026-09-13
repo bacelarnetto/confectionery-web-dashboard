@@ -132,14 +132,14 @@ export default function InsumoFormPage() {
       quantidadeMinimaEstoque: Number(alertas.minimo),
       quantidadeMaximaEstoque: Number(alertas.maximo),
       quantidadeDiasVencimento: Number(alertas.vencimento),
-      createdBy: 'netto'
+      createdBy: ''
     }
 
     try {
       if (parametrizacao?.id) {
         await updateParamMut.mutateAsync({ 
           id: parametrizacao.id, 
-          data: { ...pd, updatedBy: 'netto' } as any 
+          data: { ...pd, updatedBy: '' } as any 
         })
       } else {
         await createParamMut.mutateAsync(pd)
@@ -169,7 +169,7 @@ export default function InsumoFormPage() {
             perecivel: form.perecivel,
             unidadeMedida: form.unidadeMedida,
             ...optional,
-            updatedBy: 'netto',
+            updatedBy: '',
           },
         },
         { 
@@ -188,7 +188,7 @@ export default function InsumoFormPage() {
           perecivel: form.perecivel,
           unidadeMedida: form.unidadeMedida,
           ...optional,
-          createdBy: 'netto',
+          createdBy: '',
         },
         { 
           onSuccess: async (createdInsumo) => {

@@ -71,12 +71,12 @@ export default function CategoriaInsumoFormPage() {
 
     if (isEditing) {
       updateMutation.mutate(
-        { id: numericId, data: { nome: form.nome, ...optional, updatedBy: 'netto' } },
+        { id: numericId, data: { nome: form.nome, ...optional, updatedBy: '' } },
         { onSuccess: () => navigate('/estoque-insumos/categorias') },
       )
     } else {
       createMutation.mutate(
-        { nome: form.nome, ...optional, createdBy: 'netto' },
+        { nome: form.nome, ...optional, createdBy: '' },
         { onSuccess: () => navigate('/estoque-insumos/categorias') },
       )
     }
