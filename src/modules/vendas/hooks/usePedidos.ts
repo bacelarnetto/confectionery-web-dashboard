@@ -5,6 +5,10 @@ import { PedidoInsertForm, PedidoUpdateForm, PagamentoPedidoInsertForm } from '.
 import { downloadBlob, parseFilenameFromContentDisposition } from '../../../lib/download'
 
 const QUERY_KEY = ['pedidos']
+// O Mural da Semana usa uma query separada (faixa de datas em vez de página), então toda mutação
+// que mexe num pedido precisa invalidar as duas -- senão o card do Mural fica com dado velho até
+// o staleTime (30s) vencer sozinho, mesmo depois de fechar o modal de detalhe.
+const MURAL_QUERY_KEY = ['pedidos-mural']
 
 export function usePedidos(page = 0, size = 20, filters?: { clienteId?: number; status?: string }) {
   return useQuery({
@@ -25,7 +29,11 @@ export function useCreatePedido() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (data: PedidoInsertForm) => pedidoService.create(data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: QUERY_KEY }); toast.success('Pedido registrado!') },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY })
+      queryClient.invalidateQueries({ queryKey: MURAL_QUERY_KEY })
+      toast.success('Pedido registrado!')
+    },
   })
 }
 
@@ -33,7 +41,11 @@ export function useUpdatePedido() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: PedidoUpdateForm }) => pedidoService.update(id, data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: QUERY_KEY }); toast.success('Pedido atualizado!') },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY })
+      queryClient.invalidateQueries({ queryKey: MURAL_QUERY_KEY })
+      toast.success('Pedido atualizado!')
+    },
   })
 }
 

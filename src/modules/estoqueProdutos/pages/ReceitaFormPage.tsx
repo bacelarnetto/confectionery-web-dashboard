@@ -7,6 +7,7 @@ import RadioToggle from '../../../components/ui/RadioToggle'
 import { useReceita, useReceitas, useCreateReceita, useUpdateReceita } from '../hooks/useReceitas'
 import { useProdutos, useProduto } from '../hooks/useProdutos'
 import { useCategoriasProduto } from '../hooks/useCategoriasProduto'
+import InsumoField from '../components/InsumoField'
 import { Ingrediente, ProdutoRefForm } from '../types/receita'
 import { parseApiError } from '../../../lib/apiError'
 
@@ -389,15 +390,11 @@ export default function ReceitaFormPage() {
               <div key={index} className="grid grid-cols-12 gap-3 items-end">
                 <div className="col-span-4">
                   {index === 0 && (
-                    <label className="block text-xs font-medium text-gray-500 mb-1">Insumo ID *</label>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Insumo *</label>
                   )}
-                  <input
-                    type="number"
-                    min="1"
-                    value={ing.insumoId || ''}
-                    onChange={(e) => handleIngredienteChange(index, 'insumoId', e.target.value)}
-                    className={inputClass}
-                    placeholder="ID do insumo"
+                  <InsumoField
+                    value={ing.insumoId}
+                    onChange={(insumoId) => handleIngredienteChange(index, 'insumoId', String(insumoId))}
                   />
                 </div>
                 <div className="col-span-3">
