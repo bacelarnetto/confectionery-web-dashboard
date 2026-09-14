@@ -74,22 +74,6 @@ export default function PedidoDetalheModal({ pedido, onClose }: Props) {
               <p className="font-medium">{atual.clienteNome ?? `Cliente #${atual.clienteId ?? '—'}`}</p>
             </div>
             <div>
-              <p className="text-gray-500 text-xs mb-1">Status</p>
-              {atual.status ? (
-                <select
-                  value={atual.status}
-                  onChange={(e) => handleStatusChange(e.target.value)}
-                  className={`text-xs font-medium px-2 py-1 rounded-full border-0 cursor-pointer ${STATUS_COLORS[atual.status] ?? 'bg-gray-100 text-gray-700'}`}
-                >
-                  {PEDIDO_STATUS.map((s) => (
-                    <option key={s} value={s}>{s.replace('_', ' ')}</option>
-                  ))}
-                </select>
-              ) : (
-                '—'
-              )}
-            </div>
-            <div>
               <p className="text-gray-500 text-xs">Data do pedido</p>
               <p className="font-medium">{formatDateTime(atual.createdOn)}</p>
             </div>
@@ -106,6 +90,32 @@ export default function PedidoDetalheModal({ pedido, onClose }: Props) {
               <p className="font-medium">{formatCurrency(atual.valorFrete)}</p>
             </div>
           </div>
+
+          {atual.status && (
+            <div>
+              <p className="text-gray-500 text-xs mb-2">Status</p>
+              <div className="flex flex-wrap gap-2">
+                {PEDIDO_STATUS.map((s) => {
+                  const isAtual = s === atual.status
+                  return (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => !isAtual && handleStatusChange(s)}
+                      disabled={isAtual || statusMutation.isPending}
+                      className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors disabled:cursor-default ${
+                        isAtual
+                          ? `${STATUS_COLORS[s] ?? 'bg-gray-100 text-gray-700'} border-transparent ring-2 ring-offset-1 ring-gray-300`
+                          : 'bg-white text-gray-500 border-gray-300 hover:bg-gray-50 cursor-pointer disabled:opacity-50'
+                      }`}
+                    >
+                      {s.replace('_', ' ')}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
           {!atual.retirar && enderecoEntrega && (
             <div className="text-sm bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">

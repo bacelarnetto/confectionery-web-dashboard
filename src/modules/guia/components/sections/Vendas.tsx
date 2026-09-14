@@ -114,6 +114,8 @@ export default function Vendas() {
             <ArrowRight size={14} className="text-gray-300 flex-shrink-0" />
             <StatusBadge className="bg-green-100 text-green-800">PRONTO</StatusBadge>
             <ArrowRight size={14} className="text-gray-300 flex-shrink-0" />
+            <StatusBadge className="bg-amber-100 text-amber-800">A CAMINHO</StatusBadge>
+            <ArrowRight size={14} className="text-gray-300 flex-shrink-0" />
             <StatusBadge className="bg-gray-100 text-gray-700">ENTREGUE</StatusBadge>
           </div>
           <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
@@ -127,6 +129,11 @@ export default function Vendas() {
           sistema mexe em estoque sozinho: o produto vendido sai do estoque de produto — abastecido pela Fabricação ou
           por uma Entrada de Produto direta, no caso de terceirizado — e, se o pedido tiver algum complemento, o insumo
           dele também é descontado ali, na hora, já que complemento não passa pela Fabricação.
+        </p>
+        <p>
+          <span className="font-medium text-gray-800">A CAMINHO</span> é o intervalo entre sair pra entrega e o cliente
+          confirmar o recebimento — separado de <span className="font-medium text-gray-800">PRONTO</span> (que só diz que
+          a produção terminou) e de <span className="font-medium text-gray-800">ENTREGUE</span> (que fecha o pedido).
         </p>
       </GuiaCard>
 

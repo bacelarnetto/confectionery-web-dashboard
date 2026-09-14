@@ -3,14 +3,17 @@ import { useNavigate, useParams } from 'react-router'
 import { Plus, Trash2, AlertCircle } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
 import Button from '../../../components/ui/Button'
-import { usePedido, useCreatePedido, useUpdatePedido } from '../hooks/usePedidos'
+import { usePedido, useCreatePedido, useUpdatePedido, useUpdatePedidoStatus } from '../hooks/usePedidos'
 import { useClientes } from '../hooks/useClientes'
 import EnderecoClienteField from '../components/EnderecoClienteField'
 import ComplementoPicker, { ComplementoResolvido } from '../components/ComplementoPicker'
 import ResumoValoresCard from '../components/ResumoValoresCard'
 import PedidoPagamentoCard from '../components/PedidoPagamentoCard'
+import RegistrarPagamentoModal from '../components/RegistrarPagamentoModal'
 import { calcularResumo } from '../lib/resumoValores'
 import { formatEndereco } from '../lib/endereco'
+import { STATUS_COLORS, STATUS_QUE_SUGEREM_PAGAMENTO } from '../lib/pedidoStatus'
+import { PEDIDO_STATUS } from '../types/pedido'
 import { useProdutos } from '../../estoqueProdutos/hooks/useProdutos'
 import precificacaoProdutoService from '../../estoqueProdutos/services/precificacaoProdutoService'
 import complementoService from '../services/complementoService'
@@ -74,11 +77,28 @@ export default function PedidoFormPage() {
   const { data: produtosData } = useProdutos(0, 100)
   const createMutation = useCreatePedido()
   const updateMutation = useUpdatePedido()
+  const statusMutation = useUpdatePedidoStatus()
 
   const [form, setForm] = useState<FormState>(emptyForm)
   const [itens, setItens] = useState<ItemForm[]>([{ ...emptyItem }])
   const [erroGeral, setErroGeral] = useState<string | null>(null)
   const [itemErroIndex, setItemErroIndex] = useState<number | null>(null)
+  const [percentualSugerido, setPercentualSugerido] = useState<number | undefined>()
+  const [showPagamentoPrompt, setShowPagamentoPrompt] = useState(false)
+
+  function handleStatusChange(status: string) {
+    statusMutation.mutate(
+      { id: numericId, status },
+      {
+        onSuccess: () => {
+          if (status in STATUS_QUE_SUGEREM_PAGAMENTO) {
+            setPercentualSugerido(STATUS_QUE_SUGEREM_PAGAMENTO[status])
+            setShowPagamentoPrompt(true)
+          }
+        },
+      },
+    )
+  }
 
   const clientes = clientesData?.content ?? []
   const produtos = produtosData?.content ?? []
@@ -250,6 +270,32 @@ export default function PedidoFormPage() {
         <div className="mb-4 flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
           <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
           <p>{erroGeral}</p>
+        </div>
+      )}
+
+      {isEditing && pedido?.status && (
+        <div className="mb-6 bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+          <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">Status do Pedido</h3>
+          <div className="flex flex-wrap gap-2">
+            {PEDIDO_STATUS.map((s) => {
+              const isAtual = s === pedido.status
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => !isAtual && handleStatusChange(s)}
+                  disabled={isAtual || statusMutation.isPending}
+                  className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors disabled:cursor-default ${
+                    isAtual
+                      ? `${STATUS_COLORS[s] ?? 'bg-gray-100 text-gray-700'} border-transparent ring-2 ring-offset-1 ring-gray-300`
+                      : 'bg-white text-gray-500 border-gray-300 hover:bg-gray-50 cursor-pointer disabled:opacity-50'
+                  }`}
+                >
+                  {s.replace('_', ' ')}
+                </button>
+              )
+            })}
+          </div>
         </div>
       )}
 
@@ -452,6 +498,16 @@ export default function PedidoFormPage() {
           </Button>
         </div>
       </form>
+
+      {isEditing && (
+        <RegistrarPagamentoModal
+          pedidoId={numericId}
+          open={showPagamentoPrompt}
+          onClose={() => setShowPagamentoPrompt(false)}
+          percentualSugerido={percentualSugerido}
+          title={percentualSugerido != null ? 'Registrar adiantamento' : 'Registrar pagamento'}
+        />
+      )}
     </div>
   )
 }

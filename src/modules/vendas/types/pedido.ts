@@ -99,6 +99,7 @@ export const PEDIDO_STATUS = [
   'CONFIRMADO',
   'EM_PRODUCAO',
   'PRONTO',
+  'A_CAMINHO',
   'ENTREGUE',
   'CANCELADO',
 ] as const
