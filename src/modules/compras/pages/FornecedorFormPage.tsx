@@ -147,6 +147,8 @@ export default function FornecedorFormPage() {
                   value={form.nome}
                   onChange={handleChange}
                   required
+                  minLength={3}
+                  maxLength={250}
                   className={inputClass}
                   placeholder="Nome do fornecedor"
                 />
