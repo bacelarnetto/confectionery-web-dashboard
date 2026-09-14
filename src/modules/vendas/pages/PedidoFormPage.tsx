@@ -1,5 +1,5 @@
 import { useState, useEffect, FormEvent } from 'react'
-import { useNavigate, useParams } from 'react-router'
+import { useNavigate, useParams, useLocation } from 'react-router'
 import { Plus, Trash2, AlertCircle } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
 import Button from '../../../components/ui/Button'
@@ -79,6 +79,8 @@ const inputClass =
 
 export default function PedidoFormPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const returnTo = (location.state as { from?: string } | null)?.from || '/vendas/pedidos'
   const { id } = useParams<{ id: string }>()
   const isEditing = !!id
   const numericId = Number(id ?? 0)
@@ -269,7 +271,7 @@ export default function PedidoFormPage() {
     if (isEditing) {
       updateMutation.mutate(
         { id: numericId, data: { ...base, enderecoId: form.enderecoId ? Number(form.enderecoId) : undefined, updatedBy: '' } },
-        { onSuccess: () => navigate('/vendas/pedidos'), onError: tratarErro },
+        { onSuccess: () => navigate(returnTo), onError: tratarErro },
       )
     } else {
       createMutation.mutate(
@@ -291,7 +293,7 @@ export default function PedidoFormPage() {
       <PageHeader
         title={isEditing ? 'Editar Pedido' : 'Novo Pedido'}
         subtitle={isEditing ? 'Atualize os dados do pedido' : 'Registre um novo pedido'}
-        backTo="/vendas/pedidos"
+        backTo={returnTo}
       />
 
       {erroGeral && (

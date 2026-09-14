@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ChevronLeft, ChevronRight, KanbanSquare } from 'lucide-react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import pedidoService from '../services/pedidoService'
 import { useAlertasPedidoAtivos } from '../hooks/useAlertasPedido'
 import PedidoStickyCard from '../components/PedidoStickyCard'
@@ -37,6 +37,7 @@ function formatWeekLabel(monday: Date): string {
 }
 
 export default function PedidoMuralPage() {
+  const queryClient = useQueryClient()
   const [weekOffset, setWeekOffset] = useState(0)
   const [selected, setSelected] = useState<Pedido | null>(null)
 
@@ -115,7 +116,16 @@ export default function PedidoMuralPage() {
       </div>
 
       {selected && (
-        <PedidoDetalheModal pedido={selected} onClose={() => setSelected(null)} />
+        <PedidoDetalheModal
+          pedido={selected}
+          onClose={() => {
+            setSelected(null)
+            queryClient.invalidateQueries({ queryKey: ['pedidos-mural'] })
+          }}
+          onUpdated={() => {
+            queryClient.invalidateQueries({ queryKey: ['pedidos-mural'] })
+          }}
+        />
       )}
     </div>
   )

@@ -22,9 +22,10 @@ function formatCurrency(val?: number) {
 interface Props {
   pedido: Pedido
   onClose: () => void
+  onUpdated?: () => void
 }
 
-export default function PedidoDetalheModal({ pedido, onClose }: Props) {
+export default function PedidoDetalheModal({ pedido, onClose, onUpdated }: Props) {
   const navigate = useNavigate()
   const statusMutation = useUpdatePedidoStatus()
   // Puxa a versão ao vivo do pedido -- o `pedido` recebido por prop é a foto de quando o Mural
@@ -45,6 +46,7 @@ export default function PedidoDetalheModal({ pedido, onClose }: Props) {
       { id: pedido.id, status },
       {
         onSuccess: () => {
+          onUpdated?.()
           if (status in STATUS_QUE_SUGEREM_PAGAMENTO) {
             setPercentualSugerido(STATUS_QUE_SUGEREM_PAGAMENTO[status])
             setShowPagamentoPrompt(true)
@@ -162,7 +164,10 @@ export default function PedidoDetalheModal({ pedido, onClose }: Props) {
 
         <div className="px-5 pb-5">
           <button
-            onClick={() => { onClose(); navigate(`/vendas/pedidos/${atual.id}/editar`) }}
+            onClick={() => {
+              onClose()
+              navigate(`/vendas/pedidos/${atual.id}/editar`, { state: { from: '/vendas/mural' } })
+            }}
             className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg"
           >
             <ExternalLink size={16} /> Ir para o pedido

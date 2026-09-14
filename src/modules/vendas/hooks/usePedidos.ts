@@ -55,6 +55,7 @@ export function useUpdatePedidoStatus() {
     mutationFn: ({ id, status }: { id: number; status: string }) => pedidoService.updateStatus(id, status),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY })
+      queryClient.invalidateQueries({ queryKey: MURAL_QUERY_KEY })
       // Virar ENTREGUE (ou sair desse status, ex: reabrir) muda se o pedido aparece em contas a
       // receber -- sem isso o ícone de "entregue mas não pago" na lista fica com dado velho.
       queryClient.invalidateQueries({ queryKey: ['contas-receber'] })
@@ -78,6 +79,7 @@ export function useRegistrarPagamentoPedido() {
       pedidoService.registrarPagamentoPedido(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY })
+      queryClient.invalidateQueries({ queryKey: MURAL_QUERY_KEY })
       queryClient.invalidateQueries({ queryKey: ['contas-receber'] })
       queryClient.invalidateQueries({ queryKey: ['resumo'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard-kpis'] })
@@ -108,6 +110,7 @@ export function useUpdateMotivoPendenciaPedido() {
       pedidoService.updateMotivoPendencia(id, motivoPendencia),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY })
+      queryClient.invalidateQueries({ queryKey: MURAL_QUERY_KEY })
       queryClient.invalidateQueries({ queryKey: ['contas-receber'] })
       toast.success('Motivo de pendência atualizado!')
     },
