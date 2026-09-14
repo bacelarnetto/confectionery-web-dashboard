@@ -96,7 +96,7 @@ export default function EstoqueProdutoListPage() {
         {estoques.map((e) => (
           <tr key={e.id} className="hover:bg-gray-50 transition-colors">
             <td className="px-4 py-3 text-gray-500 text-sm">{e.id}</td>
-            <td className="px-4 py-3 text-gray-600">{e.produtoId}</td>
+            <td className="px-4 py-3 text-gray-600">{e.produtoNome ?? `#${e.produtoId}`}</td>
             <td className="px-4 py-3 font-medium text-gray-900">{e.quantidade.toFixed(2)}</td>
             <td className="px-4 py-3">{e.origem ? <Badge status={e.origem} /> : '—'}</td>
             <td className="px-4 py-3 text-gray-600">{formatDate(e.dataFabricacao)}</td>

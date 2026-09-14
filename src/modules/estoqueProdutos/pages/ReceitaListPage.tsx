@@ -5,9 +5,10 @@ import PageHeader from '../../../components/ui/PageHeader'
 import PageableTable from '../../../components/ui/PageableTable'
 import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal'
 import { useReceitas, useDeleteReceita } from '../hooks/useReceitas'
+import { useProdutos } from '../hooks/useProdutos'
 import { useDebounce } from '../../../hooks/useDebounce'
 
-const TABLE_HEADERS = ['ID', 'Nome', 'Produto ID', 'Ingredientes', 'Criado por', 'Ações']
+const TABLE_HEADERS = ['ID', 'Nome', 'Produto', 'Ingredientes', 'Criado por', 'Ações']
 
 export default function ReceitaListPage() {
   const navigate = useNavigate()
@@ -20,10 +21,12 @@ export default function ReceitaListPage() {
   const activeFilters = debouncedFilters.nome ? { nome: debouncedFilters.nome } : undefined
 
   const { data, isLoading } = useReceitas(page, pageSize, activeFilters)
+  const { data: produtosData } = useProdutos(0, 100)
   const deleteMutation = useDeleteReceita()
 
   const receitas = data?.content ?? []
   const totalPages = data?.totalPages ?? 0
+  const produtos = produtosData?.content ?? []
 
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; nome: string } | null>(null)
 
@@ -112,7 +115,7 @@ export default function ReceitaListPage() {
           <tr key={r.id} className="hover:bg-gray-50 transition-colors">
             <td className="px-4 py-3 text-gray-500 text-sm">{r.id}</td>
             <td className="px-4 py-3 font-medium text-gray-900">{r.nome}</td>
-            <td className="px-4 py-3 text-gray-600">{r.produtoId}</td>
+            <td className="px-4 py-3 text-gray-600">{produtos.find((p) => p.id === r.produtoId)?.nome ?? `#${r.produtoId}`}</td>
             <td className="px-4 py-3 text-gray-600">{r.ingredientes?.length ?? 0} ingredientes</td>
             <td className="px-4 py-3 text-gray-600">{r.createdBy}</td>
             <td className="px-4 py-3">

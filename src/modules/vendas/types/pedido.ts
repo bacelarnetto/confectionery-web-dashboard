@@ -101,6 +101,7 @@ export const PEDIDO_STATUS = [
   'PRONTO',
   'A_CAMINHO',
   'ENTREGUE',
+  'CONCLUIDO',
   'CANCELADO',
 ] as const
 

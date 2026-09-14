@@ -2,17 +2,9 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import PageableTable from '../../../components/ui/PageableTable'
 import { useClientePedidos, useClienteTotalGasto } from '../hooks/useClientes'
+import { STATUS_COLORS } from '../lib/pedidoStatus'
 
 const TABLE_HEADERS = ['ID', 'Status', 'Entrega', 'Valor Total', 'Criado em']
-
-const STATUS_COLORS: Record<string, string> = {
-  RASCUNHO: 'bg-gray-100 text-gray-600',
-  CONFIRMADO: 'bg-blue-100 text-blue-800',
-  EM_PRODUCAO: 'bg-purple-100 text-purple-800',
-  PRONTO: 'bg-green-100 text-green-800',
-  ENTREGUE: 'bg-gray-100 text-gray-700',
-  CANCELADO: 'bg-red-100 text-red-800',
-}
 
 function formatCurrency(v: number) {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })

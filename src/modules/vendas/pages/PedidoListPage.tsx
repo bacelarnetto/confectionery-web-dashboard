@@ -13,7 +13,7 @@ import { useTodasContasReceberPendentes } from '../../financeiro/hooks/useFinanc
 import RegistrarPagamentoModal from '../components/RegistrarPagamentoModal'
 import { STATUS_COLORS, STATUS_QUE_SUGEREM_PAGAMENTO } from '../lib/pedidoStatus'
 
-const STATUS_TERMINAIS = ['CANCELADO', 'ENTREGUE']
+const STATUS_TERMINAIS = ['CANCELADO', 'ENTREGUE', 'CONCLUIDO']
 
 const TABLE_HEADERS = ['ID', 'Cliente', 'Status', 'Valor Total', 'Frete', 'Retirada', 'Criado em', 'Entrega', 'Ações']
 

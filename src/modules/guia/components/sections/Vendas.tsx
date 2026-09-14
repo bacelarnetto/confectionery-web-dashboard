@@ -98,7 +98,11 @@ export default function Vendas() {
         <p>O valor total do pedido é sempre calculado pelo sistema, somando os itens, complementos, descontos e o frete.</p>
       </GuiaCard>
 
-      <GuiaCard step={5} title="Avance o status direto na lista">
+      <GuiaCard
+        step={5}
+        title="Avance o status direto na lista"
+        dica="Pedido pode ser salvo (e ficar em RASCUNHO) mesmo com um item de produto sem estoque — é assim de propósito, pra dar pra registrar uma encomenda futura sem travar. O bloqueio só acontece na hora de avançar pra EM PRODUÇÃO: se faltar estoque de algum produto do pedido, o sistema recusa, avisa qual item é e destaca em vermelho a linha dele na tela de edição do pedido. Pra resolver, remova (ou ajuste) o item sem estoque — ou reponha o estoque desse produto — e tente avançar de novo."
+      >
         <p>
           Na lista de <span className="font-medium text-gray-800">Pedidos</span>, o status aparece como um seletor colorido
           na própria linha — não precisa abrir o pedido pra avançar de uma etapa pra outra.
@@ -117,6 +121,8 @@ export default function Vendas() {
             <StatusBadge className="bg-amber-100 text-amber-800">A CAMINHO</StatusBadge>
             <ArrowRight size={14} className="text-gray-300 flex-shrink-0" />
             <StatusBadge className="bg-gray-100 text-gray-700">ENTREGUE</StatusBadge>
+            <ArrowRight size={14} className="text-gray-300 flex-shrink-0" />
+            <StatusBadge className="bg-emerald-100 text-emerald-800">CONCLUÍDO</StatusBadge>
           </div>
           <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
             <StatusBadge className="bg-red-100 text-red-800">CANCELADO</StatusBadge>
@@ -133,7 +139,15 @@ export default function Vendas() {
         <p>
           <span className="font-medium text-gray-800">A CAMINHO</span> é o intervalo entre sair pra entrega e o cliente
           confirmar o recebimento — separado de <span className="font-medium text-gray-800">PRONTO</span> (que só diz que
-          a produção terminou) e de <span className="font-medium text-gray-800">ENTREGUE</span> (que fecha o pedido).
+          a produção terminou) e de <span className="font-medium text-gray-800">ENTREGUE</span> (que confirma que o
+          produto chegou).
+        </p>
+        <p>
+          <span className="font-medium text-gray-800">CONCLUÍDO</span> é o status final de sucesso do pedido — só pode ser
+          marcado depois que o pedido estiver <span className="font-medium text-gray-800">100% pago</span>; se ainda tiver
+          saldo em aberto, o sistema recusa e avisa. Diferente de ENTREGUE, que só confirma a entrega física, CONCLUÍDO
+          fecha o pedido de vez, sem pendência nenhuma. CANCELADO continua sendo o único jeito de um pedido terminar sem
+          sucesso, e pode acontecer a partir de qualquer etapa antes de CONCLUÍDO.
         </p>
       </GuiaCard>
 

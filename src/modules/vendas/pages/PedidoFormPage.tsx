@@ -30,6 +30,17 @@ function extrairProdutoIdInvalido(mensagem: string): number | null {
   return match ? Number(match[1]) : null
 }
 
+/**
+ * A validação de estoque (só acontece ao avançar pra EM_PRODUCAO) cita o nome de cada produto sem
+ * saldo suficiente, ex: "Estoque insuficiente para o(s) produto(s): Bolo de Chocolate (necessário
+ * 1.000, disponível 0.000), Torta Salgada (necessário 2.000, disponível 1.000)". Extrai os nomes
+ * pra destacar a(s) linha(s) do item correspondente no formulário.
+ */
+function extrairNomesProdutosSemEstoque(mensagem: string): string[] {
+  if (!mensagem.includes('Estoque insuficiente')) return []
+  return Array.from(mensagem.matchAll(/([^,():]+?)\s*\(necessário/gi), (m) => m[1].trim())
+}
+
 interface ItemForm {
   produtoId: string
   quantidade: string
@@ -82,7 +93,7 @@ export default function PedidoFormPage() {
   const [form, setForm] = useState<FormState>(emptyForm)
   const [itens, setItens] = useState<ItemForm[]>([{ ...emptyItem }])
   const [erroGeral, setErroGeral] = useState<string | null>(null)
-  const [itemErroIndex, setItemErroIndex] = useState<number | null>(null)
+  const [itemErroIndices, setItemErroIndices] = useState<Set<number>>(new Set())
   const [percentualSugerido, setPercentualSugerido] = useState<number | undefined>()
   const [showPagamentoPrompt, setShowPagamentoPrompt] = useState(false)
 
@@ -91,10 +102,21 @@ export default function PedidoFormPage() {
       { id: numericId, status },
       {
         onSuccess: () => {
+          setItemErroIndices(new Set())
           if (status in STATUS_QUE_SUGEREM_PAGAMENTO) {
             setPercentualSugerido(STATUS_QUE_SUGEREM_PAGAMENTO[status])
             setShowPagamentoPrompt(true)
           }
+        },
+        onError: (err) => {
+          const { mensagem } = parseApiError(err)
+          const nomesSemEstoque = extrairNomesProdutosSemEstoque(mensagem)
+          if (nomesSemEstoque.length === 0) return
+          const indices = itens
+            .map((it, i) => ({ i, nome: produtos.find((p) => p.id === Number(it.produtoId))?.nome }))
+            .filter(({ nome }) => nome && nomesSemEstoque.some((n) => n.toLowerCase() === nome.toLowerCase()))
+            .map(({ i }) => i)
+          setItemErroIndices(new Set(indices))
         },
       },
     )
@@ -188,7 +210,13 @@ export default function PedidoFormPage() {
       updated[index] = { ...updated[index], [field]: value }
       return updated
     })
-    if (itemErroIndex === index) setItemErroIndex(null)
+    if (itemErroIndices.has(index)) {
+      setItemErroIndices((prev) => {
+        const next = new Set(prev)
+        next.delete(index)
+        return next
+      })
+    }
   }
 
   function addItem() {
@@ -219,7 +247,7 @@ export default function PedidoFormPage() {
     if (produtoIdInvalido != null) {
       const index = itens.findIndex((it) => Number(it.produtoId) === produtoIdInvalido)
       if (index >= 0) {
-        setItemErroIndex(index)
+        setItemErroIndices(new Set([index]))
         setErroGeral(mensagem)
         return
       }
@@ -230,7 +258,7 @@ export default function PedidoFormPage() {
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setErroGeral(null)
-    setItemErroIndex(null)
+    setItemErroIndices(new Set())
     const base = {
       retirar: form.retirar,
       dataEntrega: form.dataEntrega ? new Date(form.dataEntrega).toISOString() : undefined,
@@ -403,7 +431,7 @@ export default function PedidoFormPage() {
             {itens.map((item, index) => (
               <div
                 key={index}
-                className={`border rounded-lg p-4 ${itemErroIndex === index ? 'border-red-400 bg-red-50' : 'border-gray-200'}`}
+                className={`border rounded-lg p-4 ${itemErroIndices.has(index) ? 'border-red-400 bg-red-50' : 'border-gray-200'}`}
               >
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm font-medium text-gray-600">Item {index + 1}</span>

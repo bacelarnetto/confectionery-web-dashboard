@@ -1,6 +1,7 @@
 export interface Fabricacao {
   id: number
   receitaId: number
+  receitaNome?: string
   quantidade: number
   observacao?: string
   createdBy: string

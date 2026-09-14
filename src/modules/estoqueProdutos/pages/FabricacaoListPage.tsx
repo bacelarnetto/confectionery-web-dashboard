@@ -5,7 +5,7 @@ import PageHeader from '../../../components/ui/PageHeader'
 import PageableTable from '../../../components/ui/PageableTable'
 import { useFabricacoes } from '../hooks/useFabricacoes'
 
-const TABLE_HEADERS = ['ID', 'Receita ID', 'Quantidade', 'Observação', 'Criado por', 'Criado em']
+const TABLE_HEADERS = ['ID', 'Receita', 'Quantidade', 'Observação', 'Criado por', 'Criado em']
 
 function formatDate(dateStr: string | undefined): string {
   if (!dateStr) return '—'
@@ -54,7 +54,7 @@ export default function FabricacaoListPage() {
         {fabricacoes.map((f) => (
           <tr key={f.id} className="hover:bg-gray-50 transition-colors">
             <td className="px-4 py-3 text-gray-500 text-sm">{f.id}</td>
-            <td className="px-4 py-3 text-gray-600">{f.receitaId}</td>
+            <td className="px-4 py-3 text-gray-600">{f.receitaNome ?? `#${f.receitaId}`}</td>
             <td className="px-4 py-3 font-medium text-gray-900">{f.quantidade}</td>
             <td className="px-4 py-3 text-gray-600">{f.observacao ?? '—'}</td>
             <td className="px-4 py-3 text-gray-600">{f.createdBy}</td>

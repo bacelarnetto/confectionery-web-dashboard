@@ -2,7 +2,7 @@ import { AlertTriangle, MapPin, Package } from 'lucide-react'
 import { Pedido } from '../types/pedido'
 
 function getUrgencyColor(dataEntrega?: string, status?: string): string {
-  if (status === 'ENTREGUE' || status === 'CANCELADO') {
+  if (status === 'ENTREGUE' || status === 'CONCLUIDO' || status === 'CANCELADO') {
     return 'bg-gray-100 opacity-60'
   }
   if (!dataEntrega) return 'bg-green-100'
@@ -25,7 +25,9 @@ const STATUS_BADGE: Record<string, string> = {
   CONFIRMADO:  'bg-blue-100 text-blue-800',
   EM_PRODUCAO: 'bg-purple-100 text-purple-800',
   PRONTO:      'bg-green-200 text-green-800',
+  A_CAMINHO:   'bg-amber-200 text-amber-800',
   ENTREGUE:    'bg-gray-200 text-gray-600',
+  CONCLUIDO:   'bg-emerald-200 text-emerald-800',
   CANCELADO:   'bg-red-100 text-red-700',
 }
 
@@ -48,7 +50,7 @@ interface Props {
 
 export default function PedidoStickyCard({ pedido, hasAlerta, onClick, rotation }: Props) {
   const bgColor = getUrgencyColor(pedido.dataEntrega, pedido.status)
-  const isDone = pedido.status === 'ENTREGUE' || pedido.status === 'CANCELADO'
+  const isDone = pedido.status === 'ENTREGUE' || pedido.status === 'CONCLUIDO' || pedido.status === 'CANCELADO'
   const statusBadge = STATUS_BADGE[pedido.status ?? ''] ?? 'bg-gray-100 text-gray-600'
 
   return (

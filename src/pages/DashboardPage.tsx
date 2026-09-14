@@ -80,7 +80,9 @@ const STATUS_CHART_COLORS: Record<string, string> = {
   CONFIRMADO: '#3b82f6',
   EM_PRODUCAO: '#a855f7',
   PRONTO: '#22c55e',
+  A_CAMINHO: '#f59e0b',
   ENTREGUE: '#14b8a6',
+  CONCLUIDO: '#059669',
   CANCELADO: '#ef4444',
 }
 
