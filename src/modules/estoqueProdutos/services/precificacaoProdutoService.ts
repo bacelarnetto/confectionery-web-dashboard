@@ -22,8 +22,10 @@ const precificacaoProdutoService = {
   create(data: PrecificacaoProdutoInsertForm): Promise<PrecificacaoProduto> {
     return api.post('/precificacao-produto', data, { skipErrorToast: true }).then((r) => r.data)
   },
+  // Um 400 aqui é regra de negócio (produto sem receita cadastrada), não falha técnica —
+  // skipErrorToast evita o toast genérico global; a UI já trata esse estado inline.
   simular(data: PrecificacaoProdutoSimularForm): Promise<PrecificacaoProdutoSimulacao> {
-    return api.post('/precificacao-produto/simular', data).then((r) => r.data)
+    return api.post('/precificacao-produto/simular', data, { skipErrorToast: true }).then((r) => r.data)
   },
 }
 
