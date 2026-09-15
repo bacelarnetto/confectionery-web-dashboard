@@ -143,7 +143,12 @@ export default function PedidoDetalheModal({ pedido, onClose, onUpdated }: Props
                 <tbody>
                   {atual.itens.map((item, i) => (
                     <tr key={i} className="border-b last:border-0">
-                      <td className="py-1">#{item.produtoId}</td>
+                      <td className="py-1">
+                        #{item.produtoId}
+                        {!!item.desconto && (
+                          <p className="text-xs text-gray-400">Desconto: {formatCurrency(item.desconto)}</p>
+                        )}
+                      </td>
                       <td className="text-right py-1">{item.quantidade}</td>
                       <td className="text-right py-1">{formatCurrency(item.valorUnitario)}</td>
                       <td className="text-right py-1">{formatCurrency(item.valorTotal)}</td>

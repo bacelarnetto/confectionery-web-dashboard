@@ -9,6 +9,15 @@ export default function Compras() {
       title="Compras: da lista até o estoque atualizado"
       intro="Comprar não é só anotar numa lista de papel: no sistema, a compra confirmada vira estoque de verdade, sem você lançar entrada duas vezes."
     >
+      <GuiaCard step={0} title="Cadastre o fornecedor, se ainda não tiver um">
+        <p>
+          Em <span className="font-medium text-gray-800">Compras → Fornecedores → Novo Fornecedor</span>, o único campo
+          obrigatório é o <span className="font-medium text-gray-800">Nome</span> — endereço, telefone, e-mail, CNPJ,
+          inscrição estadual e site são opcionais, preencha o que tiver à mão.
+        </p>
+        <p>Fornecedor é opcional numa compra, mas ter os principais cadastrados agrupa seu histórico de compras por quem te atende.</p>
+      </GuiaCard>
+
       <GuiaCard step={1} title="Monte a lista de compras">
         <p>
           Vá em <span className="font-medium text-gray-800">Compras → Compras</span> e clique em “Nova Compra”. Escolha um

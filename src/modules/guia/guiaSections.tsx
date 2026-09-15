@@ -1,12 +1,14 @@
 import type { ComponentType, ReactNode } from 'react'
-import { LogIn, Sprout, ShoppingCart, Bell, Wallet, Sparkles, Store, KanbanSquare, CalendarClock, History, BarChart3 } from 'lucide-react'
+import { LogIn, LayoutDashboard, Sprout, ShoppingCart, Bell, Wallet, Sparkles, Store, Landmark, KanbanSquare, CalendarClock, History, BarChart3 } from 'lucide-react'
 import AcessoUsuarios from './components/sections/AcessoUsuarios'
+import Dashboard from './components/sections/Dashboard'
 import PrimeirosPassos from './components/sections/PrimeirosPassos'
 import Compras from './components/sections/Compras'
 import AlertasInsumo from './components/sections/AlertasInsumo'
 import GestaoCustos from './components/sections/GestaoCustos'
 import Precificacao from './components/sections/Precificacao'
 import Vendas from './components/sections/Vendas'
+import Financeiro from './components/sections/Financeiro'
 import Mural from './components/sections/Mural'
 import AlertasPedido from './components/sections/AlertasPedido'
 import Relatorios from './components/sections/Relatorios'
@@ -27,6 +29,13 @@ export const guiaSections: GuiaSecao[] = [
     descricao: 'Login, sua sessão e os perfis de acesso',
     icone: <LogIn size={16} />,
     Component: AcessoUsuarios,
+  },
+  {
+    id: 'dashboard',
+    titulo: 'Dashboard',
+    descricao: 'O que cada card e gráfico da tela inicial mostra',
+    icone: <LayoutDashboard size={16} />,
+    Component: Dashboard,
   },
   {
     id: 'primeiros-passos',
@@ -69,6 +78,13 @@ export const guiaSections: GuiaSecao[] = [
     descricao: 'Do cliente ao pedido pronto pra produção',
     icone: <Store size={16} />,
     Component: Vendas,
+  },
+  {
+    id: 'financeiro',
+    titulo: 'Financeiro',
+    descricao: 'Gastos, tipos de gasto e contas a receber',
+    icone: <Landmark size={16} />,
+    Component: Financeiro,
   },
   {
     id: 'mural',
