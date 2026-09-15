@@ -1,8 +1,9 @@
 import { AlertTriangle, MapPin, Package } from 'lucide-react'
 import { Pedido } from '../types/pedido'
+import { STATUS_TERMINAIS } from '../lib/pedidoStatus'
 
 function getUrgencyColor(dataEntrega?: string, status?: string): string {
-  if (status === 'ENTREGUE' || status === 'CONCLUIDO' || status === 'CANCELADO') {
+  if (STATUS_TERMINAIS.includes(status ?? '')) {
     return 'bg-gray-100 opacity-60'
   }
   if (!dataEntrega) return 'bg-green-100'
@@ -11,7 +12,7 @@ function getUrgencyColor(dataEntrega?: string, status?: string): string {
   now.setHours(0, 0, 0, 0)
   const entrega = new Date(dataEntrega)
   entrega.setHours(0, 0, 0, 0)
-  const diffDays = Math.floor((entrega.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+  const diffDays = Math.round((entrega.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
 
   if (diffDays < 0) return 'bg-red-200'  // atrasado
   if (diffDays === 0) return 'bg-red-200' // hoje

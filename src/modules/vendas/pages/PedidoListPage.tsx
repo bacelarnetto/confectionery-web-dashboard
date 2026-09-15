@@ -11,9 +11,7 @@ import { PEDIDO_STATUS } from '../types/pedido'
 import { formatCurrency } from '../../../lib/format'
 import { useTodasContasReceberPendentes } from '../../financeiro/hooks/useFinanceiro'
 import RegistrarPagamentoModal from '../components/RegistrarPagamentoModal'
-import { STATUS_COLORS, STATUS_QUE_SUGEREM_PAGAMENTO } from '../lib/pedidoStatus'
-
-const STATUS_TERMINAIS = ['CANCELADO', 'ENTREGUE', 'CONCLUIDO']
+import { STATUS_COLORS, STATUS_QUE_SUGEREM_PAGAMENTO, STATUS_TERMINAIS, getPrazoEntrega } from '../lib/pedidoStatus'
 
 const TABLE_HEADERS = ['ID', 'Cliente', 'Status', 'Valor Total', 'Frete', 'Retirada', 'Criado em', 'Entrega', 'Ações']
 
@@ -172,7 +170,9 @@ export default function PedidoListPage() {
         pageSize={pageSize}
         onPageSizeChange={(size) => { setPageSize(size); setPage(0) }}
       >
-        {pedidos.map((p) => (
+        {pedidos.map((p) => {
+          const prazoEntrega = getPrazoEntrega(p.dataEntrega, p.status)
+          return (
           <tr key={p.id} className="hover:bg-gray-50 transition-colors">
             <td className="px-4 py-3 text-gray-500 text-sm">{p.id}</td>
             <td className="px-4 py-3 text-gray-700 font-medium">{p.clienteNome ?? p.clienteId ?? '—'}</td>
@@ -210,9 +210,16 @@ export default function PedidoListPage() {
               )}
             </td>
             <td className="px-4 py-3 text-gray-600">{formatDate(p.createdOn)}</td>
-            <td className="px-4 py-3 text-gray-600">
+            <td className="px-4 py-3">
               {p.dataEntrega ? (
-                <span className="font-medium">{formatDate(p.dataEntrega)}</span>
+                <div className="flex flex-col items-start gap-1">
+                  <span className="font-medium text-gray-700">{formatDate(p.dataEntrega)}</span>
+                  {prazoEntrega && (
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${prazoEntrega.badgeClass}`}>
+                      {prazoEntrega.label}
+                    </span>
+                  )}
+                </div>
               ) : (
                 <span className="text-gray-400 text-xs">—</span>
               )}
@@ -238,7 +245,8 @@ export default function PedidoListPage() {
               </div>
             </td>
           </tr>
-        ))}
+          )
+        })}
       </PageableTable>
 
       <Modal open={!!cancelTarget} onClose={() => setCancelTarget(null)} title="Cancelar pedido">

@@ -70,9 +70,9 @@ export default function AlertasPedido() {
         <p>O atalho <span className="font-medium text-gray-800">“Ver pedido”</span> leva direto pra edição, sem procurar na lista completa.</p>
       </GuiaCard>
 
-      <GuiaCard step={5} title="Os cinco lugares onde você vê o prazo na tela">
+      <GuiaCard step={5} title="Os seis lugares onde você vê o prazo na tela">
         <p>
-          O alerta não mora numa tela só — ele aparece nos cinco pontos abaixo, sempre com a <span className="font-medium text-gray-800">mesma informação</span>, em graus diferentes de destaque:
+          O alerta não mora numa tela só — ele aparece nos seis pontos abaixo, sempre com a <span className="font-medium text-gray-800">mesma informação</span>, em graus diferentes de destaque:
         </p>
         <ul className="pl-5 space-y-2 list-none">
           <li>
@@ -97,6 +97,11 @@ export default function AlertasPedido() {
             <span className="inline-flex items-center gap-1 text-xs font-medium text-gray-700 bg-gray-100 rounded px-2 py-0.5 mr-2">Mural da Semana</span>
             o card do pedido assume a cor da urgência (vermelho atrasado/hoje, laranja 1 dia, amarelo 2–3 dias) e exibe o
             aviso de ingredientes — o prazo aparece sem você nem precisar abrir o alerta.
+          </li>
+          <li>
+            <span className="inline-flex items-center gap-1 text-xs font-medium text-gray-700 bg-gray-100 rounded px-2 py-0.5 mr-2">Lista de Pedidos</span>
+            a coluna “Entrega” ganha um selo de urgência junto à data: Atrasado (vermelho), Hoje (laranja) ou Em 1–3 dias
+            (amarelo) — dá pra ver de relance quais pedidos precisam de atenção sem sair da lista.
           </li>
         </ul>
       </GuiaCard>
