@@ -5,57 +5,66 @@ export default function Dashboard() {
   return (
     <GuiaSection
       id="dashboard"
-      title="Dashboard: seu painel de controle"
-      intro="A primeira tela que você vê ao entrar (/) — os números que mais importam, de relance, sem precisar abrir relatório nenhum."
+      title="Dashboard: seu painel de controle organizado"
+      intro="A primeira tela que você vê ao entrar (/) — agrupada em blocos temáticos claros, reunindo métricas e gráficos de cada setor com atalhos diretos."
     >
-      <GuiaCard step={1} title="Os cards do topo">
+      <GuiaCard step={1} title="Barra de atalhos e destaques do topo">
         <p>
-          <span className="font-medium text-gray-800">Valor em Estoque</span>,{' '}
-          <span className="font-medium text-gray-800">Gastos (Mês Atual)</span>,{' '}
-          <span className="font-medium text-gray-800">Produtos em Baixa</span> e{' '}
-          <span className="font-medium text-gray-800">Fornecedores Ativos</span> dão a foto geral do negócio — quanto você
-          tem parado em estoque, quanto já gastou no mês e quantos produtos estão pedindo reposição.
+          No topo da tela, a barra de navegação rápida (<span className="font-medium text-gray-800">Destaques</span>,{' '}
+          <span className="font-medium text-gray-800">Vendas</span>,{' '}
+          <span className="font-medium text-gray-800">Estoque</span> e{' '}
+          <span className="font-medium text-gray-800">Financeiro</span>) permite rolar diretamente para o setor desejado,
+          além de exibir alertas caso haja itens abaixo do mínimo ou pedidos em aberto.
         </p>
         <p>
-          Logo abaixo, o bloco <span className="font-medium text-gray-800">Vendas</span> repete a mesma ideia do lado da
-          venda: <span className="font-medium text-gray-800">Pedidos (Mês Atual)</span>,{' '}
-          <span className="font-medium text-gray-800">Receita (Mês Atual)</span>,{' '}
+          Logo abaixo, os <span className="font-medium text-gray-800">Destaques Executivos</span> mostram a foto geral do mês:
+          Receita, Lucro Real Estimado, Volume de Pedidos e Total do Inventário, junto a uma faixa de atenção operacional com links rápidos.
+        </p>
+      </GuiaCard>
+
+      <GuiaCard step={2} title="Bloco Vendas & Pedidos">
+        <p>
+          Reúne tudo relacionado ao comercial em um só lugar: indicadores de{' '}
+          <span className="font-medium text-gray-800">Pedidos no Mês</span>,{' '}
+          <span className="font-medium text-gray-800">Receita de Vendas</span>,{' '}
           <span className="font-medium text-gray-800">Pedidos em Aberto</span> e{' '}
-          <span className="font-medium text-gray-800">Ticket Médio</span>.
+          <span className="font-medium text-gray-800">Ticket Médio</span>, posicionados junto aos gráficos de{' '}
+          <span className="font-medium text-gray-800">Top 5 Produtos Mais Vendidos</span> e{' '}
+          <span className="font-medium text-gray-800">Distribuição de Pedidos por Status</span>.
+        </p>
+        <p>
+          O cabeçalho traz botões para criar um <span className="font-medium text-gray-800">Novo Pedido</span>, abrir o{' '}
+          <span className="font-medium text-gray-800">Mural de Pedidos</span> ou consultar a listagem completa.
         </p>
       </GuiaCard>
 
-      <GuiaCard
-        step={2}
-        title="Financeiro — Resumo do Mês"
-        dica="Os links “Gastos” e “Contas a Receber” no canto desse bloco levam direto pras telas de Financeiro — a próxima seção deste guia detalha o que cada uma faz."
-      >
+      <GuiaCard step={3} title="Bloco Estoque & Insumos">
         <p>
-          Receita, Gastos, <span className="font-medium text-gray-800">Custo dos Doces (COGS)</span> e{' '}
-          <span className="font-medium text-gray-800">Lucro Real</span> do mês atual, lado a lado — é o resumo financeiro
-          rápido, sem precisar somar nada na mão.
+          Concentra o valor imobilizado em estoque, os <span className="font-medium text-gray-800">Itens em Baixa</span>,{' '}
+          fornecedores cadastrados e compras de insumos.
         </p>
         <p>
-          O gráfico <span className="font-medium text-gray-800">Gastos por Categoria</span> mostra a fatia de cada Tipo de
-          Gasto no total do mês, e o card <span className="font-medium text-gray-800">A Receber</span> soma tudo que ainda
-          está pendente de recebimento — de Pedidos e de Contas Avulsas juntos.
+          Acompanhado pelos gráficos de{' '}
+          <span className="font-medium text-gray-800">Movimentações dos Últimos 7 Dias</span> (entradas vs. saídas) e{' '}
+          <span className="font-medium text-gray-800">Maiores Volumes em Estoque</span>, com atalho direto para lançar uma{' '}
+          <span className="font-medium text-gray-800">Nova Entrada</span> de insumos.
         </p>
       </GuiaCard>
 
-      <GuiaCard step={3} title="Os gráficos de baixo">
+      <GuiaCard step={4} title="Bloco Financeiro & Compras">
         <p>
-          Mais embaixo na tela: movimentações de estoque dos últimos 7 dias, maiores volumes parados em estoque, os 5
-          produtos mais vendidos, pedidos agrupados por status e o histórico de gastos com compras — tudo pronto, sem
-          precisar filtrar nada.
+          Traz o resultado do mês: Receita Realizada, Gastos Totais, Custo dos Doces (COGS) e Lucro Real.
+        </p>
+        <p>
+          Exibe o gráfico de <span className="font-medium text-gray-800">Gastos por Categoria</span>, o cartão de destaque com o saldo{' '}
+          <span className="font-medium text-gray-800">A Receber</span> e o gráfico histórico de despesas com compras de insumos ao longo dos meses.
         </p>
       </GuiaCard>
 
       <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl text-sm text-emerald-800">
-        <p className="font-medium">Não é pra decidir nada por aqui</p>
+        <p className="font-medium">Painel interativo e acionável</p>
         <p className="mt-1">
-          O Dashboard é o resumo — pra agir de verdade (lançar um gasto, registrar um recebimento, ver o detalhe de um
-          relatório), use os módulos específicos. O bloco Financeiro já traz esse atalho pronto; os demais cards e
-          gráficos são só leitura.
+          O Dashboard funciona como o ponto de partida do seu dia: você pode bater o olho nos alertas, clicar nos cards com pendências ou usar os botões de ação rápida para agir imediatamente sem se perder no menu.
         </p>
       </div>
     </GuiaSection>
