@@ -78,10 +78,16 @@ export function useUpdateCompraStatus() {
 }
 
 export function useGerarEntradaInsumoCompra() {
+  const queryClient = useQueryClient()
+
   return useMutation({
     mutationFn: ({ compraId, payload }: { compraId: number; payload: EntradaInsumoInsertForm }) =>
       compraService.gerarEntradaInsumo(compraId, payload),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['estoque-insumos'] })
+      queryClient.invalidateQueries({ queryKey: ['estoque-insumo'] })
+      queryClient.invalidateQueries({ queryKey: ['insumos'] })
+      queryClient.invalidateQueries({ queryKey: ['entradas-insumo'] })
       toast.success('Entrada de insumos gerada com sucesso!')
     },
     onError: () => {

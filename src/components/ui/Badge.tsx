@@ -25,6 +25,8 @@ const statusStyles: Record<string, string> = {
   // Origem do lote de estoque de produto (F17)
   FABRICACAO:   'bg-blue-100 text-blue-700',
   TERCEIRIZADO: 'bg-teal-100 text-teal-700',
+  // Lote gerado pelo estorno de estoque no cancelamento de pedido em produção (hotfix)
+  ESTORNO_CANCELAMENTO: 'bg-amber-100 text-amber-800',
   // Contas a receber (financeiro)
   PARCIAL:      'bg-blue-100 text-blue-700',
   PAGO:         'bg-green-100 text-green-800',
@@ -48,6 +50,7 @@ const statusLabels: Record<string, string> = {
   PADRAO:       'Padrão',
   FABRICACAO:   'Fabricação',
   TERCEIRIZADO: 'Terceirizado',
+  ESTORNO_CANCELAMENTO: 'Estorno Cancelamento',
   PARCIAL:      'Parcial',
   PAGO:         'Pago',
 }
