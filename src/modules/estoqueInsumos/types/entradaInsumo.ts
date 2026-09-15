@@ -1,6 +1,7 @@
 export interface ItemEntradaInsumo {
   id?: number
   insumoId: number
+  insumoNome?: string
   quantidade: number
   lote?: string
   dataValidade?: string
@@ -14,7 +15,6 @@ export interface ItemEntradaInsumo {
 export interface EntradaInsumo {
   id: number
   compraId?: number
-  usuarioId: number
   valorTotal: number
   valorFrete?: number
   numeroNotaFiscal?: number
@@ -28,7 +28,6 @@ export interface EntradaInsumo {
 
 export interface EntradaInsumoInsertForm {
   compraId?: number
-  usuarioId: number
   valorTotal: number
   valorFrete?: number
   numeroNotaFiscal?: number
@@ -39,7 +38,6 @@ export interface EntradaInsumoInsertForm {
 
 export interface EntradaInsumoUpdateForm {
   compraId?: number
-  usuarioId: number
   valorTotal: number
   valorFrete?: number
   numeroNotaFiscal?: number

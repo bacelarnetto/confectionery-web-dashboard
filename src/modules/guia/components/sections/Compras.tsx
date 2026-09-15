@@ -53,6 +53,11 @@ export default function Compras() {
           Caso contrário, uma última confirmação aparece e, ao aceitar, o sistema lança a entrada de estoque de uma vez e
           marca a compra como <span className="font-medium text-gray-800">confirmada</span>.
         </p>
+        <p>
+          Ah, e se o valor unitário recebido for <span className="font-medium text-gray-800">maior</span> que o custo de
+          referência do insumo, ele é atualizado sozinho nessa hora — suas receitas e precificação passam a usar o preço
+          real que você pagou.
+        </p>
       </GuiaCard>
 
       <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl text-sm text-emerald-800">

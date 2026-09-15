@@ -13,6 +13,14 @@ export default function GestaoCustos() {
           É a soma de tudo que entra na receita: farinha, açúcar, ovos, manteiga. Quanto custa, em ingredientes, produzir uma
           unidade do seu produto.
         </p>
+        <p>
+          Cada insumo tem um <span className="font-medium text-gray-800">custo de referência</span>. Toda vez que você
+          registra uma entrada de insumo — manual ou recebendo uma compra — com valor unitário{' '}
+          <span className="font-medium text-gray-800">maior</span> que esse custo de referência, o sistema atualiza o custo
+          do insumo automaticamente, para suas receitas e precificação seguirem o mercado. Se o valor da entrada for{' '}
+          <span className="font-medium text-gray-800">menor</span>, o custo de referência é mantido como está — e qualquer
+          ajuste é feito por você, manualmente, na edição do insumo.
+        </p>
       </GuiaCard>
 
       <GuiaCard step={2} title="O custo fixo/variável — o que envolve a produção">

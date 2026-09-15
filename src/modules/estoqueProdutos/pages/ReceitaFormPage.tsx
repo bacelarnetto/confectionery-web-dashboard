@@ -7,6 +7,7 @@ import RadioToggle from '../../../components/ui/RadioToggle'
 import { useReceita, useReceitas, useCreateReceita, useUpdateReceita } from '../hooks/useReceitas'
 import { useProdutos, useProduto } from '../hooks/useProdutos'
 import { useCategoriasProduto } from '../hooks/useCategoriasProduto'
+import { useInsumos } from '../../estoqueInsumos/hooks/useInsumos'
 import InsumoField from '../components/InsumoField'
 import { Ingrediente, ProdutoRefForm } from '../types/receita'
 import { parseApiError } from '../../../lib/apiError'
@@ -73,6 +74,7 @@ export default function ReceitaFormPage() {
   const { data: produtosData } = useProdutos(0, 100)
   const { data: categoriasData } = useCategoriasProduto(0, 100)
   const { data: receitasData } = useReceitas(0, 100)
+  const { data: insumosData } = useInsumos(0, 200)
   const createMutation = useCreateReceita()
   const updateMutation = useUpdateReceita()
 
@@ -191,6 +193,7 @@ export default function ReceitaFormPage() {
   const categorias = categoriasData?.content ?? []
   const produtosComReceita = new Set((receitasData?.content ?? []).map((r) => r.produtoId))
   const produtos = (produtosData?.content ?? []).filter((p) => !produtosComReceita.has(p.id))
+  const insumos = insumosData?.content ?? []
 
   if (isEditing && isLoading) {
     return <div className="flex items-center justify-center h-48 text-gray-400 text-sm">Carregando...</div>
@@ -374,69 +377,113 @@ export default function ReceitaFormPage() {
 
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Ingredientes</h3>
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900">Ingredientes da Receita</h3>
+              <p className="text-xs text-gray-500">Insumos e proporções necessárias para o preparo</p>
+            </div>
             <button
               type="button"
               onClick={addIngrediente}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors cursor-pointer"
             >
-              <Plus size={14} />
-              Adicionar
+              <Plus size={16} />
+              Adicionar ingrediente
             </button>
           </div>
 
-          <div className="space-y-3">
-            {ingredientes.map((ing, index) => (
-              <div key={index} className="grid grid-cols-12 gap-3 items-end">
-                <div className="col-span-4">
-                  {index === 0 && (
-                    <label className="block text-xs font-medium text-gray-500 mb-1">Insumo *</label>
-                  )}
-                  <InsumoField
-                    value={ing.insumoId}
-                    onChange={(insumoId) => handleIngredienteChange(index, 'insumoId', String(insumoId))}
-                  />
-                </div>
-                <div className="col-span-3">
-                  {index === 0 && (
-                    <label className="block text-xs font-medium text-gray-500 mb-1">Quantidade *</label>
-                  )}
-                  <input
-                    type="number"
-                    step="0.001"
-                    min="0.001"
-                    value={ing.quantidade || ''}
-                    onChange={(e) => handleIngredienteChange(index, 'quantidade', e.target.value)}
-                    className={inputClass}
-                    placeholder="0.000"
-                  />
-                </div>
-                <div className="col-span-4">
-                  {index === 0 && (
-                    <label className="block text-xs font-medium text-gray-500 mb-1">Observação</label>
-                  )}
-                  <input
-                    type="text"
-                    value={ing.observacao ?? ''}
-                    onChange={(e) => handleIngredienteChange(index, 'observacao', e.target.value)}
-                    className={inputClass}
-                    placeholder="Opcional..."
-                  />
-                </div>
-                <div className="col-span-1 flex justify-end">
-                  {ingredientes.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeIngrediente(index)}
-                      className="p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                    >
-                      <Trash2 size={15} />
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+          {ingredientes.length === 0 ? (
+            <p className="text-sm text-gray-400 text-center py-6 border-2 border-dashed border-gray-200 rounded-xl">
+              Nenhum ingrediente adicionado. Clique em "Adicionar ingrediente" acima para começar.
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {ingredientes.map((ing, index) => {
+                const insumo = insumos.find((i) => i.id === ing.insumoId)
+                return (
+                  <div
+                    key={index}
+                    className="p-4 rounded-xl border transition-all bg-gray-50/60 border-gray-200"
+                  >
+                    {/* Cabeçalho do Card do Ingrediente */}
+                    <div className="flex items-center justify-between pb-3 mb-3 border-b border-gray-200/80">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded bg-white border border-gray-200 text-gray-700 shadow-2xs">
+                          Ingrediente {index + 1}
+                        </span>
+                        {insumo && (
+                          <span className="text-sm font-semibold text-gray-800">
+                            {insumo.nome}
+                          </span>
+                        )}
+                        {insumo?.perecivel && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-amber-800 bg-amber-100/90 border border-amber-200 rounded-md">
+                            <span>🌡</span> Perecível
+                          </span>
+                        )}
+                      </div>
+
+                      {ingredientes.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeIngrediente(index)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                          title="Remover este ingrediente"
+                        >
+                          <Trash2 size={14} />
+                          <span>Remover</span>
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Grid de Campos do Ingrediente */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-3.5 items-start">
+                      {/* Insumo */}
+                      <div className="sm:col-span-2 md:col-span-5">
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          Insumo <span className="text-red-500">*</span>
+                        </label>
+                        <InsumoField
+                          value={ing.insumoId}
+                          onChange={(insumoId) => handleIngredienteChange(index, 'insumoId', String(insumoId))}
+                        />
+                      </div>
+
+                      {/* Quantidade */}
+                      <div className="sm:col-span-1 md:col-span-3">
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          Quantidade {insumo?.unidadeMedida ? `(${insumo.unidadeMedida})` : ''} <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="number"
+                          step="0.001"
+                          min="0.001"
+                          value={ing.quantidade || ''}
+                          onChange={(e) => handleIngredienteChange(index, 'quantidade', e.target.value)}
+                          className={inputClass}
+                          placeholder="0,000"
+                          required
+                        />
+                      </div>
+
+                      {/* Observação */}
+                      <div className="sm:col-span-1 md:col-span-4">
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          Observação
+                        </label>
+                        <input
+                          type="text"
+                          value={ing.observacao ?? ''}
+                          onChange={(e) => handleIngredienteChange(index, 'observacao', e.target.value)}
+                          className={inputClass}
+                          placeholder="Ex: peneirado, picado, morno..."
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
 
         <div className="flex items-center justify-end gap-3">
