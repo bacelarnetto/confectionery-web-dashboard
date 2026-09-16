@@ -58,6 +58,12 @@ export default function Mural() {
           Ao clicar num card, abre um modal com todos os detalhes: endereço de entrega, itens, complementos, frete. Um
           atalho “Ir para o pedido” leva você direto pra edição, se precisar mudar algo.
         </p>
+        <p>
+          O botão <span className="font-medium text-gray-800">"Imprimir Comanda"</span>, no mesmo modal (e também na
+          lista de Pedidos), gera uma comanda pronta pra levar pra cozinha — cliente, itens, complementos, horário de
+          entrega e observações, num formato pensado pra impressão. Fica desabilitado pra pedidos{' '}
+          <span className="font-medium text-gray-800">cancelados</span>.
+        </p>
       </GuiaCard>
 
       <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl text-sm text-emerald-800">

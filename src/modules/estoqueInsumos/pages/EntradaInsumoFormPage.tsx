@@ -17,6 +17,21 @@ type CampoItem = 'quantidade' | 'dataValidade' | 'dataFabricacao' | 'lote'
  * nos textos de erro que o backend usa; qualquer mensagem fora desse padrão vira o
  * banner genérico em vez de arriscar um mapeamento errado.
  */
+/**
+ * O backend espera `java.time.Instant` em dataFabricacao/dataValidade, mas o `<input type="date">`
+ * devolve "YYYY-MM-DD" puro -- sem essa conversão, o submit vira 400 genérico ("Cannot deserialize
+ * ... Instant from String"). Um valor já carregado do backend sem edição chega como ISO completo;
+ * nesse caso não mexemos, só convertemos o formato cru do input. Mesma lógica de
+ * `toInstant` em MovimentacaoEstoquePage.tsx (meia-noite local, não UTC, pra não deslocar o dia).
+ */
+function toInstantDeData(valor?: string): string | undefined {
+  if (!valor) return undefined
+  if (/^\d{4}-\d{2}-\d{2}$/.test(valor)) {
+    return new Date(`${valor}T00:00:00`).toISOString()
+  }
+  return valor
+}
+
 function mapearErroParaItem(mensagem: string): { insumoId: number; campo: CampoItem } | null {
   const match = mensagem.match(/insumoId=(\d+)/)
   if (!match) return null
@@ -176,8 +191,8 @@ export default function EntradaInsumoFormPage() {
     const sanitizedItens = itens.map((it) => ({
       ...it,
       lote: it.lote ? it.lote.trim() : undefined,
-      dataFabricacao: it.dataFabricacao ? it.dataFabricacao.trim() : undefined,
-      dataValidade: it.dataValidade ? it.dataValidade.trim() : undefined,
+      dataFabricacao: toInstantDeData(it.dataFabricacao?.trim()),
+      dataValidade: toInstantDeData(it.dataValidade?.trim()),
     }))
 
     if (isEditing) {
@@ -212,6 +227,12 @@ export default function EntradaInsumoFormPage() {
 
   const isPending = createMutation.isPending || updateMutation.isPending
   const insumos = insumosData?.content ?? []
+  // Toda "Nova Entrada" criada por este form é manual -- entrada vinculada a uma Compra nasce em
+  // compraService.gerarEntradaInsumo, não aqui. Só em edição existe a chance de ser via Compra.
+  // Regra do dono: Data Fabricação, Data Vencimento e Custo Unitário só são obrigatórios quando a
+  // entrada é manual -- via Compra, a conferência física costuma ser preenchida depois (mesmo
+  // cenário que o filtro "Preenchimento Pendente" já sinaliza).
+  const isManual = isEditing ? !entrada?.compraId : true
 
   function getInsumo(insumoId: number): Insumo | undefined {
     return insumos.find((i) => i.id === insumoId)
@@ -295,9 +316,9 @@ export default function EntradaInsumoFormPage() {
                 <ul className="list-disc list-inside space-y-1 text-blue-900">
                   <li><strong>Quantidade:</strong> volume recebido que sensibiliza o estoque;</li>
                   <li><strong>Lote:</strong> código de lote (obrigatório se perecível 🌡);</li>
-                  <li><strong>Data de Fabricação:</strong> data de produção do insumo;</li>
-                  <li><strong>Data de Vencimento:</strong> data limite de validade (obrigatório se perecível 🌡);</li>
-                  <li><strong>Custos:</strong> valor unitário e total calculado da entrada.</li>
+                  <li><strong>Data de Fabricação, Data de Vencimento e Custo Unitário:</strong> obrigatórios em entrada{' '}
+                    <strong>manual</strong> (e também se o insumo for perecível 🌡) — numa entrada via Compra, dá pra
+                    deixar em branco e preencher depois, ao confirmar a conferência física.</li>
                 </ul>
               </div>
 
@@ -423,6 +444,7 @@ export default function EntradaInsumoFormPage() {
                   const insumo = getInsumo(item.insumoId)
                   const perecivel = insumo?.perecivel ?? false
                   const itemErro = itemErros[index]
+                  const dataVencimentoObrigatoria = perecivel || isManual
                   return (
                     <div
                       key={index}
@@ -526,14 +548,15 @@ export default function EntradaInsumoFormPage() {
                         {/* Linha 2: Data Fabricação */}
                         <div className="sm:col-span-1 md:col-span-1">
                           <label className="block text-xs font-medium text-gray-700 mb-1">
-                            Data Fabricação
+                            Data Fabricação {isManual && <span className="text-red-500">*</span>}
                           </label>
                           <input
                             type="date"
                             value={item.dataFabricacao?.split('T')[0] || ''}
                             onChange={(e) => updateItem(index, 'dataFabricacao', e.target.value)}
-                            className={`${inputClass} ${itemErro?.campo === 'dataFabricacao' ? 'border-red-400 bg-red-50/50' : ''}`}
-                            title="Data de fabricação do lote"
+                            required={isManual}
+                            className={`${inputClass} ${(isManual && !item.dataFabricacao) || itemErro?.campo === 'dataFabricacao' ? 'border-red-400 bg-red-50/50' : ''}`}
+                            title={isManual ? 'Data de fabricação do lote (obrigatória em entrada manual)' : 'Data de fabricação do lote'}
                           />
                           {itemErro?.campo === 'dataFabricacao' && (
                             <p className="text-xs text-red-600 mt-1">{itemErro.mensagem}</p>
@@ -543,15 +566,15 @@ export default function EntradaInsumoFormPage() {
                         {/* Linha 2: Data Vencimento */}
                         <div className="sm:col-span-1 md:col-span-1">
                           <label className="block text-xs font-medium text-gray-700 mb-1">
-                            Data Vencimento {perecivel && <span className="text-red-500">*</span>}
+                            Data Vencimento {dataVencimentoObrigatoria && <span className="text-red-500">*</span>}
                           </label>
                           <input
                             type="date"
                             value={item.dataValidade?.split('T')[0] || ''}
                             onChange={(e) => updateItem(index, 'dataValidade', e.target.value)}
-                            required={perecivel}
-                            className={`${inputClass} ${(perecivel && !item.dataValidade) || itemErro?.campo === 'dataValidade' ? 'border-red-400 bg-red-50/50' : ''}`}
-                            title={perecivel ? 'Data de validade/vencimento obrigatória para insumos perecíveis' : 'Data de vencimento'}
+                            required={dataVencimentoObrigatoria}
+                            className={`${inputClass} ${(dataVencimentoObrigatoria && !item.dataValidade) || itemErro?.campo === 'dataValidade' ? 'border-red-400 bg-red-50/50' : ''}`}
+                            title={perecivel ? 'Data de validade/vencimento obrigatória para insumos perecíveis' : isManual ? 'Data de vencimento (obrigatória em entrada manual)' : 'Data de vencimento'}
                           />
                           {itemErro?.campo === 'dataValidade' && (
                             <p className="text-xs text-red-600 mt-1">{itemErro.mensagem}</p>
@@ -561,15 +584,18 @@ export default function EntradaInsumoFormPage() {
                         {/* Linha 2: Custo Unitário */}
                         <div className="sm:col-span-1 md:col-span-1">
                           <label className="block text-xs font-medium text-gray-700 mb-1">
-                            Custo Unitário (R$)
+                            Custo Unitário (R$) {isManual && <span className="text-red-500">*</span>}
                           </label>
                           <input
                             type="number"
                             step="0.01"
+                            min={isManual ? '0.01' : undefined}
                             placeholder="0,00"
                             value={item.valorCustoUnitario || ''}
                             onChange={(e) => updateItem(index, 'valorCustoUnitario', Number(e.target.value))}
-                            className={inputClass}
+                            required={isManual}
+                            className={`${inputClass} ${isManual && !item.valorCustoUnitario ? 'border-red-400 bg-red-50/50' : ''}`}
+                            title={isManual ? 'Custo unitário (obrigatório em entrada manual) — evita que o valor imobilizado do insumo fique zerado sem aviso' : 'Custo unitário'}
                           />
                         </div>
 
@@ -597,6 +623,11 @@ export default function EntradaInsumoFormPage() {
             {itens.some((item) => getInsumo(item.insumoId)?.perecivel) && (
               <p className="text-xs text-amber-600 mt-2">
                 🌡 Insumos perecíveis exigem lote e data de validade.
+              </p>
+            )}
+            {isManual && itens.length > 0 && (
+              <p className="text-xs text-amber-600 mt-2">
+                📋 Entrada manual exige data de fabricação, data de vencimento e custo unitário em todos os itens.
               </p>
             )}
           </div>

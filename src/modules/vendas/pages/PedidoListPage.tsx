@@ -243,8 +243,9 @@ export default function PedidoListPage() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setComandaPedido(p)}
-                  className="p-1.5 rounded-md text-gray-400 hover:text-amber-600 hover:bg-amber-50 transition-colors cursor-pointer"
-                  title="Imprimir Comanda de Produção"
+                  disabled={p.status === 'CANCELADO'}
+                  className="p-1.5 rounded-md text-gray-400 hover:text-amber-600 hover:bg-amber-50 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-gray-400"
+                  title={p.status === 'CANCELADO' ? 'Pedido cancelado — comanda de produção indisponível' : 'Imprimir Comanda de Produção'}
                 >
                   <Printer size={15} />
                 </button>

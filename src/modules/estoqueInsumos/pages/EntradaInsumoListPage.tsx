@@ -73,7 +73,14 @@ export default function EntradaInsumoListPage() {
   const [deleteTarget, setDeleteTarget] = useState<{ id: number } | null>(null)
 
   function handleFilterChange(key: string, value: string) {
-    setFilters((prev) => ({ ...prev, [key]: value }))
+    setFilters((prev) => ({
+      ...prev,
+      [key]: value,
+      // pendentePreenchimento só existe pra entrada via compra -- trocar a origem pelo dropdown
+      // detalhado precisa desfazer esse filtro, senão a combinação (ex.: MANUAL + pendente) nunca
+      // retorna resultado, sem indicar isso na tela (achado 16, rodada 6).
+      ...(key === 'origem' ? { pendentePreenchimento: false } : {}),
+    }))
     setPage(0)
   }
 
@@ -239,7 +246,10 @@ export default function EntradaInsumoListPage() {
           <button
             type="button"
             onClick={() => {
-              setFilters((prev) => ({ ...prev, pendentePreenchimento: !prev.pendentePreenchimento }))
+              // pendentePreenchimento só existe pra entrada via compra -- combinar com origem
+              // MANUAL nunca dá resultado (achado 16, rodada 6), então essa pill sempre limpa a
+              // origem selecionada, em vez de só somar o filtro.
+              setFilters((prev) => ({ ...prev, origem: '', pendentePreenchimento: !prev.pendentePreenchimento }))
               setPage(0)
             }}
             className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${

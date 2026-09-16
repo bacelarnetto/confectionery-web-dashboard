@@ -173,7 +173,9 @@ export default function PedidoDetalheModal({ pedido, onClose, onUpdated }: Props
           <button
             type="button"
             onClick={() => setShowComanda(true)}
-            className="flex-1 flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-medium py-2.5 rounded-lg transition-colors cursor-pointer text-sm shadow-xs"
+            disabled={atual.status === 'CANCELADO'}
+            title={atual.status === 'CANCELADO' ? 'Pedido cancelado — comanda de produção indisponível' : undefined}
+            className="flex-1 flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-medium py-2.5 rounded-lg transition-colors cursor-pointer text-sm shadow-xs disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-amber-500"
           >
             <Printer size={16} /> Imprimir Comanda
           </button>
