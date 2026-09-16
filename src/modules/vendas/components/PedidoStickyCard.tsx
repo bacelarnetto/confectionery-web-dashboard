@@ -1,4 +1,4 @@
-import { AlertTriangle, MapPin, Package, Clock } from 'lucide-react'
+import { AlertTriangle, MapPin, Clock } from 'lucide-react'
 import { Pedido } from '../types/pedido'
 import { STATUS_TERMINAIS } from '../lib/pedidoStatus'
 
@@ -38,11 +38,6 @@ const STATUS_BADGE: Record<string, string> = {
   ENTREGUE:    'bg-gray-200 text-gray-600',
   CONCLUIDO:   'bg-emerald-200 text-emerald-800',
   CANCELADO:   'bg-red-100 text-red-700',
-}
-
-function formatDateTime(iso?: string) {
-  if (!iso) return '—'
-  return new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
 }
 
 function formatCurrency(val?: number) {

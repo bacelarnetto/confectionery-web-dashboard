@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { ChevronLeft, ChevronRight, KanbanSquare, Calendar, Clock, Filter } from 'lucide-react'
+import { ChevronLeft, ChevronRight, KanbanSquare } from 'lucide-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import pedidoService from '../services/pedidoService'
 import { useAlertasPedidoAtivos } from '../hooks/useAlertasPedido'

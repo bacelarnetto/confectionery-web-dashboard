@@ -2,7 +2,7 @@ import { Link } from 'react-router'
 import { DollarSign, PiggyBank, ShoppingBag, Package, AlertTriangle, Clock, HandCoins } from 'lucide-react'
 import KpiCard from './KpiCard'
 import { DashboardKpis, VendasKpis } from '../services/dashboardService'
-import { ResumoMes } from '../../financeiro/types/financeiro'
+import { ResumoMes } from '../../financeiro/types/resumo'
 
 interface DestaquesProps {
   kpis?: DashboardKpis

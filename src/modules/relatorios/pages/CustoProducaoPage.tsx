@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { FileText, FileSpreadsheet } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
-import Table from '../../../components/ui/Table'
+import PageableTable from '../../../components/ui/PageableTable'
 import Button from '../../../components/ui/Button'
 import { useCategoriasProduto } from '../../estoqueProdutos/hooks/useCategoriasProduto'
 import {
@@ -16,15 +16,18 @@ const formatCurrency = (v: number) => v.toLocaleString('pt-BR', { style: 'curren
 
 export default function CustoProducaoPage() {
   const [categoriaProdutoId, setCategoriaProdutoId] = useState('')
+  const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(20)
   const { data: categoriasData } = useCategoriasProduto(0, 100)
   const categorias = categoriasData?.content ?? []
 
   const filtro = categoriaProdutoId ? Number(categoriaProdutoId) : undefined
-  const { data, isLoading } = useRelatorioCustoProducao(filtro)
+  const { data, isLoading } = useRelatorioCustoProducao(page, pageSize, filtro)
   const csvMutation = useBaixarCustoProducaoCsv()
   const pdfMutation = useBaixarCustoProducaoPdf()
 
-  const relatorio = data ?? []
+  const relatorio = data?.content ?? []
+  const totalPages = data?.totalPages ?? 0
 
   return (
     <div>
@@ -53,7 +56,7 @@ export default function CustoProducaoPage() {
         <label className="text-sm font-medium text-gray-700">Categoria</label>
         <select
           value={categoriaProdutoId}
-          onChange={(e) => setCategoriaProdutoId(e.target.value)}
+          onChange={(e) => { setCategoriaProdutoId(e.target.value); setPage(0) }}
           className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white min-w-[200px]"
         >
           <option value="">Todas as categorias</option>
@@ -63,7 +66,17 @@ export default function CustoProducaoPage() {
         </select>
       </div>
 
-      <Table headers={TABLE_HEADERS} isEmpty={!isLoading && relatorio.length === 0}>
+      <PageableTable
+        headers={TABLE_HEADERS}
+        isLoading={isLoading}
+        isEmpty={!isLoading && relatorio.length === 0}
+        page={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+        totalElements={data?.totalElements}
+        pageSize={pageSize}
+        onPageSizeChange={(size) => { setPageSize(size); setPage(0) }}
+      >
         {relatorio.map((r) => (
           <tr key={r.produtoId} className="hover:bg-gray-50 transition-colors">
             <td className="px-4 py-3 font-medium text-gray-900">{r.produtoNome}</td>
@@ -74,7 +87,7 @@ export default function CustoProducaoPage() {
             <td className="px-4 py-3 text-emerald-600 font-medium">{formatCurrency(r.lucroBruto)}</td>
           </tr>
         ))}
-      </Table>
+      </PageableTable>
     </div>
   )
 }

@@ -7,7 +7,6 @@ import {
   HandCoins,
   Plus,
   ArrowRight,
-  TrendingDown,
 } from 'lucide-react'
 import {
   PieChart as RechartsPieChart,
@@ -24,7 +23,7 @@ import {
 } from 'recharts'
 import KpiCard from './KpiCard'
 import SectionHeader from './SectionHeader'
-import { ResumoMes } from '../../financeiro/types/financeiro'
+import { ResumoMes } from '../../financeiro/types/resumo'
 import { HistoricoCompra } from '../services/dashboardService'
 
 interface FinanceiroBlockProps {

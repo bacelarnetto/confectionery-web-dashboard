@@ -5,6 +5,7 @@ import {
   RelatorioMovimentacaoEstoque,
   MovimentacaoEstoqueFiltros,
 } from '../types/relatorio'
+import { normalizePage, RawPage, PageResponse } from '../../../lib/pagination'
 
 function baixarArquivo(path: string, params: object, mimeType: string, nomeArquivo: string): Promise<void> {
   return api
@@ -32,8 +33,10 @@ const relatorioService = {
     return baixarArquivo('/relatorio/faturamento-mensal/pdf', { meses }, 'application/pdf', 'faturamento-mensal.pdf')
   },
 
-  getCustoProducao(categoriaProdutoId?: number): Promise<RelatorioCustoProducao[]> {
-    return api.get('/relatorio/custo-producao', { params: { categoriaProdutoId } }).then((r) => r.data)
+  getCustoProducao(page = 0, size = 20, categoriaProdutoId?: number): Promise<PageResponse<RelatorioCustoProducao>> {
+    return api
+      .get<RawPage<RelatorioCustoProducao>>('/relatorio/custo-producao', { params: { page, size, categoriaProdutoId } })
+      .then((r) => normalizePage(r.data))
   },
   baixarCustoProducaoCsv(categoriaProdutoId?: number) {
     return baixarArquivo('/relatorio/custo-producao/csv', { categoriaProdutoId }, 'text/csv', 'custo-producao.csv')
@@ -42,8 +45,10 @@ const relatorioService = {
     return baixarArquivo('/relatorio/custo-producao/pdf', { categoriaProdutoId }, 'application/pdf', 'custo-producao.pdf')
   },
 
-  getMovimentacaoEstoque(filtros: MovimentacaoEstoqueFiltros): Promise<RelatorioMovimentacaoEstoque[]> {
-    return api.get('/relatorio/movimentacao-estoque', { params: filtros }).then((r) => r.data)
+  getMovimentacaoEstoque(page = 0, size = 20, filtros: MovimentacaoEstoqueFiltros): Promise<PageResponse<RelatorioMovimentacaoEstoque>> {
+    return api
+      .get<RawPage<RelatorioMovimentacaoEstoque>>('/relatorio/movimentacao-estoque', { params: { page, size, ...filtros } })
+      .then((r) => normalizePage(r.data))
   },
   baixarMovimentacaoEstoqueCsv(filtros: MovimentacaoEstoqueFiltros) {
     return baixarArquivo('/relatorio/movimentacao-estoque/csv', filtros, 'text/csv', 'movimentacao-estoque.csv')

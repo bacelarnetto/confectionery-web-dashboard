@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { FileText, FileSpreadsheet, ArrowDownToLine, ArrowUpFromLine } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
-import Table from '../../../components/ui/Table'
+import PageableTable from '../../../components/ui/PageableTable'
 import Button from '../../../components/ui/Button'
 import { useDebounce } from '../../../hooks/useDebounce'
 import {
@@ -26,6 +26,8 @@ export default function MovimentacaoEstoquePage() {
   const [dataInicial, setDataInicial] = useState('')
   const [dataFinal, setDataFinal] = useState('')
   const [tipo, setTipo] = useState<TipoMovimentacao | ''>('')
+  const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(20)
 
   const debouncedDatas = useDebounce({ dataInicial, dataFinal })
 
@@ -35,11 +37,12 @@ export default function MovimentacaoEstoquePage() {
     tipo: tipo || undefined,
   }
 
-  const { data, isLoading } = useRelatorioMovimentacaoEstoque(filtros)
+  const { data, isLoading } = useRelatorioMovimentacaoEstoque(page, pageSize, filtros)
   const csvMutation = useBaixarMovimentacaoEstoqueCsv()
   const pdfMutation = useBaixarMovimentacaoEstoquePdf()
 
-  const relatorio = data ?? []
+  const relatorio = data?.content ?? []
+  const totalPages = data?.totalPages ?? 0
 
   return (
     <div>
@@ -70,7 +73,7 @@ export default function MovimentacaoEstoquePage() {
           <input
             type="date"
             value={dataInicial}
-            onChange={(e) => setDataInicial(e.target.value)}
+            onChange={(e) => { setDataInicial(e.target.value); setPage(0) }}
             className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
           />
         </div>
@@ -79,7 +82,7 @@ export default function MovimentacaoEstoquePage() {
           <input
             type="date"
             value={dataFinal}
-            onChange={(e) => setDataFinal(e.target.value)}
+            onChange={(e) => { setDataFinal(e.target.value); setPage(0) }}
             className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
           />
         </div>
@@ -87,7 +90,7 @@ export default function MovimentacaoEstoquePage() {
           <label className="text-sm font-medium text-gray-700">Tipo</label>
           <select
             value={tipo}
-            onChange={(e) => setTipo(e.target.value as TipoMovimentacao | '')}
+            onChange={(e) => { setTipo(e.target.value as TipoMovimentacao | ''); setPage(0) }}
             className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white"
           >
             <option value="">Todos</option>
@@ -97,7 +100,17 @@ export default function MovimentacaoEstoquePage() {
         </div>
       </div>
 
-      <Table headers={TABLE_HEADERS} isEmpty={!isLoading && relatorio.length === 0}>
+      <PageableTable
+        headers={TABLE_HEADERS}
+        isLoading={isLoading}
+        isEmpty={!isLoading && relatorio.length === 0}
+        page={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+        totalElements={data?.totalElements}
+        pageSize={pageSize}
+        onPageSizeChange={(size) => { setPageSize(size); setPage(0) }}
+      >
         {relatorio.map((r, i) => (
           <tr key={i} className="hover:bg-gray-50 transition-colors">
             <td className="px-4 py-3 text-gray-600">{formatDate(r.data)}</td>
@@ -116,7 +129,7 @@ export default function MovimentacaoEstoquePage() {
             <td className="px-4 py-3 text-gray-600">{r.quantidade}</td>
           </tr>
         ))}
-      </Table>
+      </PageableTable>
     </div>
   )
 }

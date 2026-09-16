@@ -12,17 +12,17 @@ export function useRelatorioFaturamentoMensal(meses: number) {
   })
 }
 
-export function useRelatorioCustoProducao(categoriaProdutoId?: number) {
+export function useRelatorioCustoProducao(page: number, size: number, categoriaProdutoId?: number) {
   return useQuery({
-    queryKey: [...QUERY_KEY, 'custo-producao', categoriaProdutoId],
-    queryFn: () => relatorioService.getCustoProducao(categoriaProdutoId),
+    queryKey: [...QUERY_KEY, 'custo-producao', page, size, categoriaProdutoId],
+    queryFn: () => relatorioService.getCustoProducao(page, size, categoriaProdutoId),
   })
 }
 
-export function useRelatorioMovimentacaoEstoque(filtros: MovimentacaoEstoqueFiltros) {
+export function useRelatorioMovimentacaoEstoque(page: number, size: number, filtros: MovimentacaoEstoqueFiltros) {
   return useQuery({
-    queryKey: [...QUERY_KEY, 'movimentacao-estoque', filtros],
-    queryFn: () => relatorioService.getMovimentacaoEstoque(filtros),
+    queryKey: [...QUERY_KEY, 'movimentacao-estoque', page, size, filtros],
+    queryFn: () => relatorioService.getMovimentacaoEstoque(page, size, filtros),
   })
 }
 
