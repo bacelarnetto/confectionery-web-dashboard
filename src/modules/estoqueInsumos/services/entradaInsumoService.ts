@@ -11,6 +11,8 @@ const entradaInsumoService = {
       compraId?: number;
       dataInicial?: string;
       dataFinal?: string;
+      origem?: 'COMPRA' | 'MANUAL';
+      pendentePreenchimento?: boolean;
     }
   ): Promise<PageResponse<EntradaInsumo>> {
     return api

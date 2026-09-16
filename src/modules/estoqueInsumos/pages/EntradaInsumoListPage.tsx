@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { Plus, Pencil, Trash2, Search, X, ShoppingCart, FileText, AlertCircle, CheckCircle2, Info } from 'lucide-react'
+import { Plus, Pencil, Trash2, Search, X, ShoppingCart, FileText, AlertCircle, CheckCircle2, Info, Bell } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
 import PageableTable from '../../../components/ui/PageableTable'
 import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal'
@@ -10,14 +10,43 @@ import { formatCurrency } from '../../../lib/format'
 
 const TABLE_HEADERS = ['ID', 'Tipo / Origem', 'Insumos', 'Valor Total', 'NF', 'Criado por', 'Ações']
 
+function formatData(dateStr?: string): string {
+  if (!dateStr) return '—'
+  try {
+    const d = new Date(dateStr)
+    return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(d)
+  } catch {
+    return dateStr
+  }
+}
+
+function getDiasAteVencimento(dataValidade?: string): number | null {
+  if (!dataValidade) return null
+  const hoje = new Date()
+  hoje.setHours(0, 0, 0, 0)
+  const valDate = new Date(dataValidade)
+  valDate.setHours(0, 0, 0, 0)
+  if (isNaN(valDate.getTime())) return null
+  const diffTime = valDate.getTime() - hoje.getTime()
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+}
+
 export default function EntradaInsumoListPage() {
   const navigate = useNavigate()
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState(20)
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<{
+    compraId: string
+    dataInicial: string
+    dataFinal: string
+    origem: '' | 'COMPRA' | 'MANUAL'
+    pendentePreenchimento: boolean
+  }>({
     compraId: '',
     dataInicial: '',
     dataFinal: '',
+    origem: '',
+    pendentePreenchimento: false,
   })
   const [showFilters, setShowFilters] = useState(false)
   const [showInfo, setShowInfo] = useState(false)
@@ -27,6 +56,8 @@ export default function EntradaInsumoListPage() {
     ...(debouncedFilters.compraId ? { compraId: Number(debouncedFilters.compraId) } : {}),
     ...(debouncedFilters.dataInicial ? { dataInicial: debouncedFilters.dataInicial } : {}),
     ...(debouncedFilters.dataFinal ? { dataFinal: debouncedFilters.dataFinal } : {}),
+    ...(debouncedFilters.origem ? { origem: debouncedFilters.origem } : {}),
+    ...(debouncedFilters.pendentePreenchimento ? { pendentePreenchimento: true } : {}),
   }
 
   const { data, isLoading } = useEntradasInsumo(page, pageSize, Object.keys(filterParams).length > 0 ? filterParams : undefined)
@@ -47,7 +78,7 @@ export default function EntradaInsumoListPage() {
   }
 
   function clearFilters() {
-    setFilters({ compraId: '', dataInicial: '', dataFinal: '' })
+    setFilters({ compraId: '', dataInicial: '', dataFinal: '', origem: '', pendentePreenchimento: false })
     setPage(0)
   }
 
@@ -158,68 +189,155 @@ export default function EntradaInsumoListPage() {
         </div>
       </PageHeader>
 
-      <div className="mb-4">
-        <button
-          onClick={() => setShowFilters(!showFilters)}
-          className={`inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border transition-colors ${
-            showFilters || Object.values(filters).some(v => v)
-              ? 'bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100'
-              : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-          }`}
-        >
-          <Search size={15} />
-          Filtros
-          {Object.values(filters).filter(Boolean).length > 0 && (
-            <span className="px-1.5 py-0.5 text-xs bg-amber-500 text-white rounded-full leading-none">
-              {Object.values(filters).filter(Boolean).length}
-            </span>
-          )}
-        </button>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        {/* Pílulas de filtro rápido na base */}
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setFilters((prev) => ({ ...prev, origem: '', pendentePreenchimento: false }))
+              setPage(0)
+            }}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
+              filters.origem === '' && !filters.pendentePreenchimento
+                ? 'bg-gray-900 text-white border-gray-900 shadow-xs'
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            Todas
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setFilters((prev) => ({ ...prev, origem: 'COMPRA', pendentePreenchimento: false }))
+              setPage(0)
+            }}
+            className={`inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
+              filters.origem === 'COMPRA' && !filters.pendentePreenchimento
+                ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                : 'bg-blue-50 text-blue-800 border-blue-200 hover:bg-blue-100'
+            }`}
+          >
+            <ShoppingCart size={13} />
+            <span>Via Compra</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setFilters((prev) => ({ ...prev, origem: 'MANUAL', pendentePreenchimento: false }))
+              setPage(0)
+            }}
+            className={`inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
+              filters.origem === 'MANUAL' && !filters.pendentePreenchimento
+                ? 'bg-gray-700 text-white border-gray-700 shadow-xs'
+                : 'bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100'
+            }`}
+          >
+            <FileText size={13} />
+            <span>Manuais</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setFilters((prev) => ({ ...prev, pendentePreenchimento: !prev.pendentePreenchimento }))
+              setPage(0)
+            }}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
+              filters.pendentePreenchimento
+                ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
+                : 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100'
+            }`}
+          >
+            <AlertCircle size={13} />
+            <span>Preenchimento Pendente</span>
+          </button>
+        </div>
 
-        {showFilters && (
-          <div className="mt-3 p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Compra ID</label>
-                <input
-                  type="number"
-                  value={filters.compraId}
-                  onChange={(e) => handleFilterChange('compraId', e.target.value)}
-                  placeholder="ID da compra..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Data Inicial</label>
-                <input
-                  type="date"
-                  value={filters.dataInicial}
-                  onChange={(e) => handleFilterChange('dataInicial', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Data Final</label>
-                <input
-                  type="date"
-                  value={filters.dataFinal}
-                  onChange={(e) => handleFilterChange('dataFinal', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-            {Object.values(filters).some(v => v) && (
-              <button
-                onClick={clearFilters}
-                className="mt-3 inline-flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900"
-              >
-                <X size={14} />
-                Limpar filtros
-              </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => navigate('/estoque-insumos/alertas?tipoId=1&ativo=true')}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors cursor-pointer"
+            title="Acessar central de alertas de vencimento com filtros dedicados na base"
+          >
+            <Bell size={13} />
+            <span>Alertas de Vencimento</span>
+          </button>
+
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
+              showFilters || Object.values(filters).some((v) => v)
+                ? 'bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100'
+                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            <Search size={14} />
+            Filtros detalhados
+            {Object.values(filters).filter(Boolean).length > 0 && (
+              <span className="px-1.5 py-0.5 text-xs bg-amber-500 text-white rounded-full leading-none">
+                {Object.values(filters).filter(Boolean).length}
+              </span>
             )}
-          </div>
-        )}
+          </button>
+        </div>
       </div>
+
+      {showFilters && (
+        <div className="mb-4 p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Compra ID</label>
+              <input
+                type="number"
+                value={filters.compraId}
+                onChange={(e) => handleFilterChange('compraId', e.target.value)}
+                placeholder="ID da compra..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Origem</label>
+              <select
+                value={filters.origem}
+                onChange={(e) => handleFilterChange('origem', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white"
+              >
+                <option value="">Todas as origens</option>
+                <option value="COMPRA">Via Compra</option>
+                <option value="MANUAL">Manual</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Data Inicial</label>
+              <input
+                type="date"
+                value={filters.dataInicial}
+                onChange={(e) => handleFilterChange('dataInicial', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Data Final</label>
+              <input
+                type="date"
+                value={filters.dataFinal}
+                onChange={(e) => handleFilterChange('dataFinal', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+          {Object.values(filters).some((v) => v) && (
+            <button
+              onClick={clearFilters}
+              className="mt-3 inline-flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900"
+            >
+              <X size={14} />
+              Limpar filtros
+            </button>
+          )}
+        </div>
+      )}
 
       <PageableTable
         headers={TABLE_HEADERS}
@@ -295,7 +413,48 @@ export default function EntradaInsumoListPage() {
                 )}
               </td>
               <td className="px-4 py-3 text-gray-600">
-                {e.itens.map((item) => item.insumoNome ?? `#${item.insumoId}`).join(', ') || '—'}
+                <div className="flex flex-col gap-1.5">
+                  {e.itens.map((item, idx) => {
+                    const dias = getDiasAteVencimento(item.dataValidade)
+                    return (
+                      <div key={idx} className="flex flex-wrap items-center gap-1.5 text-xs">
+                        <span className="text-gray-900 font-medium">
+                          {item.insumoNome ?? `#${item.insumoId}`}
+                        </span>
+                        {item.quantidade != null && (
+                          <span className="text-gray-400 font-mono text-[11px]">
+                            (qtd: {item.quantidade})
+                          </span>
+                        )}
+                        {dias !== null && dias < 0 && (
+                          <span
+                            className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-semibold bg-red-100 text-red-800 border border-red-200"
+                            title={`Venceu em ${formatData(item.dataValidade)}`}
+                          >
+                            ❌ Vencido ({Math.abs(dias)}d atrás)
+                          </span>
+                        )}
+                        {dias !== null && dias >= 0 && dias <= 15 && (
+                          <span
+                            className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 animate-pulse"
+                            title={`Vence em ${formatData(item.dataValidade)}`}
+                          >
+                            ⚠️ Vence em {dias === 0 ? 'hoje' : `${dias}d`}
+                          </span>
+                        )}
+                        {dias !== null && dias > 15 && (
+                          <span
+                            className="text-[11px] text-gray-400"
+                            title={`Data de Validade: ${formatData(item.dataValidade)}`}
+                          >
+                            (val: {formatData(item.dataValidade)})
+                          </span>
+                        )}
+                      </div>
+                    )
+                  })}
+                  {e.itens.length === 0 && '—'}
+                </div>
               </td>
               <td className="px-4 py-3 text-gray-600">{formatCurrency(e.valorTotal)}</td>
               <td className="px-4 py-3 text-gray-600">{e.numeroNotaFiscal ?? '—'}</td>

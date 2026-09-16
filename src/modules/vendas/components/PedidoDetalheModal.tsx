@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { X, ExternalLink } from 'lucide-react'
+import { X, ExternalLink, Printer } from 'lucide-react'
 import { useNavigate } from 'react-router'
 import { Pedido, PEDIDO_STATUS } from '../types/pedido'
 import { usePedido, useUpdatePedidoStatus } from '../hooks/usePedidos'
 import { useCliente } from '../hooks/useClientes'
 import PedidoPagamentoCard from './PedidoPagamentoCard'
 import RegistrarPagamentoModal from './RegistrarPagamentoModal'
+import ComandaProducaoModal from './ComandaProducaoModal'
 import { STATUS_COLORS, STATUS_QUE_SUGEREM_PAGAMENTO } from '../lib/pedidoStatus'
 import { formatEndereco } from '../lib/endereco'
 
@@ -40,6 +41,7 @@ export default function PedidoDetalheModal({ pedido, onClose, onUpdated }: Props
 
   const [percentualSugerido, setPercentualSugerido] = useState<number | undefined>()
   const [showPagamentoPrompt, setShowPagamentoPrompt] = useState(false)
+  const [showComanda, setShowComanda] = useState(false)
 
   function handleStatusChange(status: string) {
     statusMutation.mutate(
@@ -167,18 +169,33 @@ export default function PedidoDetalheModal({ pedido, onClose, onUpdated }: Props
           <PedidoPagamentoCard pedidoId={atual.id} pedido={atual} />
         </div>
 
-        <div className="px-5 pb-5">
+        <div className="px-5 pb-5 flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setShowComanda(true)}
+            className="flex-1 flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-medium py-2.5 rounded-lg transition-colors cursor-pointer text-sm shadow-xs"
+          >
+            <Printer size={16} /> Imprimir Comanda
+          </button>
           <button
             onClick={() => {
               onClose()
               navigate(`/vendas/pedidos/${atual.id}/editar`, { state: { from: '/vendas/mural' } })
             }}
-            className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg"
+            className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition-colors cursor-pointer text-sm shadow-xs"
           >
             <ExternalLink size={16} /> Ir para o pedido
           </button>
         </div>
       </div>
+
+      {showComanda && (
+        <ComandaProducaoModal
+          pedido={atual}
+          open={showComanda}
+          onClose={() => setShowComanda(false)}
+        />
+      )}
 
       <RegistrarPagamentoModal
         pedidoId={pedido.id}

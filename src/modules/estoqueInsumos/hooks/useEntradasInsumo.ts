@@ -12,6 +12,8 @@ export function useEntradasInsumo(
     compraId?: number;
     dataInicial?: string;
     dataFinal?: string;
+    origem?: 'COMPRA' | 'MANUAL';
+    pendentePreenchimento?: boolean;
   }
 ) {
   return useQuery({

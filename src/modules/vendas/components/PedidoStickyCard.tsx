@@ -1,6 +1,14 @@
-import { AlertTriangle, MapPin, Package } from 'lucide-react'
+import { AlertTriangle, MapPin, Package, Clock } from 'lucide-react'
 import { Pedido } from '../types/pedido'
 import { STATUS_TERMINAIS } from '../lib/pedidoStatus'
+
+function formatDateTimeParts(iso?: string) {
+  if (!iso) return { data: '—', hora: null }
+  const d = new Date(iso)
+  const data = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+  const hora = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  return { data, hora: hora !== '00:00' ? hora : null }
+}
 
 function getUrgencyColor(dataEntrega?: string, status?: string): string {
   if (STATUS_TERMINAIS.includes(status ?? '')) {
@@ -73,10 +81,20 @@ export default function PedidoStickyCard({ pedido, hasAlerta, onClick, rotation 
         {pedido.clienteNome ?? (pedido.clienteId ? `Cliente #${pedido.clienteId}` : '—')}
       </p>
 
-      <div className="flex items-center gap-1 text-xs text-gray-600">
-        <Package size={12} />
-        <span>{formatDateTime(pedido.dataEntrega)}</span>
-      </div>
+      {(() => {
+        const parts = formatDateTimeParts(pedido.dataEntrega)
+        return (
+          <div className="flex items-center justify-between text-xs text-gray-700 bg-white/50 px-2 py-1 rounded">
+            <span className="font-semibold">{parts.data}</span>
+            {parts.hora && (
+              <span className="inline-flex items-center gap-1 text-[11px] font-extrabold text-amber-950 bg-amber-200/90 px-1.5 py-0.2 rounded shadow-2xs">
+                <Clock size={11} className="text-amber-800" />
+                {parts.hora}
+              </span>
+            )}
+          </div>
+        )
+      })()}
 
       <p className="text-sm font-semibold text-gray-700">{formatCurrency(pedido.valorTotal)}</p>
 

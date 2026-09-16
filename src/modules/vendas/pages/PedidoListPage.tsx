@@ -1,23 +1,27 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { Plus, Eye, Ban, Search, X, CircleDollarSign } from 'lucide-react'
+import { Plus, Eye, Ban, Search, X, CircleDollarSign, Printer, Clock } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
 import PageableTable from '../../../components/ui/PageableTable'
 import Button from '../../../components/ui/Button'
 import Modal from '../../../components/ui/Modal'
 import { usePedidos, useUpdatePedidoStatus } from '../hooks/usePedidos'
 import { useDebounce } from '../../../hooks/useDebounce'
-import { PEDIDO_STATUS } from '../types/pedido'
+import { Pedido, PEDIDO_STATUS } from '../types/pedido'
 import { formatCurrency } from '../../../lib/format'
 import { useTodasContasReceberPendentes } from '../../financeiro/hooks/useFinanceiro'
 import RegistrarPagamentoModal from '../components/RegistrarPagamentoModal'
+import ComandaProducaoModal from '../components/ComandaProducaoModal'
 import { STATUS_COLORS, STATUS_QUE_SUGEREM_PAGAMENTO, STATUS_TERMINAIS, getPrazoEntrega } from '../lib/pedidoStatus'
 
 const TABLE_HEADERS = ['ID', 'Cliente', 'Status', 'Valor Total', 'Frete', 'Retirada', 'Criado em', 'Entrega', 'Ações']
 
-function formatDate(dateStr: string | undefined): string {
-  if (!dateStr) return '—'
-  return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(dateStr))
+function formatDateTimeParts(dateStr: string | undefined) {
+  if (!dateStr) return { data: '—', hora: null }
+  const d = new Date(dateStr)
+  const data = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(d)
+  const hora = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  return { data, hora: hora !== '00:00' ? hora : null }
 }
 
 export default function PedidoListPage() {
@@ -26,6 +30,7 @@ export default function PedidoListPage() {
   const [pageSize, setPageSize] = useState(20)
   const [filters, setFilters] = useState({ clienteId: '', status: '' })
   const [showFilters, setShowFilters] = useState(false)
+  const [comandaPedido, setComandaPedido] = useState<Pedido | null>(null)
   const debouncedFilters = useDebounce(filters)
 
   const activeFilters =
@@ -209,23 +214,40 @@ export default function PedidoListPage() {
                 <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">Não</span>
               )}
             </td>
-            <td className="px-4 py-3 text-gray-600">{formatDate(p.createdOn)}</td>
+            <td className="px-4 py-3 text-gray-600">{formatDateTimeParts(p.createdOn).data}</td>
             <td className="px-4 py-3">
-              {p.dataEntrega ? (
-                <div className="flex flex-col items-start gap-1">
-                  <span className="font-medium text-gray-700">{formatDate(p.dataEntrega)}</span>
-                  {prazoEntrega && (
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${prazoEntrega.badgeClass}`}>
-                      {prazoEntrega.label}
-                    </span>
-                  )}
-                </div>
-              ) : (
+              {p.dataEntrega ? (() => {
+                const parts = formatDateTimeParts(p.dataEntrega)
+                return (
+                  <div className="flex flex-col items-start gap-1">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="font-medium text-gray-700">{parts.data}</span>
+                      {parts.hora && (
+                        <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-amber-900 bg-amber-100/90 px-1.5 py-0.2 rounded border border-amber-200 shadow-2xs">
+                          <Clock size={10} className="text-amber-800" /> {parts.hora}
+                        </span>
+                      )}
+                    </div>
+                    {prazoEntrega && (
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${prazoEntrega.badgeClass}`}>
+                        {prazoEntrega.label}
+                      </span>
+                    )}
+                  </div>
+                )
+              })() : (
                 <span className="text-gray-400 text-xs">—</span>
               )}
             </td>
             <td className="px-4 py-3">
               <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setComandaPedido(p)}
+                  className="p-1.5 rounded-md text-gray-400 hover:text-amber-600 hover:bg-amber-50 transition-colors cursor-pointer"
+                  title="Imprimir Comanda de Produção"
+                >
+                  <Printer size={15} />
+                </button>
                 <button
                   onClick={() => navigate(`/vendas/pedidos/${p.id}/editar`)}
                   className="p-1.5 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
@@ -277,6 +299,14 @@ export default function PedidoListPage() {
           onClose={() => setPagamentoPrompt(null)}
           percentualSugerido={pagamentoPrompt.percentualSugerido}
           title={pagamentoPrompt.percentualSugerido != null ? 'Registrar adiantamento' : 'Registrar pagamento'}
+        />
+      )}
+
+      {comandaPedido && (
+        <ComandaProducaoModal
+          pedido={comandaPedido}
+          open={!!comandaPedido}
+          onClose={() => setComandaPedido(null)}
         />
       )}
     </div>

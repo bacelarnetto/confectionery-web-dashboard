@@ -10,6 +10,7 @@ const estoqueInsumoService = {
     filters?: {
       insumoId?: number;
       categoriaId?: number;
+      statusSaldo?: 'COM_SALDO' | 'ZERADO';
     }
   ): Promise<PageResponse<EstoqueInsumo>> {
     return api

@@ -11,6 +11,7 @@ const insumoService = {
       id?: number;
       categoriaId?: number;
       nome?: string;
+      perecivel?: boolean;
     }
   ): Promise<PageResponse<Insumo>> {
     return api

@@ -26,9 +26,14 @@ function formatDate(dateStr: string | undefined): string {
 export default function EstoqueInsumoListPage() {
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState(20)
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<{
+    insumoId: string
+    categoriaId: string
+    statusSaldo: '' | 'COM_SALDO' | 'ZERADO'
+  }>({
     insumoId: '',
     categoriaId: '',
+    statusSaldo: '',
   })
   const [showFilters, setShowFilters] = useState(false)
 
@@ -36,6 +41,7 @@ export default function EstoqueInsumoListPage() {
   const filterParams = {
     ...(debouncedFilters.insumoId ? { insumoId: Number(debouncedFilters.insumoId) } : {}),
     ...(debouncedFilters.categoriaId ? { categoriaId: Number(debouncedFilters.categoriaId) } : {}),
+    ...(debouncedFilters.statusSaldo ? { statusSaldo: debouncedFilters.statusSaldo } : {}),
   }
 
   const { data, isLoading } = useEstoqueInsumos(page, pageSize, Object.keys(filterParams).length > 0 ? filterParams : undefined)
@@ -53,7 +59,7 @@ export default function EstoqueInsumoListPage() {
   }
 
   function clearFilters() {
-    setFilters({ insumoId: '', categoriaId: '' })
+    setFilters({ insumoId: '', categoriaId: '', statusSaldo: '' })
     setPage(0)
   }
 
@@ -74,60 +80,109 @@ export default function EstoqueInsumoListPage() {
         </div>
       </div>
 
-      <div className="mb-4">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        {/* Pílulas de filtro rápido na base */}
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => handleFilterChange('statusSaldo', '')}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
+              filters.statusSaldo === ''
+                ? 'bg-gray-900 text-white border-gray-900 shadow-xs'
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            Todos
+          </button>
+          <button
+            type="button"
+            onClick={() => handleFilterChange('statusSaldo', 'COM_SALDO')}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
+              filters.statusSaldo === 'COM_SALDO'
+                ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                : 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
+            }`}
+          >
+            <span>✅ Com Saldo</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleFilterChange('statusSaldo', 'ZERADO')}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
+              filters.statusSaldo === 'ZERADO'
+                ? 'bg-red-600 text-white border-red-600 shadow-xs'
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            <span>⚠️ Zerados (0)</span>
+          </button>
+        </div>
+
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className={`inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border transition-colors ${
-            showFilters || Object.values(filters).some(v => v)
+          className={`inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
+            showFilters || Object.values(filters).some((v) => v)
               ? 'bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100'
               : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
           }`}
         >
-          <Search size={15} />
-          Filtros
+          <Search size={14} />
+          Filtros detalhados
           {Object.values(filters).filter(Boolean).length > 0 && (
             <span className="px-1.5 py-0.5 text-xs bg-amber-500 text-white rounded-full leading-none">
               {Object.values(filters).filter(Boolean).length}
             </span>
           )}
         </button>
-
-        {showFilters && (
-          <div className="mt-3 p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Insumo ID</label>
-                <input
-                  type="number"
-                  value={filters.insumoId}
-                  onChange={(e) => handleFilterChange('insumoId', e.target.value)}
-                  placeholder="ID do insumo..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Categoria ID</label>
-                <input
-                  type="number"
-                  value={filters.categoriaId}
-                  onChange={(e) => handleFilterChange('categoriaId', e.target.value)}
-                  placeholder="ID da categoria..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-            {Object.values(filters).some(v => v) && (
-              <button
-                onClick={clearFilters}
-                className="mt-3 inline-flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900"
-              >
-                <X size={14} />
-                Limpar filtros
-              </button>
-            )}
-          </div>
-        )}
       </div>
+
+      {showFilters && (
+        <div className="mb-4 p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Insumo ID</label>
+              <input
+                type="number"
+                value={filters.insumoId}
+                onChange={(e) => handleFilterChange('insumoId', e.target.value)}
+                placeholder="ID do insumo..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Categoria ID</label>
+              <input
+                type="number"
+                value={filters.categoriaId}
+                onChange={(e) => handleFilterChange('categoriaId', e.target.value)}
+                placeholder="ID da categoria..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Status do Saldo</label>
+              <select
+                value={filters.statusSaldo}
+                onChange={(e) => handleFilterChange('statusSaldo', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white"
+              >
+                <option value="">Todos</option>
+                <option value="COM_SALDO">Apenas com Saldo (&gt; 0)</option>
+                <option value="ZERADO">Apenas Zerados (0)</option>
+              </select>
+            </div>
+          </div>
+          {Object.values(filters).some((v) => v) && (
+            <button
+              onClick={clearFilters}
+              className="mt-3 inline-flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900"
+            >
+              <X size={14} />
+              Limpar filtros
+            </button>
+          )}
+        </div>
+      )}
 
       <PageableTable
         headers={TABLE_HEADERS}
@@ -146,8 +201,14 @@ export default function EstoqueInsumoListPage() {
             <td className="px-4 py-3 text-gray-600">
               {e.insumoNome} <span className="text-xs text-gray-400">({e.insumoId})</span>
             </td>
-            <td className="px-4 py-3 text-gray-900 font-medium">
-              {e.quantidade.toFixed(2)}
+            <td className="px-4 py-3 font-medium">
+              {e.quantidade <= 0 ? (
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
+                  0.00 (Zerado)
+                </span>
+              ) : (
+                <span className="text-gray-900">{e.quantidade.toFixed(2)}</span>
+              )}
             </td>
             <td className="px-4 py-3 text-emerald-700 font-medium">
               {valorizadoPorInsumo.has(e.insumoId) ? formatCurrency(valorizadoPorInsumo.get(e.insumoId)!.valorTotal) : '—'}

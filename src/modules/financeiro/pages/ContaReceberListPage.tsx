@@ -1,5 +1,6 @@
 import { useState, useEffect, FormEvent } from 'react'
-import { Plus, Pencil, Trash2, HandCoins, MessageSquare } from 'lucide-react'
+import { Plus, Pencil, Trash2, HandCoins, MessageSquare, FileSpreadsheet } from 'lucide-react'
+import toast from 'react-hot-toast'
 import PageHeader from '../../../components/ui/PageHeader'
 import PageableTable from '../../../components/ui/PageableTable'
 import Modal from '../../../components/ui/Modal'
@@ -75,11 +76,41 @@ export default function ContaReceberListPage() {
   const contas = data?.content ?? []
   const totalPages = data?.totalPages ?? 0
 
+  function exportarCsv() {
+    if (contas.length === 0) {
+      toast.error('Nenhuma conta a receber para exportar.')
+      return
+    }
+    const headers = ['Origem', 'Cliente / Descrição', 'Valor (R$)', 'Já Recebido (R$)', 'Saldo (R$)', 'Status', 'Motivo', 'Data Referência']
+    const rows = contas.map((c) => [
+      c.origem === 'PEDIDO' ? 'Pedido' : 'Avulsa',
+      `"${((c.origem === 'PEDIDO' ? (c.clienteNome ?? `Pedido #${c.pedidoId ?? c.idRef}`) : c.descricao) ?? '').replace(/"/g, '""')}"`,
+      c.valor.toFixed(2),
+      c.valorRecebido.toFixed(2),
+      c.saldo.toFixed(2),
+      c.status ?? '',
+      `"${(c.motivo ?? '').replace(/"/g, '""')}"`,
+      c.dataReferencia ? c.dataReferencia.split('T')[0] : '',
+    ])
+
+    const csvContent = '\uFEFF' + [headers.join(';'), ...rows.map((r) => r.join(';'))].join('\n')
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `contas_a_receber_${apenasPendentes ? 'pendentes' : 'todas'}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+    toast.success('Contas a receber exportadas com sucesso!')
+  }
+
   return (
     <div>
       <PageHeader title="Contas a Receber" subtitle="Recebimentos pendentes de pedidos e contas avulsas">
-        <div className="flex items-center gap-3">
-          <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700 mr-1">
             <input
               type="checkbox"
               checked={apenasPendentes}
@@ -89,8 +120,17 @@ export default function ContaReceberListPage() {
             Apenas pendentes
           </label>
           <button
+            type="button"
+            onClick={exportarCsv}
+            className="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors shadow-2xs cursor-pointer"
+            title="Exportar contas para planilha CSV"
+          >
+            <FileSpreadsheet size={16} className="text-emerald-600" />
+            <span>Exportar CSV</span>
+          </button>
+          <button
             onClick={() => setAvulsaModal({ mode: 'create' })}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 transition-colors cursor-pointer"
           >
             <Plus size={16} />
             Nova Conta Avulsa

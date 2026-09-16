@@ -4,7 +4,7 @@ import estoqueInsumoService from '../services/estoqueInsumoService'
 export function useEstoqueInsumos(
   page = 0,
   size = 20,
-  filters?: { insumoId?: number; categoriaId?: number }
+  filters?: { insumoId?: number; categoriaId?: number; statusSaldo?: 'COM_SALDO' | 'ZERADO' }
 ) {
   return useQuery({
     queryKey: ['estoque-insumos', page, size, filters],
