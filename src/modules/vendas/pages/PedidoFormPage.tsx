@@ -418,95 +418,178 @@ export default function PedidoFormPage() {
 
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Itens do Pedido</h3>
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900">Itens do Pedido</h3>
+              <p className="text-xs text-gray-500">Produtos e complementos incluídos no pedido</p>
+            </div>
             <button
               type="button"
               onClick={addItem}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors"
             >
-              <Plus size={14} />
+              <Plus size={16} />
               Adicionar item
             </button>
           </div>
 
-          <div className="space-y-4">
-            {itens.map((item, index) => (
-              <div
-                key={index}
-                className={`border rounded-lg p-4 ${itemErroIndices.has(index) ? 'border-red-400 bg-red-50' : 'border-gray-200'}`}
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-medium text-gray-600">Item {index + 1}</span>
-                  {itens.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeItem(index)}
-                      className="p-1 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  )}
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <div className="col-span-2 md:col-span-1">
-                    <Field label="Produto" required>
-                      <select
-                        value={item.produtoId}
-                        onChange={(e) => handleProdutoChange(index, e.target.value)}
-                        required
-                        className={inputClass}
-                      >
-                        <option value="">Selecione...</option>
-                        {produtos.map((p) => (
-                          <option key={p.id} value={p.id}>{p.nome}</option>
-                        ))}
-                      </select>
-                    </Field>
+          {itens.length === 0 ? (
+            <p className="text-sm text-gray-400 text-center py-6 border-2 border-dashed border-gray-200 rounded-xl">
+              Nenhum item adicionado. Clique em "Adicionar item" acima para começar.
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {itens.map((item, index) => {
+                const produto = produtos.find((p) => p.id === Number(item.produtoId))
+                const qtd = Number(item.quantidade) || 0
+                const unit = Number(item.valorUnitario) || 0
+                const desc = Number(item.desconto) || 0
+                const extrasValor = (item.complementosResolvidos || [])
+                  .filter((c) => !c.padrao)
+                  .reduce((acc, c) => acc + (c.valorVenda || 0), 0)
+                const subtotalItem = Math.max(0, qtd * unit - desc + extrasValor * qtd)
+                const hasErro = itemErroIndices.has(index)
+
+                return (
+                  <div
+                    key={index}
+                    className={`p-4 rounded-xl border transition-all ${
+                      hasErro
+                        ? 'bg-red-50/30 border-red-300'
+                        : 'bg-gray-50/60 border-gray-200'
+                    }`}
+                  >
+                    {/* Cabeçalho do Card do Item */}
+                    <div className="flex items-center justify-between pb-3 mb-3 border-b border-gray-200/80">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded bg-white border border-gray-200 text-gray-700 shadow-2xs">
+                          Item {index + 1}
+                        </span>
+                        {produto && (
+                          <span className="text-sm font-semibold text-gray-800">
+                            {produto.nome}
+                          </span>
+                        )}
+                        {hasErro && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-red-800 bg-red-100/90 border border-red-200 rounded-md">
+                            <span>⚠️</span> Estoque insuficiente
+                          </span>
+                        )}
+                      </div>
+
+                      {itens.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeItem(index)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                          title="Remover este item"
+                        >
+                          <Trash2 size={14} />
+                          <span>Remover</span>
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Grid de Campos em 2 Linhas */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3.5 items-start">
+                      {/* Linha 1: Produto (Ocupa 2 colunas) */}
+                      <div className="sm:col-span-2 md:col-span-2">
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          Produto <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          value={item.produtoId}
+                          onChange={(e) => handleProdutoChange(index, e.target.value)}
+                          required
+                          className={`${inputClass} ${hasErro ? 'border-red-400 bg-red-50/50' : ''}`}
+                        >
+                          <option value="">Selecione um produto...</option>
+                          {produtos.map((p) => (
+                            <option key={p.id} value={p.id}>{p.nome}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Linha 1: Quantidade */}
+                      <div className="sm:col-span-1 md:col-span-1">
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          Quantidade <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={item.quantidade}
+                          onChange={(e) => handleItemChange(index, 'quantidade', e.target.value)}
+                          className={inputClass}
+                          placeholder="1"
+                          required
+                        />
+                      </div>
+
+                      {/* Linha 1: Valor Unit. (R$) */}
+                      <div className="sm:col-span-1 md:col-span-1">
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          Valor Unit. (R$) <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={item.valorUnitario}
+                          onChange={(e) => handleItemChange(index, 'valorUnitario', e.target.value)}
+                          className={inputClass}
+                          placeholder="0,00"
+                          required
+                        />
+                      </div>
+
+                      {/* Linha 2: Desconto (R$) */}
+                      <div className="sm:col-span-1 md:col-span-1">
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          Desconto (R$)
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={item.desconto}
+                          onChange={(e) => handleItemChange(index, 'desconto', e.target.value)}
+                          className={inputClass}
+                          placeholder="0,00"
+                        />
+                      </div>
+
+                      {/* Linha 2: Subtotal Item (R$) */}
+                      <div className="sm:col-span-1 md:col-span-1">
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          Subtotal Item (R$)
+                        </label>
+                        <input
+                          type="text"
+                          value={subtotalItem.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          readOnly
+                          className={`${inputClass} bg-gray-100/80 font-medium text-gray-600 cursor-not-allowed`}
+                          title="Calculado automaticamente: (Qtd × Valor Unit.) − Desconto + Complementos"
+                        />
+                      </div>
+
+                      {/* Linha 2: Complementos (Ocupa 2 colunas) */}
+                      <div className="sm:col-span-2 md:col-span-2">
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          Complementos / Adicionais
+                        </label>
+                        <ComplementoPicker
+                          produtoId={Number(item.produtoId) || undefined}
+                          value={item.complementoIds}
+                          onChange={(ids) => handleItemChange(index, 'complementoIds', ids)}
+                          onResolvedChange={(resolvidos) => handleItemChange(index, 'complementosResolvidos', resolvidos)}
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <Field label="Quantidade" required>
-                    <input
-                      type="number"
-                      min="1"
-                      value={item.quantidade}
-                      onChange={(e) => handleItemChange(index, 'quantidade', e.target.value)}
-                      className={inputClass}
-                      placeholder="1"
-                    />
-                  </Field>
-                  <Field label="Valor Unit. (R$)" required>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={item.valorUnitario}
-                      onChange={(e) => handleItemChange(index, 'valorUnitario', e.target.value)}
-                      className={inputClass}
-                      placeholder="0.00"
-                    />
-                  </Field>
-                  <Field label="Desconto (R$)">
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={item.desconto}
-                      onChange={(e) => handleItemChange(index, 'desconto', e.target.value)}
-                      className={inputClass}
-                      placeholder="0.00"
-                    />
-                  </Field>
-                  <div className="col-span-2">
-                    <ComplementoPicker
-                      produtoId={Number(item.produtoId) || undefined}
-                      value={item.complementoIds}
-                      onChange={(ids) => handleItemChange(index, 'complementoIds', ids)}
-                      onResolvedChange={(resolvidos) => handleItemChange(index, 'complementosResolvidos', resolvidos)}
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+                )
+              })}
+            </div>
+          )}
         </div>
 
         <ResumoValoresCard resumo={resumo} />

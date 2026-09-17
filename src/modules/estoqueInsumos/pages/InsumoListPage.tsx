@@ -18,6 +18,7 @@ export default function InsumoListPage() {
     id: '',
     nome: '',
     categoriaId: '',
+    perecivel: '',
   })
   const [showFilters, setShowFilters] = useState(false)
 
@@ -26,6 +27,7 @@ export default function InsumoListPage() {
     ...(debouncedFilters.id ? { id: Number(debouncedFilters.id) } : {}),
     ...(debouncedFilters.nome ? { nome: debouncedFilters.nome } : {}),
     ...(debouncedFilters.categoriaId ? { categoriaId: Number(debouncedFilters.categoriaId) } : {}),
+    ...(debouncedFilters.perecivel !== '' ? { perecivel: debouncedFilters.perecivel === 'true' } : {}),
   }
 
   const { data, isLoading } = useInsumos(page, pageSize, Object.keys(filterParams).length > 0 ? filterParams : undefined)
@@ -42,7 +44,7 @@ export default function InsumoListPage() {
   }
 
   function clearFilters() {
-    setFilters({ id: '', nome: '', categoriaId: '' })
+    setFilters({ id: '', nome: '', categoriaId: '', perecivel: '' })
     setPage(0)
   }
 
@@ -68,70 +70,119 @@ export default function InsumoListPage() {
         </button>
       </PageHeader>
 
-      <div className="mb-4">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        {/* Pílulas de filtro rápido na base */}
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => handleFilterChange('perecivel', '')}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
+              filters.perecivel === ''
+                ? 'bg-gray-900 text-white border-gray-900 shadow-xs'
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            Todos
+          </button>
+          <button
+            type="button"
+            onClick={() => handleFilterChange('perecivel', 'true')}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
+              filters.perecivel === 'true'
+                ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
+                : 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100'
+            }`}
+          >
+            <span>🌡 Perecíveis</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleFilterChange('perecivel', 'false')}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
+              filters.perecivel === 'false'
+                ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                : 'bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100'
+            }`}
+          >
+            <span>📦 Não Perecíveis</span>
+          </button>
+        </div>
+
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className={`inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border transition-colors ${
-            showFilters || Object.values(filters).some(v => v)
+          className={`inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
+            showFilters || Object.values(filters).some((v) => v)
               ? 'bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100'
               : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
           }`}
         >
-          <Search size={15} />
-          Filtros
+          <Search size={14} />
+          Filtros detalhados
           {Object.values(filters).filter(Boolean).length > 0 && (
             <span className="px-1.5 py-0.5 text-xs bg-amber-500 text-white rounded-full leading-none">
               {Object.values(filters).filter(Boolean).length}
             </span>
           )}
         </button>
-
-        {showFilters && (
-          <div className="mt-3 p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">ID</label>
-                <input
-                  type="number"
-                  value={filters.id}
-                  onChange={(e) => handleFilterChange('id', e.target.value)}
-                  placeholder="ID do insumo..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
-                <input
-                  type="text"
-                  value={filters.nome}
-                  onChange={(e) => handleFilterChange('nome', e.target.value)}
-                  placeholder="Buscar por nome..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Categoria ID</label>
-                <input
-                  type="number"
-                  value={filters.categoriaId}
-                  onChange={(e) => handleFilterChange('categoriaId', e.target.value)}
-                  placeholder="ID da categoria..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-            {Object.values(filters).some(v => v) && (
-              <button
-                onClick={clearFilters}
-                className="mt-3 inline-flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900"
-              >
-                <X size={14} />
-                Limpar filtros
-              </button>
-            )}
-          </div>
-        )}
       </div>
+
+      {showFilters && (
+        <div className="mb-4 p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">ID</label>
+              <input
+                type="number"
+                value={filters.id}
+                onChange={(e) => handleFilterChange('id', e.target.value)}
+                placeholder="ID do insumo..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
+              <input
+                type="text"
+                value={filters.nome}
+                onChange={(e) => handleFilterChange('nome', e.target.value)}
+                placeholder="Buscar por nome..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Categoria ID</label>
+              <input
+                type="number"
+                value={filters.categoriaId}
+                onChange={(e) => handleFilterChange('categoriaId', e.target.value)}
+                placeholder="ID da categoria..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Perecibilidade</label>
+              <select
+                value={filters.perecivel}
+                onChange={(e) => handleFilterChange('perecivel', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white"
+              >
+                <option value="">Todos</option>
+                <option value="true">Apenas Perecíveis</option>
+                <option value="false">Apenas Não Perecíveis</option>
+              </select>
+            </div>
+          </div>
+          {Object.values(filters).some((v) => v) && (
+            <button
+              onClick={clearFilters}
+              className="mt-3 inline-flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900"
+            >
+              <X size={14} />
+              Limpar filtros
+            </button>
+          )}
+        </div>
+      )}
 
       <PageableTable
         headers={TABLE_HEADERS}

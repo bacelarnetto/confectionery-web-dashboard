@@ -22,6 +22,15 @@ function extrairProdutoIdInvalido(mensagem: string): number | null {
   return match ? Number(match[1]) : null
 }
 
+/** Extrai Y-M-D no timezone local — usar `.slice(0, 10)` na string ISO (UTC) desloca o dia perto da meia-noite. */
+function dateToLocalYMD(iso: string): string {
+  const d = new Date(iso)
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 interface ItemForm {
   produtoId: string
   quantidade: string
@@ -99,7 +108,7 @@ export default function OrcamentoFormPage() {
       setForm({
         clienteId: String(orcamento.clienteId ?? ''),
         enderecoId: String(orcamento.enderecoId ?? ''),
-        dataValidade: orcamento.dataValidade ? orcamento.dataValidade.slice(0, 10) : '',
+        dataValidade: orcamento.dataValidade ? dateToLocalYMD(orcamento.dataValidade) : '',
         valorFrete: String(orcamento.valorFrete ?? ''),
         observacao: orcamento.observacao ?? '',
       })

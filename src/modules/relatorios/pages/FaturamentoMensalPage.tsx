@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { FileText, FileSpreadsheet } from 'lucide-react'
+import { FileText, FileSpreadsheet, TrendingUp, BarChart3, Award, ShoppingBag } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts'
 import PageHeader from '../../../components/ui/PageHeader'
 import Table from '../../../components/ui/Table'
@@ -29,6 +29,16 @@ export default function FaturamentoMensalPage() {
 
   const relatorio = data ?? []
   const chartData = relatorio.map((r) => ({ ...r, mesLabel: formatMes(r.mes) }))
+
+  const totalFaturado = relatorio.reduce((acc, r) => acc + r.faturamento, 0)
+  const mediaFaturamento = relatorio.length > 0 ? totalFaturado / relatorio.length : 0
+  const totalPedidos = relatorio.reduce((acc, r) => acc + r.quantidadePedidos, 0)
+  const ticketMedioGeral = totalPedidos > 0 ? totalFaturado / totalPedidos : 0
+
+  const melhorMesObj = relatorio.reduce<typeof relatorio[0] | null>((best, cur) => {
+    if (!best || cur.faturamento > best.faturamento) return cur
+    return best
+  }, null)
 
   return (
     <div>
@@ -64,6 +74,57 @@ export default function FaturamentoMensalPage() {
           <option value={6}>Últimos 6 meses</option>
           <option value={12}>Últimos 12 meses</option>
         </select>
+      </div>
+
+      {/* Cards de Resumo Executivo */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-2xs flex items-center gap-3.5">
+          <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl shrink-0">
+            <TrendingUp size={22} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-gray-500">Total Faturado</p>
+            <p className="text-lg font-bold text-gray-900 truncate">{formatCurrency(totalFaturado)}</p>
+            <p className="text-[11px] text-gray-400">Últimos {meses} meses</p>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-2xs flex items-center gap-3.5">
+          <div className="p-3 bg-blue-50 text-blue-600 rounded-xl shrink-0">
+            <BarChart3 size={22} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-gray-500">Média Mensal</p>
+            <p className="text-lg font-bold text-gray-900 truncate">{formatCurrency(mediaFaturamento)}</p>
+            <p className="text-[11px] text-gray-400">Receita média / mês</p>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-2xs flex items-center gap-3.5">
+          <div className="p-3 bg-amber-50 text-amber-600 rounded-xl shrink-0">
+            <Award size={22} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-gray-500">Melhor Mês</p>
+            <p className="text-lg font-bold text-gray-900 truncate">
+              {melhorMesObj ? formatMes(melhorMesObj.mes) : '—'}
+            </p>
+            <p className="text-[11px] text-amber-700 font-medium truncate">
+              {melhorMesObj ? formatCurrency(melhorMesObj.faturamento) : '—'}
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-2xs flex items-center gap-3.5">
+          <div className="p-3 bg-purple-50 text-purple-600 rounded-xl shrink-0">
+            <ShoppingBag size={22} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-gray-500">Volume de Pedidos</p>
+            <p className="text-lg font-bold text-gray-900 truncate">{totalPedidos} pedidos</p>
+            <p className="text-[11px] text-gray-400 truncate">Ticket médio: {formatCurrency(ticketMedioGeral)}</p>
+          </div>
+        </div>
       </div>
 
       <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm mb-6">

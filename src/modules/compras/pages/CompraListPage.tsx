@@ -22,8 +22,7 @@ const TABLE_HEADERS = ['ID', 'Fornecedor', 'Status', 'Itens', 'Data', 'Ações']
 type DialogState =
   | null
   | { type: 'sem-itens' }
-  | { type: 'perecivel'; nomes: string; compraId: number }
-  | { type: 'confirmar'; compra: { id: number; itens: any[] } }
+  | { type: 'confirmar'; compra: { id: number; itens: any[] }; nomesPereciveis?: string }
 
 function formatDate(dateStr: string) {
   try {
@@ -100,19 +99,18 @@ export default function CompraListPage() {
       return
     }
 
-    const itensPerecíveis = itensComprados.filter((i) =>
+    const itensPereciveis = itensComprados.filter((i) =>
       insumos.find((ins) => ins.id === i.insumoId)?.perecivel === true
     )
 
-    if (itensPerecíveis.length > 0) {
-      const nomes = itensPerecíveis
-        .map((i) => insumos.find((ins) => ins.id === i.insumoId)?.nome ?? `Insumo #${i.insumoId}`)
-        .join(', ')
-      setDialog({ type: 'perecivel', nomes, compraId: compraSelecionada.id })
-      return
-    }
+    const nomesPereciveis =
+      itensPereciveis.length > 0
+        ? itensPereciveis
+            .map((i) => insumos.find((ins) => ins.id === i.insumoId)?.nome ?? `Insumo #${i.insumoId}`)
+            .join(', ')
+        : undefined
 
-    setDialog({ type: 'confirmar', compra: compraSelecionada })
+    setDialog({ type: 'confirmar', compra: compraSelecionada, nomesPereciveis })
   }
 
   function executarRecebimento(compra: { id: number; itens: any[] }) {
@@ -121,7 +119,6 @@ export default function CompraListPage() {
 
     const payload: EntradaInsumoInsertForm = {
       compraId: compra.id,
-      usuarioId: 1,
       valorTotal: valorTotalItens,
       createdBy: '',
       itens: itensComprados.map((i: any) => ({
@@ -309,49 +306,24 @@ export default function CompraListPage() {
       />
 
       <AlertModal
-        isOpen={dialog?.type === 'perecivel'}
-        onClose={() => setDialog(null)}
-        variant="warning"
-        title="Insumos perecíveis detectados"
-        message={
-          dialog?.type === 'perecivel' ? (
-            <div>
-              <p className="mb-3">
-                Os seguintes insumos são perecíveis e exigem <strong>lote</strong> e <strong>data de validade</strong>:
-              </p>
-              <ul className="list-disc list-inside space-y-1 mb-3">
-                {dialog.nomes.split(', ').map((nome) => (
-                  <li key={nome} className="text-amber-700 font-medium">{nome}</li>
-                ))}
-              </ul>
-              <p>
-                Você será redirecionado para a tela de <strong>Nova Entrada</strong> com o Compra ID já preenchido.
-              </p>
-            </div>
-          ) : ''
-        }
-        confirmLabel="Ir para Nova Entrada"
-        onConfirm={() => {
-          if (dialog?.type === 'perecivel') {
-            navigate('/estoque-insumos/entradas/nova', { state: { compraId: dialog.compraId } })
-            setDialog(null)
-          }
-        }}
-        cancelLabel="Cancelar"
-      />
-
-      <AlertModal
         isOpen={dialog?.type === 'confirmar'}
         onClose={() => setDialog(null)}
         variant="success"
         title="Confirmar recebimento"
         message={
           dialog?.type === 'confirmar' ? (
-            <span>
-              Confirma o recebimento da <strong>Compra #{dialog.compra.id}</strong>?{' '}
-              <strong>{dialog.compra.itens.filter((i: any) => i.comprado).length} item(ns)</strong> marcados como
-              comprados serão lançados no estoque.
-            </span>
+            <div className="space-y-2.5 text-sm text-gray-700">
+              <p>
+                Confirma o recebimento da <strong>Compra #{dialog.compra.id}</strong>?{' '}
+                <strong>{dialog.compra.itens.filter((i: any) => i.comprado).length} item(ns)</strong> marcados como
+                comprados serão lançados no estoque.
+              </p>
+              {dialog.nomesPereciveis && (
+                <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-900 leading-relaxed">
+                  <strong>⚠️ Insumos perecíveis detectados:</strong> {dialog.nomesPereciveis}. A entrada será gerada e marcada como pendente de conferência (lote, data de fabricação e validade) na lista de entradas.
+                </div>
+              )}
+            </div>
           ) : ''
         }
         confirmLabel="Confirmar recebimento"

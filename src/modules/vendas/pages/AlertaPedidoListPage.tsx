@@ -1,6 +1,6 @@
-import { CalendarClock } from 'lucide-react'
+import { CalendarClock, RefreshCw } from 'lucide-react'
 import { AlertaPedido, AlertaPedidoTipo } from '../types/alertaPedido'
-import { useAlertasPedidoAtivos, useReconhecerAlertaPedido } from '../hooks/useAlertasPedido'
+import { useAlertasPedidoAtivos, useReconhecerAlertaPedido, useVerificarAlertasPedido } from '../hooks/useAlertasPedido'
 import { useNavigate } from 'react-router'
 
 const TIPO_CONFIG: Record<AlertaPedidoTipo, { label: string; bg: string; text: string; badge: string }> = {
@@ -61,6 +61,7 @@ function AlertaCard({ alerta }: { alerta: AlertaPedido }) {
 
 export default function AlertaPedidoListPage() {
   const { data, isLoading } = useAlertasPedidoAtivos()
+  const verificarMutation = useVerificarAlertasPedido()
 
   if (isLoading) return <p className="p-6 text-gray-500">Carregando alertas...</p>
 
@@ -84,6 +85,14 @@ export default function AlertaPedidoListPage() {
             {totalAtivos}
           </span>
         )}
+        <button
+          onClick={() => verificarMutation.mutate()}
+          disabled={verificarMutation.isPending}
+          className="ml-auto inline-flex items-center gap-2 px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 disabled:opacity-60 transition-colors"
+        >
+          <RefreshCw size={16} className={verificarMutation.isPending ? 'animate-spin' : ''} />
+          Verificar Agora
+        </button>
       </div>
 
       {totalAtivos === 0 && (

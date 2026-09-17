@@ -6,12 +6,16 @@ import { useMovimentacoes } from '../hooks/useMovimentacoes'
 
 const TABLE_HEADERS = [
   'ID',
+  'Insumo',
   'Tipo',
+  'Origem',
   'Entrada Ref.',
   'Saída Ref.',
   'Qtd Causadora',
   'Qtd Sensibilizada',
   'Qtd Resultante',
+  'Data',
+  'Usuário',
 ]
 
 function getTipoBadge(tipo: string) {
@@ -26,6 +30,28 @@ function getTipoBadge(tipo: string) {
     default:
       return <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-md">{tipo}</span>
   }
+}
+
+function getOrigemBadge(origem?: string) {
+  switch (origem) {
+    case 'MANUAL':
+      return <span className="px-2 py-1 text-xs font-medium bg-emerald-50 text-emerald-700 rounded-md">Manual</span>
+    case 'COMPRA':
+      return <span className="px-2 py-1 text-xs font-medium bg-sky-50 text-sky-700 rounded-md">Compra</span>
+    case 'PRODUCAO':
+      return <span className="px-2 py-1 text-xs font-medium bg-violet-50 text-violet-700 rounded-md">Produção</span>
+    default:
+      return <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-500 rounded-md">{origem ?? '—'}</span>
+  }
+}
+
+function formatDate(iso?: string) {
+  if (!iso) return '—'
+  return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(iso))
+}
+
+function toFixedNullable(v?: number) {
+  return (v ?? 0).toFixed(2)
 }
 
 export default function MovimentacaoListPage() {
@@ -119,8 +145,12 @@ export default function MovimentacaoListPage() {
         {movimentacoes.map((m) => (
           <tr key={m.id} className="hover:bg-gray-50 transition-colors">
             <td className="px-4 py-3 font-medium text-gray-900">#{m.id}</td>
+            <td className="px-4 py-3 text-gray-800">{m.insumoNome ?? (m.insumoId ? `#${m.insumoId}` : '—')}</td>
             <td className="px-4 py-3">
               {getTipoBadge(m.tipo)}
+            </td>
+            <td className="px-4 py-3">
+              {getOrigemBadge(m.origem)}
             </td>
             <td className="px-4 py-3 text-gray-600">
               {m.itemEntradaInsumoId ? `#${m.itemEntradaInsumoId}` : '—'}
@@ -129,14 +159,16 @@ export default function MovimentacaoListPage() {
               {m.itemSaidaInsumoId ? `#${m.itemSaidaInsumoId}` : '—'}
             </td>
             <td className="px-4 py-3 text-gray-600">
-              {m.quantidadeCausadora.toFixed(2)}
+              {toFixedNullable(m.quantidadeCausadora)}
             </td>
             <td className="px-4 py-3 text-gray-600">
-              {m.quantidadeSensibilizada.toFixed(2)}
+              {toFixedNullable(m.quantidadeSensibilizada)}
             </td>
             <td className="px-4 py-3 font-medium text-gray-900">
-              {m.quantidadeResultante.toFixed(2)}
+              {toFixedNullable(m.quantidadeResultante)}
             </td>
+            <td className="px-4 py-3 text-gray-600 text-sm">{formatDate(m.createdOn)}</td>
+            <td className="px-4 py-3 text-gray-600">{m.createdBy || '—'}</td>
           </tr>
         ))}
       </PageableTable>

@@ -105,9 +105,9 @@ api.interceptors.response.use(
       if (status === 500) {
         mensagem = `Erro interno do servidor (${url})`
       } else if (status === 404) {
-        mensagem = `Endpoint não encontrado (${url})`
+        mensagem = data?.mensagem || data?.message || `Endpoint não encontrado (${url})`
       } else if (status === 401 || status === 403) {
-        mensagem = 'Acesso não autorizado'
+        mensagem = data?.mensagem || data?.message || 'Acesso não autorizado'
       } else if (status === 400) {
         mensagem = data?.mensagem || data?.message || 'Dados inválidos'
       } else {

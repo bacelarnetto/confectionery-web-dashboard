@@ -54,18 +54,63 @@ export default function AlertasPedido() {
 
       <GuiaCard step={4} title="Reconheça o alerta, não “resolva”">
         <p>
-          Em <span className="font-medium text-gray-800">Vendas → Alertas de Pedidos</span>, os cards vêm agrupados por
-          urgência (atrasados primeiro). O botão aqui é “Reconhecer”, não “Resolver” — porque só o avanço de status do
-          próprio pedido é que realmente encerra a pendência.
+          Em <span className="font-medium text-gray-800">Vendas → Alertas de Pedidos</span> fica a lista completa: os
+          cards vêm <span className="font-medium text-gray-800">agrupados por urgência, atrasados primeiro</span>, e cada
+          seção mostra a contagem — o card traz o cliente, a data de entrega e, quando houver, o aviso de{' '}
+          <span className="inline-flex items-center gap-1 align-middle text-xs font-medium text-orange-700 bg-orange-100 rounded px-2 py-0.5">
+            <AlertTriangle size={12} /> Ingredientes insuficientes
+          </span>
+          .
         </p>
-        <p>Um atalho “Ver pedido” leva direto pra edição, sem precisar procurar na lista completa.</p>
+        <p>
+          O botão aqui é <span className="font-medium text-gray-800">“Reconhecer”</span>, não “Resolver” — ele só tira o
+          alerta da contagem. A pendência de verdade encerra quando o próprio pedido avança de status (é entregue,
+          concluído ou cancelado) e deixa de entrar nas verificações diárias.
+        </p>
+        <p>O atalho <span className="font-medium text-gray-800">“Ver pedido”</span> leva direto pra edição, sem procurar na lista completa.</p>
+      </GuiaCard>
+
+      <GuiaCard step={5} title="Os seis lugares onde você vê o prazo na tela">
+        <p>
+          O alerta não mora numa tela só — ele aparece nos seis pontos abaixo, sempre com a <span className="font-medium text-gray-800">mesma informação</span>, em graus diferentes de destaque:
+        </p>
+        <ul className="pl-5 space-y-2 list-none">
+          <li>
+            <span className="inline-flex items-center gap-1 text-xs font-medium text-gray-700 bg-gray-100 rounded px-2 py-0.5 mr-2">Sino no topo</span>
+            mostra a contagem de alertas ativos num badge — vermelho se houver atrasado, laranja caso contrário. Passar o
+            mouse abre um resumo com os 5 mais urgentes; clicar leva pra lista completa.
+          </li>
+          <li>
+            <span className="inline-flex items-center gap-1 text-xs font-medium text-gray-700 bg-gray-100 rounded px-2 py-0.5 mr-2">Faixa no topo</span>
+            em qualquer tela, quando existe pedido precisando de atenção: “N pedidos precisam de atenção” — vermelha se há
+            atrasado, laranja se ainda dá tempo. Botão “Ver alertas” vai direto pra lista.
+          </li>
+          <li>
+            <span className="inline-flex items-center gap-1 text-xs font-medium text-gray-700 bg-gray-100 rounded px-2 py-0.5 mr-2">Menu lateral</span>
+            o item “Alertas de Pedidos” carrega o mesmo contador do sino.
+          </li>
+          <li>
+            <span className="inline-flex items-center gap-1 text-xs font-medium text-gray-700 bg-gray-100 rounded px-2 py-0.5 mr-2">Tela dedicada</span>
+            “Vendas → Alertas de Pedidos” — a lista completa com todos os cards e os botões Reconhecer / Ver pedido.
+          </li>
+          <li>
+            <span className="inline-flex items-center gap-1 text-xs font-medium text-gray-700 bg-gray-100 rounded px-2 py-0.5 mr-2">Mural da Semana</span>
+            o card do pedido assume a cor da urgência (vermelho atrasado/hoje, laranja 1 dia, amarelo 2–3 dias) e exibe o
+            aviso de ingredientes — o prazo aparece sem você nem precisar abrir o alerta.
+          </li>
+          <li>
+            <span className="inline-flex items-center gap-1 text-xs font-medium text-gray-700 bg-gray-100 rounded px-2 py-0.5 mr-2">Lista de Pedidos</span>
+            a coluna “Entrega” ganha um selo de urgência junto à data: Atrasado (vermelho), Hoje (laranja) ou Em 1–3 dias
+            (amarelo) — dá pra ver de relance quais pedidos precisam de atenção sem sair da lista.
+          </li>
+        </ul>
       </GuiaCard>
 
       <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl text-sm text-emerald-800">
-        <p className="font-medium">Você vê isso em três lugares diferentes</p>
+        <p className="font-medium">Uma cor, um significado, em qualquer lugar</p>
         <p className="mt-1">
-          Um sino no topo com a contagem, uma faixa vermelha ou laranja no topo da tela quando há algo urgente, e a lista
-          completa em Alertas de Pedidos — sempre a mesma informação, em graus diferentes de destaque.
+          Vermelho é atrasado, laranja é hoje/urgente, amarelo ainda dá tempo, azul é a visão da semana. Essa mesma lógica
+          de cor vale na faixa do topo, no sino, na lista e nos cards do mural — você entende a urgência num relance.
         </p>
       </div>
     </GuiaSection>

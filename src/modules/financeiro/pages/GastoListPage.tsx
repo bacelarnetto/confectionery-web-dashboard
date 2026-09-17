@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { Plus, Pencil, Trash2, Repeat, Search, X } from 'lucide-react'
+import { Plus, Pencil, Trash2, Repeat, Search, X, ChevronLeft, ChevronRight, Calendar, FileSpreadsheet } from 'lucide-react'
+import toast from 'react-hot-toast'
 import PageHeader from '../../../components/ui/PageHeader'
 import PageableTable from '../../../components/ui/PageableTable'
 import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal'
@@ -13,6 +14,20 @@ const TABLE_HEADERS = ['ID', 'Tipo', 'Descrição', 'Valor', 'Data Pagamento', '
 function mesAtual(): string {
   const now = new Date()
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+}
+
+function navegarMes(mesStr: string, offset: number): string {
+  const [ano, m] = mesStr ? mesStr.split('-').map(Number) : [new Date().getFullYear(), new Date().getMonth() + 1]
+  const d = new Date(ano, m - 1 + offset, 1)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+}
+
+function formatMesExtenso(mesStr: string): string {
+  if (!mesStr) return 'Todos os meses'
+  const [ano, m] = mesStr.split('-').map(Number)
+  const d = new Date(ano, m - 1, 1)
+  const nome = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(d)
+  return nome.charAt(0).toUpperCase() + nome.slice(1)
 }
 
 function formatData(dateStr?: string) {
@@ -81,17 +96,114 @@ export default function GastoListPage() {
     })
   }
 
+  function exportarCsv() {
+    if (gastos.length === 0) {
+      toast.error('Nenhum gasto para exportar no período.')
+      return
+    }
+    const headers = ['ID', 'Tipo', 'Descrição', 'Valor', 'Data Pagamento', 'Recorrente', 'Documento']
+    const rows = gastos.map((g) => [
+      g.id,
+      `"${(g.tipoGastoNome ?? '').replace(/"/g, '""')}"`,
+      `"${(g.descricao ?? '').replace(/"/g, '""')}"`,
+      g.valor.toFixed(2),
+      g.dataPagamento ? g.dataPagamento.split('T')[0] : '',
+      g.recorrente ? 'Sim' : 'Não',
+      `"${(g.documento ?? '').replace(/"/g, '""')}"`,
+    ])
+
+    const csvContent = '\uFEFF' + [headers.join(';'), ...rows.map((r) => r.join(';'))].join('\n')
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `gastos_${mes || 'todos'}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+    toast.success('Gastos exportados com sucesso!')
+  }
+
+  const totalGastoExibido = gastos.reduce((acc, g) => acc + g.valor, 0)
+
   return (
     <div>
       <PageHeader title="Gastos" subtitle="Controle os gastos do mês (regime caixa)">
-        <button
-          onClick={() => navigate('/financeiro/gastos/novo')}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 transition-colors"
-        >
-          <Plus size={16} />
-          Novo Gasto
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={exportarCsv}
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shadow-2xs cursor-pointer"
+            title="Exportar dados para planilha Excel / CSV"
+          >
+            <FileSpreadsheet size={16} className="text-emerald-600" />
+            <span>Exportar CSV</span>
+          </button>
+          <button
+            onClick={() => navigate('/financeiro/gastos/novo')}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 transition-colors cursor-pointer"
+          >
+            <Plus size={16} />
+            Novo Gasto
+          </button>
+        </div>
       </PageHeader>
+
+      {/* Barra de Navegação Rápida entre Meses */}
+      <div className="mb-4 bg-white rounded-xl border border-gray-200 shadow-2xs p-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-amber-50 text-amber-600 rounded-lg">
+            <Calendar size={18} />
+          </div>
+          <div>
+            <span className="text-xs font-medium text-gray-400 block">Mês em visualização</span>
+            <span className="text-base font-semibold text-gray-900">
+              {formatMesExtenso(mes)}
+            </span>
+          </div>
+          {gastos.length > 0 && (
+            <div className="hidden sm:block ml-4 pl-4 border-l border-gray-200">
+              <span className="text-xs font-medium text-gray-400 block">Total do Mês</span>
+              <span className="text-sm font-semibold text-emerald-700">
+                {formatCurrency(totalGastoExibido)}
+              </span>
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => { setMes(navegarMes(mes, -1)); setPage(0) }}
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+            title="Mês anterior"
+          >
+            <ChevronLeft size={14} />
+            Anterior
+          </button>
+          <button
+            type="button"
+            onClick={() => { setMes(mesAtual()); setPage(0) }}
+            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer ${
+              mes === mesAtual()
+                ? 'bg-amber-500 text-white font-semibold'
+                : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            Mês Atual
+          </button>
+          <button
+            type="button"
+            onClick={() => { setMes(navegarMes(mes, 1)); setPage(0) }}
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+            title="Próximo mês"
+          >
+            Próximo
+            <ChevronRight size={14} />
+          </button>
+        </div>
+      </div>
 
       <div className="mb-4">
         <button

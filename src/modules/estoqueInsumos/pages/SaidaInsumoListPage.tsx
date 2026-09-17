@@ -7,15 +7,16 @@ import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal'
 import { useSaidasInsumo, useDeleteSaidaInsumo } from '../hooks/useSaidasInsumo'
 import { useDebounce } from '../../../hooks/useDebounce'
 import { formatCurrency } from '../../../lib/format'
+import { TIPO_SAIDA_CODIGOS, TIPO_SAIDA_LABELS, TipoSaidaInsumo } from '../types/saidaInsumo'
 
-const TABLE_HEADERS = ['ID', 'Tipo ID', 'Valor Total', 'Produto ID', 'Usuário', 'Criado por', 'Ações']
+const TABLE_HEADERS = ['ID', 'Tipo', 'Insumos', 'Valor Total', 'Produto ID', 'Usuário', 'Ações']
 
 export default function SaidaInsumoListPage() {
   const navigate = useNavigate()
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState(20)
   const [filters, setFilters] = useState({
-    tipoId: '',
+    tipo: '',
     dataInicial: '',
     dataFinal: '',
   })
@@ -23,7 +24,7 @@ export default function SaidaInsumoListPage() {
 
   const debouncedFilters = useDebounce(filters)
   const filterParams = {
-    ...(debouncedFilters.tipoId ? { tipoId: Number(debouncedFilters.tipoId) } : {}),
+    ...(debouncedFilters.tipo ? { tipoId: TIPO_SAIDA_CODIGOS[debouncedFilters.tipo as TipoSaidaInsumo] } : {}),
     ...(debouncedFilters.dataInicial ? { dataInicial: debouncedFilters.dataInicial } : {}),
     ...(debouncedFilters.dataFinal ? { dataFinal: debouncedFilters.dataFinal } : {}),
   }
@@ -42,7 +43,7 @@ export default function SaidaInsumoListPage() {
   }
 
   function clearFilters() {
-    setFilters({ tipoId: '', dataInicial: '', dataFinal: '' })
+    setFilters({ tipo: '', dataInicial: '', dataFinal: '' })
     setPage(0)
   }
 
@@ -90,14 +91,19 @@ export default function SaidaInsumoListPage() {
           <div className="mt-3 p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tipo ID</label>
-                <input
-                  type="number"
-                  value={filters.tipoId}
-                  onChange={(e) => handleFilterChange('tipoId', e.target.value)}
-                  placeholder="ID do tipo..."
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+                <select
+                  value={filters.tipo}
+                  onChange={(e) => handleFilterChange('tipo', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                />
+                >
+                  <option value="">Todos</option>
+                  {(Object.keys(TIPO_SAIDA_CODIGOS) as TipoSaidaInsumo[]).map((tipo) => (
+                    <option key={tipo} value={tipo}>
+                      {TIPO_SAIDA_LABELS[tipo]}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Data Inicial</label>
@@ -145,10 +151,12 @@ export default function SaidaInsumoListPage() {
         {saidas.map((s) => (
           <tr key={s.id} className="hover:bg-gray-50 transition-colors">
             <td className="px-4 py-3 font-medium text-gray-900">#{s.id}</td>
-            <td className="px-4 py-3 text-gray-600">{s.tipoId}</td>
+            <td className="px-4 py-3 text-gray-600">{TIPO_SAIDA_LABELS[s.tipo as TipoSaidaInsumo] ?? s.tipo}</td>
+            <td className="px-4 py-3 text-gray-600">
+              {s.itens.map((item) => item.insumoNome ?? `#${item.insumoId}`).join(', ') || '—'}
+            </td>
             <td className="px-4 py-3 text-gray-600">{formatCurrency(s.valorTotal)}</td>
             <td className="px-4 py-3 text-gray-600">{s.produtoId ?? '—'}</td>
-            <td className="px-4 py-3 text-gray-600">{s.usuarioId}</td>
             <td className="px-4 py-3 text-gray-600">{s.createdBy}</td>
             <td className="px-4 py-3">
               <div className="flex items-center gap-2">

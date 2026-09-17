@@ -8,7 +8,7 @@ const QUERY_KEY = ['insumos']
 export function useInsumos(
   page = 0,
   size = 20,
-  filters?: { id?: number; categoriaId?: number; nome?: string }
+  filters?: { id?: number; categoriaId?: number; nome?: string; perecivel?: boolean }
 ) {
   return useQuery({
     queryKey: [...QUERY_KEY, page, size, filters],

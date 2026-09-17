@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
 import alertaPedidoService from '../services/alertaPedidoService'
 
 export function useAlertasPedidoAtivos() {
@@ -24,5 +25,17 @@ export function useReconhecerAlertaPedido() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['alertas-pedido'] })
     },
+  })
+}
+
+export function useVerificarAlertasPedido() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: () => alertaPedidoService.verificar(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['alertas-pedido'] })
+      toast.success('Verificação concluída!')
+    },
+    onError: () => toast.error('Erro ao verificar alertas.'),
   })
 }
