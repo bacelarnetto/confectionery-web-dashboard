@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Ban, Clock } from 'lucide-react'
+import { Plus, Ban, Clock, Trash2 } from 'lucide-react'
 import Modal from '../../../components/ui/Modal'
 import Button from '../../../components/ui/Button'
 import { useApoiosFesta, useCreateApoioFesta, useCancelarApoioFesta } from '../hooks/useApoiosFesta'
@@ -13,18 +13,36 @@ function formatDateTime(iso?: string) {
   return new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
 }
 
+export interface ApoioFestaLocal extends ApoioFormBase {
+  itemApoioNome: string
+  colaboradorNome?: string
+  valorTotal: number
+}
+
 interface Props {
-  pedidoId: number
+  pedidoId?: number
   /** O pedido precisa ter pelo menos um item de produto -- Apoio de Festa só existe pra
    * complementar uma venda de doce, o backend recusa (400) se o pedido estiver vazio. */
   podeAdicionar: boolean
   /** Valor cru de form.dataEntrega (datetime-local) -- usado só pelo atalho "Carrinho (dia
    * inteiro)" pra saber que dia pré-preencher. Sem isso o atalho fica desabilitado. */
   dataEntrega?: string
+  /** Quando em modo de criação do pedido, a lista de apoios é gerenciada localmente no formulário */
+  itensLocais?: ApoioFestaLocal[]
+  onAdicionarLocal?: (apoio: ApoioFestaLocal) => void
+  onRemoverLocal?: (index: number) => void
 }
 
-export default function ApoioFestaSection({ pedidoId, podeAdicionar, dataEntrega }: Props) {
-  const { data, isLoading } = useApoiosFesta(0, 50, { pedidoId })
+export default function ApoioFestaSection({
+  pedidoId,
+  podeAdicionar,
+  dataEntrega,
+  itensLocais = [],
+  onAdicionarLocal,
+  onRemoverLocal,
+}: Props) {
+  const isModoEdicao = pedidoId != null && pedidoId > 0
+  const { data, isLoading } = useApoiosFesta(0, 50, { pedidoId: pedidoId! }, isModoEdicao)
   const createMutation = useCreateApoioFesta()
   const cancelarMutation = useCancelarApoioFesta()
 
@@ -37,7 +55,7 @@ export default function ApoioFestaSection({ pedidoId, podeAdicionar, dataEntrega
     setShowAdicionar(true)
   }
 
-  const apoios = data?.content ?? []
+  const apoios = isModoEdicao ? (data?.content ?? []) : []
 
   function handleCancelConfirm() {
     if (!cancelTarget) return
@@ -83,7 +101,7 @@ export default function ApoioFestaSection({ pedidoId, podeAdicionar, dataEntrega
 
       {isLoading ? (
         <div className="h-8 bg-gray-100 rounded animate-pulse" />
-      ) : apoios.length === 0 ? (
+      ) : (isModoEdicao ? apoios.length === 0 : itensLocais.length === 0) ? (
         <p className="text-sm text-gray-400">Nenhum apoio de festa vinculado a este pedido.</p>
       ) : (
         <table className="w-full text-sm">
@@ -99,43 +117,75 @@ export default function ApoioFestaSection({ pedidoId, podeAdicionar, dataEntrega
             </tr>
           </thead>
           <tbody>
-            {apoios.map((a) => (
-              <tr key={a.id} className="border-b last:border-0">
-                <td className="py-1.5 font-medium text-gray-900">
-                  {a.itemApoioNome}
-                  {a.incluiMaoDeObra && (
-                    <span className="ml-1.5 inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
-                      + atendente
-                    </span>
-                  )}
-                </td>
-                <td className="py-1.5 text-gray-600">{a.colaboradorNome ?? '—'}</td>
-                <td className="py-1.5 text-gray-600">{formatDateTime(a.horaInicio)}</td>
-                <td className="py-1.5 text-gray-600">{formatDateTime(a.horaFim)}</td>
-                <td className="text-right py-1.5 font-medium">{formatCurrency(a.valorTotal)}</td>
-                <td className="py-1.5 pl-4">
-                  <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                      a.status === 'ATIVO' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'
-                    }`}
-                  >
-                    {a.status === 'ATIVO' ? 'Ativo' : 'Cancelado'}
-                  </span>
-                </td>
-                <td className="py-1.5 text-right">
-                  {a.status === 'ATIVO' && (
-                    <button
-                      type="button"
-                      onClick={() => setCancelTarget(a)}
-                      className="p-1 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                      title="Cancelar apoio de festa"
-                    >
-                      <Ban size={15} />
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
+            {isModoEdicao
+              ? apoios.map((a) => (
+                  <tr key={a.id} className="border-b last:border-0">
+                    <td className="py-1.5 font-medium text-gray-900">
+                      {a.itemApoioNome}
+                      {a.incluiMaoDeObra && (
+                        <span className="ml-1.5 inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                          + atendente
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-1.5 text-gray-600">{a.colaboradorNome ?? '—'}</td>
+                    <td className="py-1.5 text-gray-600">{formatDateTime(a.horaInicio)}</td>
+                    <td className="py-1.5 text-gray-600">{formatDateTime(a.horaFim)}</td>
+                    <td className="text-right py-1.5 font-medium">{formatCurrency(a.valorTotal)}</td>
+                    <td className="py-1.5 pl-4">
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                          a.status === 'ATIVO' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'
+                        }`}
+                      >
+                        {a.status === 'ATIVO' ? 'Ativo' : 'Cancelado'}
+                      </span>
+                    </td>
+                    <td className="py-1.5 text-right">
+                      {a.status === 'ATIVO' && (
+                        <button
+                          type="button"
+                          onClick={() => setCancelTarget(a)}
+                          className="p-1 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                          title="Cancelar apoio de festa"
+                        >
+                          <Ban size={15} />
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              : itensLocais.map((a, idx) => (
+                  <tr key={idx} className="border-b last:border-0">
+                    <td className="py-1.5 font-medium text-gray-900">
+                      {a.itemApoioNome}
+                      {a.incluiMaoDeObra && (
+                        <span className="ml-1.5 inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                          + atendente
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-1.5 text-gray-600">{a.colaboradorNome ?? '—'}</td>
+                    <td className="py-1.5 text-gray-600">{formatDateTime(a.horaInicio)}</td>
+                    <td className="py-1.5 text-gray-600">{formatDateTime(a.horaFim)}</td>
+                    <td className="text-right py-1.5 font-medium">{formatCurrency(a.valorTotal)}</td>
+                    <td className="py-1.5 pl-4">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                        Ao salvar
+                      </span>
+                    </td>
+                    <td className="py-1.5 text-right">
+                      <button
+                        type="button"
+                        onClick={() => onRemoverLocal?.(idx)}
+                        className="p-1 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                        title="Remover apoio"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
           </tbody>
         </table>
       )}
@@ -143,8 +193,9 @@ export default function ApoioFestaSection({ pedidoId, podeAdicionar, dataEntrega
       <AdicionarApoioModal<ApoioFestaInsertForm>
         open={showAdicionar}
         onClose={() => setShowAdicionar(false)}
-        createMutation={createMutation}
-        buildPayload={(base: ApoioFormBase) => ({ ...base, pedidoId })}
+        createMutation={isModoEdicao ? createMutation : undefined}
+        buildPayload={isModoEdicao ? (base: ApoioFormBase) => ({ ...base, pedidoId: pedidoId! }) : undefined}
+        onConfirmLocal={!isModoEdicao ? (base, info) => onAdicionarLocal?.({ ...base, ...info }) : undefined}
         defaults={defaults}
       />
 
@@ -157,6 +208,7 @@ export default function ApoioFestaSection({ pedidoId, podeAdicionar, dataEntrega
         </p>
         <div className="flex justify-end gap-2">
           <button
+            type="button"
             onClick={() => setCancelTarget(null)}
             disabled={cancelarMutation.isPending}
             className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-60"

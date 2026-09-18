@@ -1,8 +1,8 @@
 import api from '../../../lib/axios'
-import { ItemApoio, ItemApoioInsertForm, ItemApoioUpdateForm } from '../types/itemApoio'
+import { ItemApoio, ItemApoioInsertForm, ItemApoioUpdateForm, DisponibilidadeDia } from '../types/itemApoio'
 import { normalizePage, RawPage, PageResponse } from '../../../lib/pagination'
 
-export type { PageResponse }
+export type { PageResponse, DisponibilidadeDia }
 
 const itemApoioService = {
   getAll(page = 0, size = 50): Promise<PageResponse<ItemApoio>> {
@@ -25,6 +25,14 @@ const itemApoioService = {
 
   remove(id: number): Promise<void> {
     return api.delete(`/item-apoio/${id}`, { headers: { usuario: '' } }).then(() => undefined)
+  },
+
+  getDisponibilidade(id: number, mes: string): Promise<DisponibilidadeDia[]> {
+    // Um 404 aqui é esperado enquanto o endpoint backend não existir e o hook de disponibilidade
+    // cai no fallback client-side — skipErrorToast evita o toast genérico de "Endpoint não encontrado".
+    return api
+      .get<DisponibilidadeDia[]>(`/item-apoio/${id}/disponibilidade`, { params: { mes }, skipErrorToast: true })
+      .then((res) => res.data)
   },
 }
 

@@ -10,11 +10,13 @@ import ComplementoPicker, { ComplementoResolvido } from '../components/Complemen
 import ResumoValoresCard from '../components/ResumoValoresCard'
 import PedidoPagamentoCard from '../components/PedidoPagamentoCard'
 import RegistrarPagamentoModal from '../components/RegistrarPagamentoModal'
-import ApoioFestaSection from '../../apoioFesta/components/ApoioFestaSection'
+import ApoioFestaSection, { ApoioFestaLocal } from '../../apoioFesta/components/ApoioFestaSection'
+import apoioFestaService from '../../apoioFesta/services/apoioFestaService'
+import { useApoiosFesta } from '../../apoioFesta/hooks/useApoiosFesta'
 import { calcularResumo } from '../lib/resumoValores'
 import { formatEndereco } from '../lib/endereco'
-import { STATUS_COLORS, STATUS_QUE_SUGEREM_PAGAMENTO } from '../lib/pedidoStatus'
-import { PEDIDO_STATUS } from '../types/pedido'
+import { STATUS_COLORS, STATUS_QUE_SUGEREM_PAGAMENTO, PEDIDO_STATUS_ORDEM, statusDisponiveisPara, tituloStatusPill } from '../lib/pedidoStatus'
+import ConfirmarMudancaStatusModal from '../components/ConfirmarMudancaStatusModal'
 import { useProdutos } from '../../estoqueProdutos/hooks/useProdutos'
 import precificacaoProdutoService from '../../estoqueProdutos/services/precificacaoProdutoService'
 import complementoService from '../services/complementoService'
@@ -78,6 +80,8 @@ function Field({ label, required, children }: { label: string; required?: boolea
 const inputClass =
   'w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent placeholder:text-gray-400 disabled:bg-gray-50 disabled:text-gray-500'
 
+
+
 export default function PedidoFormPage() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -97,8 +101,11 @@ export default function PedidoFormPage() {
   const [itens, setItens] = useState<ItemForm[]>([{ ...emptyItem }])
   const [erroGeral, setErroGeral] = useState<string | null>(null)
   const [itemErroIndices, setItemErroIndices] = useState<Set<number>>(new Set())
+  const [apoiosLocais, setApoiosLocais] = useState<ApoioFestaLocal[]>([])
+  const [isSavingApoios, setIsSavingApoios] = useState(false)
   const [percentualSugerido, setPercentualSugerido] = useState<number | undefined>()
   const [showPagamentoPrompt, setShowPagamentoPrompt] = useState(false)
+  const [statusConfirmTarget, setStatusConfirmTarget] = useState<string | null>(null)
 
   function handleStatusChange(status: string) {
     statusMutation.mutate(
@@ -123,6 +130,13 @@ export default function PedidoFormPage() {
         },
       },
     )
+  }
+
+  function handleConfirmarMudancaStatus() {
+    if (statusConfirmTarget) {
+      handleStatusChange(statusConfirmTarget)
+      setStatusConfirmTarget(null)
+    }
   }
 
   const clientes = clientesData?.content ?? []
@@ -277,13 +291,53 @@ export default function PedidoFormPage() {
     } else {
       createMutation.mutate(
         { clienteId: Number(form.clienteId), enderecoId: form.enderecoId ? Number(form.enderecoId) : undefined, ...base, createdBy: '' },
-        { onSuccess: () => navigate('/vendas/pedidos'), onError: tratarErro },
+        {
+          onSuccess: async (novoPedido) => {
+            if (apoiosLocais.length > 0 && novoPedido?.id) {
+              setIsSavingApoios(true)
+              try {
+                await Promise.all(
+                  apoiosLocais.map((a) =>
+                    apoioFestaService.create({
+                      pedidoId: novoPedido.id,
+                      itemApoioId: a.itemApoioId,
+                      horaInicio: a.horaInicio,
+                      horaFim: a.horaFim,
+                      incluiMaoDeObra: a.incluiMaoDeObra,
+                      colaboradorId: a.colaboradorId,
+                      createdBy: '',
+                    }),
+                  ),
+                )
+              } catch (err) {
+                console.error('Erro ao salvar apoio de festa em cascata:', err)
+              } finally {
+                setIsSavingApoios(false)
+              }
+            }
+            navigate('/vendas/pedidos')
+          },
+          onError: tratarErro,
+        },
       )
     }
   }
 
-  const isPending = createMutation.isPending || updateMutation.isPending
-  const resumo = calcularResumo(itens, form.retirar ? 0 : Number(form.valorFrete) || 0)
+  const isPending = createMutation.isPending || updateMutation.isPending || isSavingApoios
+
+  // Apoio de Festa soma no total do pedido (itens + frete + apoio ativo).
+  // Em edição busca os apoios ativos salvos; em criação soma os apoios configurados em memória.
+  const { data: apoioData } = useApoiosFesta(
+    0,
+    100,
+    isEditing ? { pedidoId: numericId, status: 'ATIVO' } : undefined,
+    isEditing,
+  )
+  const valorApoioFesta = isEditing
+    ? (apoioData?.content ?? []).reduce((acc, a) => acc + (a.valorTotal ?? 0), 0)
+    : apoiosLocais.reduce((acc, a) => acc + (a.valorTotal ?? 0), 0)
+  const resumo = calcularResumo(itens, form.retirar ? 0 : Number(form.valorFrete) || 0, valorApoioFesta)
+  const statusAtual = pedido?.status
 
   if (isEditing && isLoading) {
     return <div className="flex items-center justify-center h-48 text-gray-400 text-sm">Carregando...</div>
@@ -304,28 +358,54 @@ export default function PedidoFormPage() {
         </div>
       )}
 
-      {isEditing && pedido?.status && (
+      {isEditing && statusAtual && (
         <div className="mb-6 bg-white rounded-xl border border-gray-200 shadow-sm p-6">
           <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">Status do Pedido</h3>
-          <div className="flex flex-wrap gap-2">
-            {PEDIDO_STATUS.map((s) => {
-              const isAtual = s === pedido.status
+          <div className="flex flex-wrap items-center gap-2">
+            {PEDIDO_STATUS_ORDEM.map((s) => {
+              const isAtual = s === statusAtual
+              const disponivel = statusDisponiveisPara(statusAtual).includes(s)
               return (
                 <button
                   key={s}
                   type="button"
-                  onClick={() => !isAtual && handleStatusChange(s)}
-                  disabled={isAtual || statusMutation.isPending}
+                  onClick={() => disponivel && setStatusConfirmTarget(s)}
+                  disabled={isAtual || !disponivel || statusMutation.isPending}
+                  title={isAtual ? 'Status atual' : disponivel ? undefined : tituloStatusPill(s, statusAtual)}
                   className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors disabled:cursor-default ${
                     isAtual
                       ? `${STATUS_COLORS[s] ?? 'bg-gray-100 text-gray-700'} border-transparent ring-2 ring-offset-1 ring-gray-300`
-                      : 'bg-white text-gray-500 border-gray-300 hover:bg-gray-50 cursor-pointer disabled:opacity-50'
+                      : disponivel
+                        ? 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100 hover:border-gray-400 cursor-pointer'
+                        : 'bg-white text-gray-400 border-gray-200 disabled:opacity-60'
                   }`}
                 >
                   {s.replace('_', ' ')}
                 </button>
               )
             })}
+            <span className="mx-1 h-5 w-px bg-gray-200" aria-hidden />
+            <button
+              type="button"
+              onClick={() => statusDisponiveisPara(statusAtual).includes('CANCELADO') && setStatusConfirmTarget('CANCELADO')}
+              disabled={statusAtual === 'CANCELADO' || !statusDisponiveisPara(statusAtual).includes('CANCELADO') || statusMutation.isPending}
+              title={
+                statusAtual === 'CANCELADO'
+                  ? 'Status atual'
+                  : statusDisponiveisPara(statusAtual).includes('CANCELADO')
+                    ? undefined
+                    : tituloStatusPill('CANCELADO', statusAtual)
+              }
+              className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors disabled:cursor-default ${
+                statusAtual === 'CANCELADO'
+                  ? `${STATUS_COLORS.CANCELADO} border-transparent ring-2 ring-offset-1 ring-gray-300`
+                  : statusDisponiveisPara(statusAtual).includes('CANCELADO')
+                    ? 'bg-white text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400 cursor-pointer'
+                    : 'bg-white text-gray-400 border-gray-200 disabled:opacity-60'
+              }`}
+            >
+              Cancelado
+            </button>
           </div>
         </div>
       )}
@@ -593,11 +673,16 @@ export default function PedidoFormPage() {
           )}
         </div>
 
-        <ResumoValoresCard resumo={resumo} />
+        <ApoioFestaSection
+          pedidoId={isEditing ? numericId : undefined}
+          podeAdicionar={buildItens().length > 0}
+          dataEntrega={form.dataEntrega}
+          itensLocais={apoiosLocais}
+          onAdicionarLocal={(novoApoio) => setApoiosLocais((prev) => [...prev, novoApoio])}
+          onRemoverLocal={(idx) => setApoiosLocais((prev) => prev.filter((_, i) => i !== idx))}
+        />
 
-        {isEditing && pedido && (
-          <ApoioFestaSection pedidoId={numericId} podeAdicionar={buildItens().length > 0} dataEntrega={form.dataEntrega} />
-        )}
+        <ResumoValoresCard resumo={resumo} />
 
         {isEditing && pedido && (
           <PedidoPagamentoCard pedidoId={numericId} pedido={pedido} />
@@ -626,6 +711,16 @@ export default function PedidoFormPage() {
           title={percentualSugerido != null ? 'Registrar adiantamento' : 'Registrar pagamento'}
         />
       )}
+
+      <ConfirmarMudancaStatusModal
+        open={!!statusConfirmTarget}
+        pedidoId={numericId}
+        statusAtual={statusAtual}
+        statusNovo={statusConfirmTarget ?? ''}
+        isPending={statusMutation.isPending}
+        onConfirm={handleConfirmarMudancaStatus}
+        onCancel={() => setStatusConfirmTarget(null)}
+      />
     </div>
   )
 }

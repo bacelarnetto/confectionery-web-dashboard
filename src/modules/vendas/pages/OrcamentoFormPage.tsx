@@ -10,7 +10,8 @@ import { useClientes } from '../hooks/useClientes'
 import EnderecoClienteField from '../components/EnderecoClienteField'
 import ComplementoPicker, { ComplementoResolvido } from '../components/ComplementoPicker'
 import ResumoValoresCard from '../components/ResumoValoresCard'
-import ApoioOrcamentoSection from '../../apoioFesta/components/ApoioOrcamentoSection'
+import ApoioOrcamentoSection, { ApoioOrcamentoLocal } from '../../apoioFesta/components/ApoioOrcamentoSection'
+import apoioOrcamentoService from '../../apoioFesta/services/apoioOrcamentoService'
 import { calcularResumo } from '../lib/resumoValores'
 import { useProdutos } from '../../estoqueProdutos/hooks/useProdutos'
 import precificacaoProdutoService from '../../estoqueProdutos/services/precificacaoProdutoService'
@@ -87,6 +88,8 @@ export default function OrcamentoFormPage() {
   const [erroGeral, setErroGeral] = useState<string | null>(null)
   const [itemErroIndex, setItemErroIndex] = useState<number | null>(null)
   const [confirmAcao, setConfirmAcao] = useState<'CONVERTIDO' | 'REJEITADO' | null>(null)
+  const [apoiosLocais, setApoiosLocais] = useState<ApoioOrcamentoLocal[]>([])
+  const [isSavingApoios, setIsSavingApoios] = useState(false)
 
   const clientes = clientesData?.content ?? []
   const produtos = produtosData?.content ?? []
@@ -240,7 +243,34 @@ export default function OrcamentoFormPage() {
           itens: buildItens(),
           createdBy: '',
         },
-        { onSuccess: () => navigate('/vendas/orcamentos'), onError: tratarErro },
+        {
+          onSuccess: async (novoOrcamento) => {
+            if (apoiosLocais.length > 0 && novoOrcamento?.id) {
+              setIsSavingApoios(true)
+              try {
+                await Promise.all(
+                  apoiosLocais.map((a) =>
+                    apoioOrcamentoService.create({
+                      orcamentoId: novoOrcamento.id,
+                      itemApoioId: a.itemApoioId,
+                      horaInicio: a.horaInicio,
+                      horaFim: a.horaFim,
+                      incluiMaoDeObra: a.incluiMaoDeObra,
+                      colaboradorId: a.colaboradorId,
+                      createdBy: '',
+                    }),
+                  ),
+                )
+              } catch (err) {
+                console.error('Erro ao salvar apoio de orçamento em cascata:', err)
+              } finally {
+                setIsSavingApoios(false)
+              }
+            }
+            navigate('/vendas/orcamentos')
+          },
+          onError: tratarErro,
+        },
       )
     }
   }
@@ -266,7 +296,7 @@ export default function OrcamentoFormPage() {
     )
   }
 
-  const isPending = createMutation.isPending || updateMutation.isPending
+  const isPending = createMutation.isPending || updateMutation.isPending || isSavingApoios
   const resumo = calcularResumo(itens, Number(form.valorFrete) || 0)
 
   if (isEditing && isLoading) {
@@ -512,16 +542,17 @@ export default function OrcamentoFormPage() {
           </div>
         </div>
 
-        <ResumoValoresCard resumo={resumo} />
+        <ApoioOrcamentoSection
+          orcamentoId={isEditing ? numericId : undefined}
+          podeAdicionar={buildItens().length > 0}
+          readOnly={isReadOnly}
+          dataEvento={form.dataEvento}
+          itensLocais={apoiosLocais}
+          onAdicionarLocal={(novoApoio) => setApoiosLocais((prev) => [...prev, novoApoio])}
+          onRemoverLocal={(idx) => setApoiosLocais((prev) => prev.filter((_, i) => i !== idx))}
+        />
 
-        {isEditing && (
-          <ApoioOrcamentoSection
-            orcamentoId={numericId}
-            podeAdicionar={buildItens().length > 0}
-            readOnly={isReadOnly}
-            dataEvento={form.dataEvento}
-          />
-        )}
+        <ResumoValoresCard resumo={resumo} />
 
         <div className="flex items-center justify-end gap-3">
           <button

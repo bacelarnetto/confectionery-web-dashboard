@@ -109,7 +109,7 @@ export default function EstoqueBlock({
       {/* Gráficos de Estoque */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
         {/* Movimentações (7 dias) */}
-        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-xs">
+        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-xs min-w-0">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-sm font-bold text-gray-900">Movimentações — Últimos 7 dias</h3>
@@ -131,8 +131,8 @@ export default function EstoqueBlock({
               Sem movimentações nos últimos 7 dias
             </div>
           ) : (
-            <div className="h-72">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="w-full h-72 min-w-0">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 300, height: 288 }}>
                 <LineChart data={movimentacoes} margin={{ top: 10, right: 20, bottom: 5, left: 0 }}>
                   <CartesianGrid stroke="#f3f4f6" strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
@@ -149,7 +149,7 @@ export default function EstoqueBlock({
         </div>
 
         {/* Maiores Volumes */}
-        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-xs">
+        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-xs min-w-0">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-sm font-bold text-gray-900">Maiores Volumes em Estoque</h3>
@@ -163,8 +163,8 @@ export default function EstoqueBlock({
               Sem dados de volume em estoque
             </div>
           ) : (
-            <div className="h-72">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="w-full h-72 min-w-0">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 300, height: 288 }}>
                 <BarChart data={estoqueVolumes} margin={{ top: 5, right: 20, bottom: 5, left: 0 }} layout="vertical">
                   <CartesianGrid stroke="#f3f4f6" strokeDasharray="3 3" horizontal={false} />
                   <XAxis type="number" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />

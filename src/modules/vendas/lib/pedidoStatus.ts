@@ -1,3 +1,40 @@
+export const PEDIDO_STATUS_ORDEM: string[] = [
+  'RASCUNHO',
+  'CONFIRMADO',
+  'EM_PRODUCAO',
+  'PRONTO',
+  'A_CAMINHO',
+  'ENTREGUE',
+  'CONCLUIDO',
+]
+
+// Status para os quais dá pra migrar a partir de `atual`: o PRÓXIMO passo da ordem canônica
+// (evolução natural, sem pular) + CANCELADO (regra de negócio: cancelável de qualquer status,
+// exceto CONCLUIDO e já CANCELADO). Nunca inclui o próprio status atual.
+export function statusDisponiveisPara(atual: string | undefined): string[] {
+  if (!atual) return ['RASCUNHO', 'CANCELADO']
+  if (atual === 'CONCLUIDO' || atual === 'CANCELADO') return []
+  const idx = PEDIDO_STATUS_ORDEM.indexOf(atual)
+  if (idx >= 0 && idx < PEDIDO_STATUS_ORDEM.length - 1) {
+    return [PEDIDO_STATUS_ORDEM[idx + 1], 'CANCELADO']
+  }
+  return ['CANCELADO']
+}
+
+export function tituloStatusPill(status: string, atual?: string): string | undefined {
+  if (!atual) return undefined
+  if (atual === 'CANCELADO') return 'Pedido cancelado — não é possível alterar'
+  if (atual === 'CONCLUIDO') return 'Pedido concluído — não é possível alterar'
+  const i = PEDIDO_STATUS_ORDEM.indexOf(status)
+  const j = PEDIDO_STATUS_ORDEM.indexOf(atual)
+  if (j >= 0 && i >= 0 && i < j) return 'Status já avançado'
+  if (i > j + 1) {
+    const anterior = PEDIDO_STATUS_ORDEM[i - 1]
+    return `Para mudar para ${status.replace('_', ' ')}, o pedido precisa estar em ${anterior.replace('_', ' ')}`
+  }
+  return undefined
+}
+
 export const STATUS_COLORS: Record<string, string> = {
   RASCUNHO: 'bg-gray-100 text-gray-600',
   CONFIRMADO: 'bg-blue-100 text-blue-800',

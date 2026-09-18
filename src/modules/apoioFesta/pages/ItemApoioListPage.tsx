@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router'
-import { Plus, Pencil, Trash2 } from 'lucide-react'
+import { useNavigate, Link } from 'react-router'
+import { Plus, Pencil, Trash2, CalendarDays } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
 import PageableTable from '../../../components/ui/PageableTable'
 import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal'
@@ -32,13 +32,22 @@ export default function ItemApoioListPage() {
   return (
     <div>
       <PageHeader title="Itens de Apoio" subtitle="Catálogo de equipamentos alugáveis (carrinho, tacho, decoração...)">
-        <button
-          onClick={() => navigate('/vendas/itens-apoio/novo')}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 transition-colors"
-        >
-          <Plus size={16} />
-          Novo Item de Apoio
-        </button>
+        <div className="flex items-center gap-2">
+          <Link
+            to="/vendas/apoios-festa/disponibilidade"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium text-amber-800 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors shadow-2xs"
+          >
+            <CalendarDays size={16} />
+            Calendário de Disponibilidade
+          </Link>
+          <button
+            onClick={() => navigate('/vendas/itens-apoio/novo')}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 transition-colors cursor-pointer"
+          >
+            <Plus size={16} />
+            Novo Item de Apoio
+          </button>
+        </div>
       </PageHeader>
 
       <PageableTable

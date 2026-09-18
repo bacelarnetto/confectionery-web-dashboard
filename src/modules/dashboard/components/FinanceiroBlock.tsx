@@ -128,7 +128,7 @@ export default function FinanceiroBlock({
       {/* Grid: Pizza de Gastos + Card A Receber */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
         {/* Gastos por Categoria */}
-        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-xs">
+        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-xs min-w-0">
           <div className="flex items-center justify-between mb-2">
             <div>
               <h3 className="text-sm font-bold text-gray-900">Gastos por Categoria</h3>
@@ -148,8 +148,8 @@ export default function FinanceiroBlock({
               Nenhum gasto registrado neste mês
             </div>
           ) : (
-            <div className="h-72">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="w-full h-72 min-w-0">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 300, height: 288 }}>
                 <RechartsPieChart>
                   <Pie
                     data={pieData}
@@ -221,7 +221,7 @@ export default function FinanceiroBlock({
       </div>
 
       {/* Histórico de Compras (Área Total) */}
-      <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-xs mt-4">
+      <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-xs mt-4 min-w-0">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="text-sm font-bold text-gray-900">Histórico de Gastos com Compras</h3>
@@ -241,8 +241,8 @@ export default function FinanceiroBlock({
             Nenhum histórico disponível
           </div>
         ) : (
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="w-full h-72 min-w-0">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 300, height: 288 }}>
               <AreaChart data={historicoCompras} margin={{ top: 10, right: 20, bottom: 5, left: 0 }}>
                 <defs>
                   <linearGradient id="colorPurchases" x1="0" y1="0" x2="0" y2="1">

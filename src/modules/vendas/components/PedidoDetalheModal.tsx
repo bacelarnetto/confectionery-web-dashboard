@@ -1,14 +1,18 @@
 import { useState } from 'react'
 import { X, ExternalLink, Printer } from 'lucide-react'
 import { useNavigate } from 'react-router'
-import { Pedido, PEDIDO_STATUS } from '../types/pedido'
+import { Pedido } from '../types/pedido'
 import { usePedido, useUpdatePedidoStatus } from '../hooks/usePedidos'
 import { useCliente } from '../hooks/useClientes'
+import { useApoiosFesta } from '../../apoioFesta/hooks/useApoiosFesta'
 import PedidoPagamentoCard from './PedidoPagamentoCard'
 import RegistrarPagamentoModal from './RegistrarPagamentoModal'
 import ComandaProducaoModal from './ComandaProducaoModal'
-import { STATUS_COLORS, STATUS_QUE_SUGEREM_PAGAMENTO } from '../lib/pedidoStatus'
+import ConfirmarMudancaStatusModal from './ConfirmarMudancaStatusModal'
+import { STATUS_COLORS, STATUS_QUE_SUGEREM_PAGAMENTO, PEDIDO_STATUS_ORDEM, statusDisponiveisPara, tituloStatusPill } from '../lib/pedidoStatus'
 import { formatEndereco } from '../lib/endereco'
+
+
 
 function formatDateTime(iso?: string) {
   if (!iso) return '—'
@@ -34,14 +38,19 @@ export default function PedidoDetalheModal({ pedido, onClose, onUpdated }: Props
   // fechar e reabrir o modal.
   const { data: pedidoAtual } = usePedido(pedido.id)
   const atual = pedidoAtual ?? pedido
+  const statusAtual = atual.status
   // Backend já enriquece `atual.endereco`; só busca o cliente à parte como fallback
   // para pedidos anteriores a esse enriquecimento.
   const { data: cliente } = useCliente(atual.endereco ? 0 : (atual.clienteId ?? 0))
   const enderecoEntrega = atual.endereco ?? cliente?.enderecos?.find((e) => e.id === atual.enderecoId)
 
+  const { data: apoioData } = useApoiosFesta(0, 50, { pedidoId: atual.id, status: 'ATIVO' })
+  const apoiosAtivos = apoioData?.content ?? []
+
   const [percentualSugerido, setPercentualSugerido] = useState<number | undefined>()
   const [showPagamentoPrompt, setShowPagamentoPrompt] = useState(false)
   const [showComanda, setShowComanda] = useState(false)
+  const [statusConfirmTarget, setStatusConfirmTarget] = useState<string | null>(null)
 
   function handleStatusChange(status: string) {
     statusMutation.mutate(
@@ -56,6 +65,13 @@ export default function PedidoDetalheModal({ pedido, onClose, onUpdated }: Props
         },
       },
     )
+  }
+
+  function handleConfirmarMudancaStatus() {
+    if (statusConfirmTarget) {
+      handleStatusChange(statusConfirmTarget)
+      setStatusConfirmTarget(null)
+    }
   }
 
   return (
@@ -95,28 +111,54 @@ export default function PedidoDetalheModal({ pedido, onClose, onUpdated }: Props
             </div>
           </div>
 
-          {atual.status && (
+          {statusAtual && (
             <div>
               <p className="text-gray-500 text-xs mb-2">Status</p>
-              <div className="flex flex-wrap gap-2">
-                {PEDIDO_STATUS.map((s) => {
-                  const isAtual = s === atual.status
+              <div className="flex flex-wrap items-center gap-2">
+                {PEDIDO_STATUS_ORDEM.map((s) => {
+                  const isAtual = s === statusAtual
+                  const disponivel = statusDisponiveisPara(statusAtual).includes(s)
                   return (
                     <button
                       key={s}
                       type="button"
-                      onClick={() => !isAtual && handleStatusChange(s)}
-                      disabled={isAtual || statusMutation.isPending}
+                      onClick={() => disponivel && setStatusConfirmTarget(s)}
+                      disabled={isAtual || !disponivel || statusMutation.isPending}
+                      title={isAtual ? 'Status atual' : disponivel ? undefined : tituloStatusPill(s, statusAtual)}
                       className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors disabled:cursor-default ${
                         isAtual
                           ? `${STATUS_COLORS[s] ?? 'bg-gray-100 text-gray-700'} border-transparent ring-2 ring-offset-1 ring-gray-300`
-                          : 'bg-white text-gray-500 border-gray-300 hover:bg-gray-50 cursor-pointer disabled:opacity-50'
+                          : disponivel
+                            ? 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100 hover:border-gray-400 cursor-pointer'
+                            : 'bg-white text-gray-400 border-gray-200 disabled:opacity-60'
                       }`}
                     >
                       {s.replace('_', ' ')}
                     </button>
                   )
                 })}
+                <span className="mx-1 h-5 w-px bg-gray-200" aria-hidden />
+                <button
+                  type="button"
+                  onClick={() => statusDisponiveisPara(statusAtual).includes('CANCELADO') && setStatusConfirmTarget('CANCELADO')}
+                  disabled={statusAtual === 'CANCELADO' || !statusDisponiveisPara(statusAtual).includes('CANCELADO') || statusMutation.isPending}
+                  title={
+                    statusAtual === 'CANCELADO'
+                      ? 'Status atual'
+                      : statusDisponiveisPara(statusAtual).includes('CANCELADO')
+                        ? undefined
+                        : tituloStatusPill('CANCELADO', statusAtual)
+                  }
+                  className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors disabled:cursor-default ${
+                    statusAtual === 'CANCELADO'
+                      ? `${STATUS_COLORS.CANCELADO} border-transparent ring-2 ring-offset-1 ring-gray-300`
+                      : statusDisponiveisPara(statusAtual).includes('CANCELADO')
+                        ? 'bg-white text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400 cursor-pointer'
+                        : 'bg-white text-gray-400 border-gray-200 disabled:opacity-60'
+                  }`}
+                >
+                  Cancelado
+                </button>
               </div>
             </div>
           )}
@@ -160,6 +202,32 @@ export default function PedidoDetalheModal({ pedido, onClose, onUpdated }: Props
               </table>
             )}
           </div>
+
+          {apoiosAtivos.length > 0 && (
+            <div>
+              <p className="text-gray-500 text-xs mb-2">Apoio de Festa (Locação)</p>
+              <div className="space-y-2 bg-amber-50/70 border border-amber-200 rounded-lg p-3 text-sm">
+                {apoiosAtivos.map((a) => (
+                  <div key={a.id} className="flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold text-gray-900">
+                        {a.itemApoioNome}
+                        {a.incluiMaoDeObra && (
+                          <span className="ml-1.5 inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-medium bg-blue-100 text-blue-800">
+                            + atendente {a.colaboradorNome ? `(${a.colaboradorNome})` : ''}
+                          </span>
+                        )}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {formatDateTime(a.horaInicio)} até {formatDateTime(a.horaFim)}
+                      </p>
+                    </div>
+                    <span className="font-medium text-gray-900">{formatCurrency(a.valorTotal)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="flex items-center justify-between border-t pt-3">
             <span className="font-bold text-gray-800">Total</span>
@@ -205,6 +273,16 @@ export default function PedidoDetalheModal({ pedido, onClose, onUpdated }: Props
         onClose={() => setShowPagamentoPrompt(false)}
         percentualSugerido={percentualSugerido}
         title={percentualSugerido != null ? 'Registrar adiantamento' : 'Registrar pagamento'}
+      />
+
+      <ConfirmarMudancaStatusModal
+        open={!!statusConfirmTarget}
+        pedidoId={pedido.id}
+        statusAtual={atual.status}
+        statusNovo={statusConfirmTarget ?? ''}
+        isPending={statusMutation.isPending}
+        onConfirm={handleConfirmarMudancaStatus}
+        onCancel={() => setStatusConfirmTarget(null)}
       />
     </div>
   )

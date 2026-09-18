@@ -7,6 +7,8 @@ import { useApoiosFesta } from '../hooks/useApoiosFesta'
 import { mesmoDiaBrasilia } from '../lib/horarioBrasilia'
 import { parseApiError } from '../../../lib/apiError'
 
+import { calcularValorApoio } from '../lib/calculoApoio'
+
 const inputClass =
   'w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent placeholder:text-gray-400'
 
@@ -24,17 +26,25 @@ export interface ApoioFormBase {
   createdBy: string
 }
 
+export interface ApoioInfoCalculada {
+  itemApoioNome: string
+  colaboradorNome?: string
+  valorTotal: number
+}
+
 interface MutationLike<TInsert> {
   mutate: (data: TInsert, options: { onSuccess: () => void; onError: (err: unknown) => void }) => void
   isPending: boolean
 }
 
-interface Props<TInsert> {
+interface Props<TInsert = unknown> {
   open: boolean
   onClose: () => void
   title?: string
-  createMutation: MutationLike<TInsert>
-  buildPayload: (base: ApoioFormBase) => TInsert
+  createMutation?: MutationLike<TInsert>
+  buildPayload?: (base: ApoioFormBase) => TInsert
+  /** Quando em modo de criação do pedido/orçamento, confirma em memória sem disparar mutação imediata */
+  onConfirmLocal?: (base: ApoioFormBase, info: ApoioInfoCalculada) => void
   /** Pré-preenche hora início/fim ao abrir (atalho "Carrinho (dia inteiro)") -- continuam
    * editáveis depois, é só o valor inicial. */
   defaults?: ApoioFormDefaults
@@ -56,6 +66,7 @@ export default function AdicionarApoioModal<TInsert>({
   title = 'Adicionar Apoio de Festa',
   createMutation,
   buildPayload,
+  onConfirmLocal,
   defaults,
 }: Props<TInsert>) {
   const { data: itensData } = useItensApoio(0, 100)
@@ -108,6 +119,7 @@ export default function AdicionarApoioModal<TInsert>({
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
+    e.stopPropagation()
     setErro(null)
     const horaInicioIso = new Date(horaInicio).toISOString()
     const horaFimIso = new Date(horaFim).toISOString()
@@ -115,25 +127,50 @@ export default function AdicionarApoioModal<TInsert>({
       setErro('Hora de início e hora de fim precisam ser no mesmo dia (horário de Brasília) — locação de Apoio de Festa não passa de um dia.')
       return
     }
-    createMutation.mutate(
-      buildPayload({
-        itemApoioId: Number(itemApoioId),
-        horaInicio: horaInicioIso,
-        horaFim: horaFimIso,
-        incluiMaoDeObra,
-        colaboradorId: colaboradorId ? Number(colaboradorId) : undefined,
-        createdBy: '',
-      }),
-      {
-        onSuccess: onClose,
-        onError: (err) => setErro(parseApiError(err).mensagem),
-      },
-    )
+
+    const itemApoio = itensApoio.find((i) => i.id === Number(itemApoioId))
+    const colaborador = colaboradores.find((c) => c.id === Number(colaboradorId))
+    const valorTotal = calcularValorApoio(itemApoio, horaInicioIso, horaFimIso, incluiMaoDeObra)
+
+    const basePayload: ApoioFormBase = {
+      itemApoioId: Number(itemApoioId),
+      horaInicio: horaInicioIso,
+      horaFim: horaFimIso,
+      incluiMaoDeObra,
+      colaboradorId: colaboradorId ? Number(colaboradorId) : undefined,
+      createdBy: '',
+    }
+
+    if (onConfirmLocal) {
+      onConfirmLocal(basePayload, {
+        itemApoioNome: itemApoio?.nome ?? `Item #${itemApoioId}`,
+        colaboradorNome: colaborador?.nome,
+        valorTotal,
+      })
+      onClose()
+      return
+    }
+
+    if (createMutation && buildPayload) {
+      createMutation.mutate(
+        buildPayload(basePayload),
+        {
+          onSuccess: onClose,
+          onError: (err) => setErro(parseApiError(err).mensagem),
+        },
+      )
+    }
   }
 
   return (
     <Modal open={open} onClose={onClose} title={title}>
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form
+        onSubmit={(e) => {
+          e.stopPropagation()
+          handleSubmit(e)
+        }}
+        className="space-y-4"
+      >
         {erro && (
           <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{erro}</p>
         )}
@@ -232,12 +269,12 @@ export default function AdicionarApoioModal<TInsert>({
           <button
             type="button"
             onClick={onClose}
-            disabled={createMutation.isPending}
+            disabled={createMutation?.isPending ?? false}
             className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-60"
           >
             Cancelar
           </button>
-          <Button type="submit" isLoading={createMutation.isPending}>
+          <Button type="submit" isLoading={createMutation?.isPending ?? false}>
             Adicionar
           </Button>
         </div>

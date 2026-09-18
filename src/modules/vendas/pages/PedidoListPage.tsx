@@ -12,7 +12,8 @@ import { formatCurrency } from '../../../lib/format'
 import { useTodasContasReceberPendentes } from '../../financeiro/hooks/useFinanceiro'
 import RegistrarPagamentoModal from '../components/RegistrarPagamentoModal'
 import ComandaProducaoModal from '../components/ComandaProducaoModal'
-import { STATUS_COLORS, STATUS_QUE_SUGEREM_PAGAMENTO, STATUS_TERMINAIS, getPrazoEntrega } from '../lib/pedidoStatus'
+import ConfirmarMudancaStatusModal from '../components/ConfirmarMudancaStatusModal'
+import { STATUS_COLORS, STATUS_QUE_SUGEREM_PAGAMENTO, STATUS_TERMINAIS, getPrazoEntrega, statusDisponiveisPara } from '../lib/pedidoStatus'
 
 const TABLE_HEADERS = ['ID', 'Cliente', 'Status', 'Valor Total', 'Frete', 'Retirada', 'Criado em', 'Entrega', 'Ações']
 
@@ -60,6 +61,11 @@ export default function PedidoListPage() {
 
   const [cancelTarget, setCancelTarget] = useState<{ id: number; nome: string } | null>(null)
   const [pagamentoPrompt, setPagamentoPrompt] = useState<{ pedidoId: number; percentualSugerido?: number } | null>(null)
+  const [statusConfirmTarget, setStatusConfirmTarget] = useState<{
+    pedidoId: number
+    statusNovo: string
+    statusAtual: string | undefined
+  } | null>(null)
 
   function handleStatusChange(pedidoId: number, status: string) {
     statusMutation.mutate(
@@ -72,6 +78,13 @@ export default function PedidoListPage() {
         },
       },
     )
+  }
+
+  function handleStatusConfirm() {
+    if (statusConfirmTarget) {
+      handleStatusChange(statusConfirmTarget.pedidoId, statusConfirmTarget.statusNovo)
+      setStatusConfirmTarget(null)
+    }
   }
 
   function handleFilterChange(key: string, value: string) {
@@ -184,15 +197,32 @@ export default function PedidoListPage() {
             <td className="px-4 py-3">
               <div className="flex items-center gap-1.5">
                 {p.status ? (
-                  <select
-                    value={p.status}
-                    onChange={(e) => handleStatusChange(p.id, e.target.value)}
-                    className={`text-xs font-medium px-2 py-1 rounded-full border-0 cursor-pointer ${STATUS_COLORS[p.status] ?? 'bg-gray-100 text-gray-700'}`}
-                  >
-                    {PEDIDO_STATUS.map((s) => (
-                      <option key={s} value={s}>{s.replace('_', ' ')}</option>
-                    ))}
-                  </select>
+                  (() => {
+                    const disponiveis = statusDisponiveisPara(p.status)
+                    return (
+                      <select
+                        value={p.status}
+                        onChange={(e) =>
+                          setStatusConfirmTarget({
+                            pedidoId: p.id,
+                            statusNovo: e.target.value,
+                            statusAtual: p.status,
+                          })
+                        }
+                        disabled={disponiveis.length === 0}
+                        className={`text-xs font-medium px-2 py-1 rounded-full border-0 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 ${STATUS_COLORS[p.status] ?? 'bg-gray-100 text-gray-700'}`}
+                      >
+                        <option value={p.status} disabled>
+                          {p.status.replace('_', ' ')} (atual)
+                        </option>
+                        {disponiveis.map((s) => (
+                          <option key={s} value={s}>
+                            {s.replace('_', ' ')}
+                          </option>
+                        ))}
+                      </select>
+                    )
+                  })()
                 ) : '—'}
                 {p.status === 'ENTREGUE' && pedidosNaoPagosIds.has(p.id) && (
                   <span title="Entregue mas ainda não pago" className="flex-shrink-0">
@@ -292,6 +322,18 @@ export default function PedidoListPage() {
           </Button>
         </div>
       </Modal>
+
+      {statusConfirmTarget && (
+        <ConfirmarMudancaStatusModal
+          open
+          pedidoId={statusConfirmTarget.pedidoId}
+          statusAtual={statusConfirmTarget.statusAtual}
+          statusNovo={statusConfirmTarget.statusNovo}
+          isPending={statusMutation.isPending}
+          onConfirm={handleStatusConfirm}
+          onCancel={() => setStatusConfirmTarget(null)}
+        />
+      )}
 
       {pagamentoPrompt && (
         <RegistrarPagamentoModal

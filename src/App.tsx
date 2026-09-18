@@ -49,6 +49,7 @@ import FormaPagamentoFormPage from './modules/vendas/pages/FormaPagamentoFormPag
 import ItemApoioListPage from './modules/apoioFesta/pages/ItemApoioListPage'
 import ItemApoioFormPage from './modules/apoioFesta/pages/ItemApoioFormPage'
 import ApoioFestaListPage from './modules/apoioFesta/pages/ApoioFestaListPage'
+import DisponibilidadeApoioPage from './modules/apoioFesta/pages/DisponibilidadeApoioPage'
 import ColaboradorListPage from './modules/apoioFesta/pages/ColaboradorListPage'
 import ColaboradorFormPage from './modules/apoioFesta/pages/ColaboradorFormPage'
 import AlertaPedidoListPage from './modules/vendas/pages/AlertaPedidoListPage'
@@ -138,6 +139,8 @@ export default function App() {
         <Route path="/vendas/itens-apoio/novo" element={<ItemApoioFormPage />} />
         <Route path="/vendas/itens-apoio/:id/editar" element={<ItemApoioFormPage />} />
         <Route path="/vendas/apoios-festa" element={<ApoioFestaListPage />} />
+        <Route path="/vendas/apoios-festa/disponibilidade" element={<DisponibilidadeApoioPage />} />
+        <Route path="/vendas/apoio-festa/disponibilidade" element={<DisponibilidadeApoioPage />} />
         <Route path="/vendas/colaboradores" element={<ColaboradorListPage />} />
         <Route path="/vendas/colaboradores/novo" element={<ColaboradorFormPage />} />
         <Route path="/vendas/colaboradores/:id/editar" element={<ColaboradorFormPage />} />

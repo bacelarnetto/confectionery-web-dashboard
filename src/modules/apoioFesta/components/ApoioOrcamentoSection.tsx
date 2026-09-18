@@ -13,8 +13,14 @@ function formatDateTime(iso?: string) {
   return new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
 }
 
+export interface ApoioOrcamentoLocal extends ApoioFormBase {
+  itemApoioNome: string
+  colaboradorNome?: string
+  valorTotal: number
+}
+
 interface Props {
-  orcamentoId: number
+  orcamentoId?: number
   /** O orçamento precisa ter pelo menos um item de produto -- mesma regra de negócio de
    * ApoioFesta ("não somos uma locadora, apoio só existe pra complementar o doce"). */
   podeAdicionar: boolean
@@ -24,10 +30,23 @@ interface Props {
   /** Valor cru de form.dataEvento (datetime-local) -- usado só pelo atalho "Carrinho (dia
    * inteiro)". Sem isso o atalho fica desabilitado. */
   dataEvento?: string
+  /** Quando em modo de criação de orçamento, a lista de apoios propostos é gerenciada localmente */
+  itensLocais?: ApoioOrcamentoLocal[]
+  onAdicionarLocal?: (apoio: ApoioOrcamentoLocal) => void
+  onRemoverLocal?: (index: number) => void
 }
 
-export default function ApoioOrcamentoSection({ orcamentoId, podeAdicionar, readOnly, dataEvento }: Props) {
-  const { data: apoios, isLoading } = useApoiosOrcamento(orcamentoId)
+export default function ApoioOrcamentoSection({
+  orcamentoId,
+  podeAdicionar,
+  readOnly,
+  dataEvento,
+  itensLocais = [],
+  onAdicionarLocal,
+  onRemoverLocal,
+}: Props) {
+  const isModoEdicao = orcamentoId != null && orcamentoId > 0
+  const { data: apoios, isLoading } = useApoiosOrcamento(orcamentoId ?? 0)
   const createMutation = useCreateApoioOrcamento()
   const removerMutation = useRemoverApoioOrcamento()
 
@@ -35,7 +54,7 @@ export default function ApoioOrcamentoSection({ orcamentoId, podeAdicionar, read
   const [defaults, setDefaults] = useState<ApoioFormDefaults | undefined>(undefined)
   const [removeTarget, setRemoveTarget] = useState<ApoioOrcamento | null>(null)
 
-  const lista = apoios ?? []
+  const lista = isModoEdicao ? (apoios ?? []) : []
 
   function abrirModal(comDiaInteiro: boolean) {
     setDefaults(comDiaInteiro && dataEvento ? diaInteiroBrasilia(dataEvento) : undefined)
@@ -91,7 +110,7 @@ export default function ApoioOrcamentoSection({ orcamentoId, podeAdicionar, read
 
       {isLoading ? (
         <div className="h-8 bg-gray-100 rounded animate-pulse" />
-      ) : lista.length === 0 ? (
+      ) : (isModoEdicao ? lista.length === 0 : itensLocais.length === 0) ? (
         <p className="text-sm text-gray-400">Nenhum apoio de festa proposto neste orçamento.</p>
       ) : (
         <table className="w-full text-sm">
@@ -106,34 +125,63 @@ export default function ApoioOrcamentoSection({ orcamentoId, podeAdicionar, read
             </tr>
           </thead>
           <tbody>
-            {lista.map((a) => (
-              <tr key={a.id} className="border-b last:border-0">
-                <td className="py-1.5 font-medium text-gray-900">
-                  {a.itemApoioNome}
-                  {a.incluiMaoDeObra && (
-                    <span className="ml-1.5 inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
-                      + atendente
-                    </span>
-                  )}
-                </td>
-                <td className="py-1.5 text-gray-600">{a.colaboradorNome ?? '—'}</td>
-                <td className="py-1.5 text-gray-600">{formatDateTime(a.horaInicio)}</td>
-                <td className="py-1.5 text-gray-600">{formatDateTime(a.horaFim)}</td>
-                <td className="text-right py-1.5 font-medium">{formatCurrency(a.valorTotal)}</td>
-                {!readOnly && (
-                  <td className="py-1.5 text-right">
-                    <button
-                      type="button"
-                      onClick={() => setRemoveTarget(a)}
-                      className="p-1 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                      title="Remover da proposta"
-                    >
-                      <Trash2 size={15} />
-                    </button>
-                  </td>
-                )}
-              </tr>
-            ))}
+            {isModoEdicao
+              ? lista.map((a) => (
+                  <tr key={a.id} className="border-b last:border-0">
+                    <td className="py-1.5 font-medium text-gray-900">
+                      {a.itemApoioNome}
+                      {a.incluiMaoDeObra && (
+                        <span className="ml-1.5 inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                          + atendente
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-1.5 text-gray-600">{a.colaboradorNome ?? '—'}</td>
+                    <td className="py-1.5 text-gray-600">{formatDateTime(a.horaInicio)}</td>
+                    <td className="py-1.5 text-gray-600">{formatDateTime(a.horaFim)}</td>
+                    <td className="text-right py-1.5 font-medium">{formatCurrency(a.valorTotal)}</td>
+                    {!readOnly && (
+                      <td className="py-1.5 text-right">
+                        <button
+                          type="button"
+                          onClick={() => setRemoveTarget(a)}
+                          className="p-1 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                          title="Remover da proposta"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </td>
+                    )}
+                  </tr>
+                ))
+              : itensLocais.map((a, idx) => (
+                  <tr key={idx} className="border-b last:border-0">
+                    <td className="py-1.5 font-medium text-gray-900">
+                      {a.itemApoioNome}
+                      {a.incluiMaoDeObra && (
+                        <span className="ml-1.5 inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                          + atendente
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-1.5 text-gray-600">{a.colaboradorNome ?? '—'}</td>
+                    <td className="py-1.5 text-gray-600">{formatDateTime(a.horaInicio)}</td>
+                    <td className="py-1.5 text-gray-600">{formatDateTime(a.horaFim)}</td>
+                    <td className="text-right py-1.5 font-medium">{formatCurrency(a.valorTotal)}</td>
+                    {!readOnly && (
+                      <td className="py-1.5 text-right">
+                        <button
+                          type="button"
+                          onClick={() => onRemoverLocal?.(idx)}
+                          className="p-1 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                          title="Remover da proposta"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </td>
+                    )}
+                  </tr>
+                ))}
           </tbody>
         </table>
       )}
@@ -144,8 +192,9 @@ export default function ApoioOrcamentoSection({ orcamentoId, podeAdicionar, read
             open={showAdicionar}
             onClose={() => setShowAdicionar(false)}
             title="Propor Apoio de Festa"
-            createMutation={createMutation}
-            buildPayload={(base: ApoioFormBase) => ({ ...base, orcamentoId })}
+            createMutation={isModoEdicao ? createMutation : undefined}
+            buildPayload={isModoEdicao ? (base: ApoioFormBase) => ({ ...base, orcamentoId: orcamentoId! }) : undefined}
+            onConfirmLocal={!isModoEdicao ? (base, info) => onAdicionarLocal?.({ ...base, ...info }) : undefined}
             defaults={defaults}
           />
 
@@ -157,6 +206,7 @@ export default function ApoioOrcamentoSection({ orcamentoId, podeAdicionar, read
             </p>
             <div className="flex justify-end gap-2">
               <button
+                type="button"
                 onClick={() => setRemoveTarget(null)}
                 disabled={removerMutation.isPending}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-60"

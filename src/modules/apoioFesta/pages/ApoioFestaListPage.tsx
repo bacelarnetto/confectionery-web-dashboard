@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router'
-import { Search, X, Ban, ExternalLink } from 'lucide-react'
+import { useNavigate, Link } from 'react-router'
+import { Search, X, Ban, ExternalLink, CalendarDays } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
 import PageableTable from '../../../components/ui/PageableTable'
 import Modal from '../../../components/ui/Modal'
@@ -64,7 +64,18 @@ export default function ApoioFestaListPage() {
 
   return (
     <div>
-      <PageHeader title="Apoios de Festa" subtitle="Locações de carrinho, tacho, decoração e outros equipamentos, por pedido" />
+      <PageHeader
+        title="Apoios de Festa"
+        subtitle="Locações de carrinho, tacho, decoração e outros equipamentos, por pedido"
+      >
+        <Link
+          to="/vendas/apoios-festa/disponibilidade"
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium text-amber-800 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors shadow-2xs"
+        >
+          <CalendarDays size={16} />
+          Calendário de Disponibilidade
+        </Link>
+      </PageHeader>
 
       <div className="mb-4">
         <button

@@ -9,6 +9,7 @@ import { useProdutos, useProduto } from '../hooks/useProdutos'
 import { useCategoriasProduto } from '../hooks/useCategoriasProduto'
 import { useInsumos } from '../../estoqueInsumos/hooks/useInsumos'
 import InsumoField from '../components/InsumoField'
+import ProdutoField from '../components/ProdutoField'
 import { Ingrediente, ProdutoRefForm } from '../types/receita'
 import { parseApiError } from '../../../lib/apiError'
 

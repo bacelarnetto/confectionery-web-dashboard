@@ -12,6 +12,9 @@ export interface ResumoValores {
   totalDesconto: number
   totalComplementos: number
   valorFrete: number
+  /** Soma dos Apoios de Festa ATIVOS do pedido (locação de carrinho/tacho/decoração) -- só o
+   * Pedido soma isso no total; o Orçamento não (apoio proposto não altera o total até aprovar). */
+  valorApoioFesta: number
   total: number
 }
 
@@ -19,8 +22,10 @@ export interface ResumoValores {
  * Espelha exatamente PedidoCalculoLogic/OrcamentoCalculoLogic (idênticas no backend): por item,
  * total = (valorUnitario × quantidade − desconto) + (Σ valorVenda dos extras não-padrão × quantidade).
  * Complemento padrão nunca soma (valorVenda sempre 0 no save), mas filtra mesmo assim por clareza.
+ * `valorApoioFesta` (padrão 0) entra no total da mesma forma que o backend faz no
+ * `PedidoCalculoLogic.calcularValorTotalPedido` (itens + frete + apoio ativo).
  */
-export function calcularResumo(itens: ItemParaResumo[], valorFrete = 0): ResumoValores {
+export function calcularResumo(itens: ItemParaResumo[], valorFrete = 0, valorApoioFesta = 0): ResumoValores {
   let subtotalItens = 0
   let totalDesconto = 0
   let totalComplementos = 0
@@ -38,7 +43,7 @@ export function calcularResumo(itens: ItemParaResumo[], valorFrete = 0): ResumoV
     totalComplementos += extrasValor * quantidade
   }
 
-  const total = subtotalItens - totalDesconto + totalComplementos + valorFrete
+  const total = subtotalItens - totalDesconto + totalComplementos + valorFrete + valorApoioFesta
 
-  return { subtotalItens, totalDesconto, totalComplementos, valorFrete, total }
+  return { subtotalItens, totalDesconto, totalComplementos, valorFrete, valorApoioFesta, total }
 }

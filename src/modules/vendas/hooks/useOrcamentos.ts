@@ -46,6 +46,7 @@ export function useUpdateOrcamentoStatus() {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY })
       if (orcamento.status === 'CONVERTIDO') {
         queryClient.invalidateQueries({ queryKey: PEDIDOS_QUERY_KEY })
+        queryClient.invalidateQueries({ queryKey: ['apoios-festa'] })
         toast.success(`Orçamento aprovado! Pedido #${orcamento.pedidoId} criado.`)
       } else {
         toast.success('Orçamento rejeitado.')

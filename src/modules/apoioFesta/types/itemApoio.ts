@@ -39,3 +39,10 @@ export interface ItemApoioUpdateForm {
   valorHoraMaoDeObra?: number | null
   updatedBy?: string
 }
+
+export interface DisponibilidadeDia {
+  dia: string
+  quantidadeTotal: number
+  quantidadeOcupada: number
+  quantidadeLivre: number
+}
