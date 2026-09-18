@@ -1,14 +1,16 @@
 import { useState, useRef, useEffect, useId } from 'react'
 import { Search, X, Package, ChevronDown, ExternalLink, Thermometer } from 'lucide-react'
 import { useInsumo, useInsumos } from '../hooks/useInsumos'
+import { Insumo } from '../types/insumo'
 import { useDebounce } from '../../../hooks/useDebounce'
 
 interface InsumoFieldProps {
   value: number
-  onChange: (insumoId: number) => void
+  onChange: (insumoId: number, insumo?: Insumo) => void
   disabled?: boolean
   readOnly?: boolean
   required?: boolean
+  compact?: boolean
   className?: string
   placeholder?: string
 }
@@ -24,6 +26,7 @@ export default function InsumoField({
   disabled = false,
   readOnly = false,
   required = false,
+  compact = false,
   className = '',
   placeholder = 'Buscar insumo por nome (ex: Farinha de Trigo, Leite Moça)...',
 }: InsumoFieldProps) {
@@ -73,15 +76,15 @@ export default function InsumoField({
     }
   }, [highlightedIndex])
 
-  function handleSelect(id: number) {
-    onChange(id)
+  function handleSelect(id: number, insumo?: Insumo) {
+    onChange(id, insumo)
     setSearch('')
     setOpen(false)
   }
 
   function handleClear() {
     if (disabled || readOnly) return
-    onChange(0)
+    onChange(0, undefined)
     setSearch('')
     setTimeout(() => inputRef.current?.focus(), 50)
   }
@@ -106,7 +109,7 @@ export default function InsumoField({
     } else if (e.key === 'Enter') {
       e.preventDefault()
       if (highlightedIndex >= 0 && results[highlightedIndex]) {
-        handleSelect(results[highlightedIndex].id)
+        handleSelect(results[highlightedIndex].id, results[highlightedIndex])
       }
     } else if (e.key === 'Escape') {
       e.preventDefault()
@@ -116,6 +119,57 @@ export default function InsumoField({
 
   // --- ESTADO: INSUMO SELECIONADO ---
   if (value > 0) {
+    if (compact) {
+      return (
+        <div className={`relative ${className}`}>
+          <div className="flex items-center justify-between gap-1.5 px-2.5 py-1.5 border border-amber-200 bg-amber-50/50 rounded-lg min-h-[38px] transition-all">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <div className="p-1 bg-amber-100 text-amber-700 rounded shrink-0">
+                <Package size={14} />
+              </div>
+              <div className="min-w-0">
+                <span className="font-medium text-gray-900 truncate block text-xs leading-tight">
+                  {insumoAtual?.nome ?? (loadingAtual ? 'Carregando...' : `Insumo #${value}`)}
+                </span>
+                <div className="flex items-center gap-1 text-[10px] text-gray-500 leading-none mt-0.5">
+                  {insumoAtual?.unidadeMedida && (
+                    <span className="font-semibold text-amber-900 bg-amber-100/70 px-1 rounded">
+                      {insumoAtual.unidadeMedida}
+                    </span>
+                  )}
+                  {insumoAtual?.marca && (
+                    <span className="truncate max-w-[80px]">({insumoAtual.marca})</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {!readOnly && !disabled && (
+              <div className="flex items-center gap-1 shrink-0">
+                <button
+                  type="button"
+                  onClick={handleClear}
+                  className="text-[11px] font-medium text-amber-800 hover:text-amber-900 bg-white border border-amber-200 hover:bg-amber-100/60 px-1.5 py-0.5 rounded shadow-2xs transition-colors cursor-pointer"
+                  title="Trocar insumo"
+                >
+                  Trocar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleClear}
+                  title="Remover insumo"
+                  className="text-gray-400 hover:text-red-500 p-0.5 rounded transition-colors cursor-pointer"
+                >
+                  <X size={13} />
+                </button>
+              </div>
+            )}
+          </div>
+          <input type="hidden" value={value} required={required} />
+        </div>
+      )
+    }
+
     return (
       <div className={`space-y-1 ${className}`}>
         <div className="flex items-center justify-between gap-3 p-3 text-sm border border-amber-200 bg-amber-50/40 rounded-xl transition-all">
@@ -184,8 +238,8 @@ export default function InsumoField({
     <div className={`relative ${className}`} ref={containerRef}>
       <div className="relative">
         <Search
-          size={16}
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+          size={15}
+          className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
         />
 
         <input
@@ -207,7 +261,7 @@ export default function InsumoField({
           className={inputClass}
         />
 
-        <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
+        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
           {search && (
             <button
               type="button"
@@ -215,7 +269,7 @@ export default function InsumoField({
               className="text-gray-400 hover:text-gray-600 p-0.5 rounded cursor-pointer"
               title="Limpar busca"
             >
-              <X size={14} />
+              <X size={13} />
             </button>
           )}
           <button
@@ -230,20 +284,20 @@ export default function InsumoField({
       </div>
 
       {open && (
-        <div className="absolute z-30 mt-1.5 w-full bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden animate-in fade-in-50 duration-100">
+        <div className="absolute z-30 mt-1 w-full min-w-[240px] bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden animate-in fade-in-50 duration-100">
           <ul
             id={listboxId}
             ref={listRef}
             role="listbox"
-            className="max-h-64 overflow-y-auto divide-y divide-gray-50 py-1"
+            className="max-h-60 overflow-y-auto divide-y divide-gray-50 py-1"
           >
             {loadingResults ? (
-              <li className="px-4 py-3 text-xs text-gray-500 flex items-center gap-2">
+              <li className="px-3.5 py-2.5 text-xs text-gray-500 flex items-center gap-2">
                 <span className="w-3.5 h-3.5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin shrink-0" />
                 Buscando insumos...
               </li>
             ) : results.length === 0 ? (
-              <li className="px-4 py-4 text-xs text-center space-y-2">
+              <li className="px-3 py-3 text-xs text-center space-y-1.5">
                 <p className="text-gray-500">
                   {search ? (
                     <>
@@ -259,7 +313,7 @@ export default function InsumoField({
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 text-amber-700 hover:text-amber-800 font-medium hover:underline text-xs"
                 >
-                  Cadastrar novo insumo <ExternalLink size={12} />
+                  Cadastrar novo insumo <ExternalLink size={11} />
                 </a>
               </li>
             ) : (
@@ -271,28 +325,28 @@ export default function InsumoField({
                     role="option"
                     aria-selected={isHighlighted}
                     onMouseEnter={() => setHighlightedIndex(index)}
-                    onClick={() => handleSelect(i.id)}
-                    className={`px-3.5 py-2.5 cursor-pointer transition-colors flex items-center justify-between gap-3 ${
+                    onClick={() => handleSelect(i.id, i)}
+                    className={`px-3 py-2 cursor-pointer transition-colors flex items-center justify-between gap-2 ${
                       isHighlighted ? 'bg-amber-50 text-amber-950' : 'hover:bg-gray-50 text-gray-800'
                     }`}
                   >
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{i.nome}</p>
-                      <div className="flex flex-wrap items-center gap-1.5 text-xs text-gray-500 mt-0.5">
-                        <span className="font-medium text-amber-800 bg-amber-50 border border-amber-200/70 px-1.5 py-0.2 rounded text-[11px]">
+                      <p className="text-xs font-medium text-gray-900 truncate">{i.nome}</p>
+                      <div className="flex flex-wrap items-center gap-1 text-[11px] text-gray-500 mt-0.5">
+                        <span className="font-semibold text-amber-800 bg-amber-50 border border-amber-200/70 px-1 rounded text-[10px]">
                           {i.unidadeMedida}
                         </span>
                         {i.categoriaNome && <span>{i.categoriaNome}</span>}
                         {i.marca && <span className="text-gray-400">({i.marca})</span>}
                         {i.perecivel && (
-                          <span className="inline-flex items-center gap-0.5 text-amber-700 font-medium text-[11px]">
-                            <Thermometer size={10} /> Perecível
+                          <span className="inline-flex items-center gap-0.5 text-amber-700 font-medium text-[10px]">
+                            <Thermometer size={9} /> Perecível
                           </span>
                         )}
                       </div>
                     </div>
 
-                    <span className="text-[11px] font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md shrink-0">
+                    <span className="text-[10px] font-medium text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded shrink-0">
                       Selecionar
                     </span>
                   </li>
@@ -302,8 +356,8 @@ export default function InsumoField({
           </ul>
 
           {results.length >= RESULT_LIMIT && (
-            <div className="px-3 py-1.5 bg-gray-50 border-t border-gray-100 text-[11px] text-gray-500 text-center">
-              Mostrando os primeiros {RESULT_LIMIT} resultados. Digite para refinar sua busca.
+            <div className="px-3 py-1 bg-gray-50 border-t border-gray-100 text-[10px] text-gray-500 text-center">
+              Mostrando {RESULT_LIMIT} primeiros. Digite para filtrar.
             </div>
           )}
         </div>
@@ -311,4 +365,3 @@ export default function InsumoField({
     </div>
   )
 }
-

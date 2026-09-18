@@ -5,7 +5,7 @@ import PageHeader from '../../../components/ui/PageHeader'
 import Button from '../../../components/ui/Button'
 import RadioToggle from '../../../components/ui/RadioToggle'
 import { useReceita, useReceitas, useCreateReceita, useUpdateReceita } from '../hooks/useReceitas'
-import { useProdutos, useProduto } from '../hooks/useProdutos'
+import { useProduto } from '../hooks/useProdutos'
 import { useCategoriasProduto } from '../hooks/useCategoriasProduto'
 import { useInsumos } from '../../estoqueInsumos/hooks/useInsumos'
 import InsumoField from '../components/InsumoField'
@@ -72,7 +72,6 @@ export default function ReceitaFormPage() {
 
   const { data: receita, isLoading } = useReceita(numericId)
   const { data: produtoAtual } = useProduto(receita?.produtoId ?? 0)
-  const { data: produtosData } = useProdutos(0, 100)
   const { data: categoriasData } = useCategoriasProduto(0, 100)
   const { data: receitasData } = useReceitas(0, 100)
   const { data: insumosData } = useInsumos(0, 200)
@@ -163,6 +162,11 @@ export default function ReceitaFormPage() {
         { onSuccess: () => navigate('/estoque-produtos/receitas'), onError: tratarErro },
       )
     } else {
+      if (produtoMode === 'existente' && (!produtoId || Number(produtoId) <= 0)) {
+        setErroProduto('Selecione um produto para a receita.')
+        return
+      }
+
       const produto: ProdutoRefForm =
         produtoMode === 'existente'
           ? { produtoId: Number(produtoId) }
@@ -193,7 +197,6 @@ export default function ReceitaFormPage() {
   const isPending = createMutation.isPending || updateMutation.isPending
   const categorias = categoriasData?.content ?? []
   const produtosComReceita = new Set((receitasData?.content ?? []).map((r) => r.produtoId))
-  const produtos = (produtosData?.content ?? []).filter((p) => !produtosComReceita.has(p.id))
   const insumos = insumosData?.content ?? []
 
   if (isEditing && isLoading) {
@@ -249,21 +252,14 @@ export default function ReceitaFormPage() {
 
             {produtoMode === 'existente' ? (
               <Field label="Produto" required>
-                <select
-                  value={produtoId}
-                  onChange={(e) => setProdutoId(e.target.value)}
+                <ProdutoField
+                  value={Number(produtoId) || 0}
+                  onChange={(id) => setProdutoId(id ? String(id) : '')}
+                  excludeIds={Array.from(produtosComReceita)}
                   required
-                  className={inputClass}
-                >
-                  <option value="">Selecione um produto...</option>
-                  {produtos.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.nome} ({p.categoriaProdutoNome})
-                    </option>
-                  ))}
-                </select>
+                />
                 <p className="text-xs text-gray-400 mt-1">
-                  Produtos que já têm uma receita cadastrada não aparecem aqui (cada produto só pode ter uma receita).
+                  Produtos que já têm uma receita cadastrada não aparecem na busca (cada produto só pode ter uma receita).
                 </p>
               </Field>
             ) : (
