@@ -10,6 +10,7 @@ import { useClientes } from '../hooks/useClientes'
 import EnderecoClienteField from '../components/EnderecoClienteField'
 import ComplementoPicker, { ComplementoResolvido } from '../components/ComplementoPicker'
 import ResumoValoresCard from '../components/ResumoValoresCard'
+import ApoioOrcamentoSection from '../../apoioFesta/components/ApoioOrcamentoSection'
 import { calcularResumo } from '../lib/resumoValores'
 import { useProdutos } from '../../estoqueProdutos/hooks/useProdutos'
 import precificacaoProdutoService from '../../estoqueProdutos/services/precificacaoProdutoService'
@@ -44,11 +45,12 @@ interface FormState {
   clienteId: string
   enderecoId: string
   dataValidade: string
+  dataEvento: string
   valorFrete: string
   observacao: string
 }
 
-const emptyForm: FormState = { clienteId: '', enderecoId: '', dataValidade: '', valorFrete: '', observacao: '' }
+const emptyForm: FormState = { clienteId: '', enderecoId: '', dataValidade: '', dataEvento: '', valorFrete: '', observacao: '' }
 const emptyItem: ItemForm = { produtoId: '', quantidade: '1', valorUnitario: '', desconto: '', complementoIds: [], complementosResolvidos: [] }
 
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
@@ -109,6 +111,7 @@ export default function OrcamentoFormPage() {
         clienteId: String(orcamento.clienteId ?? ''),
         enderecoId: String(orcamento.enderecoId ?? ''),
         dataValidade: orcamento.dataValidade ? dateToLocalYMD(orcamento.dataValidade) : '',
+        dataEvento: orcamento.dataEvento ? new Date(orcamento.dataEvento).toISOString().slice(0, 16) : '',
         valorFrete: String(orcamento.valorFrete ?? ''),
         observacao: orcamento.observacao ?? '',
       })
@@ -207,6 +210,7 @@ export default function OrcamentoFormPage() {
     setErroGeral(null)
     setItemErroIndex(null)
     const dataValidadeIso = form.dataValidade ? new Date(`${form.dataValidade}T23:59:59`).toISOString() : undefined
+    const dataEventoIso = form.dataEvento ? new Date(form.dataEvento).toISOString() : undefined
 
     if (isEditing) {
       updateMutation.mutate(
@@ -215,6 +219,7 @@ export default function OrcamentoFormPage() {
           data: {
             enderecoId: form.enderecoId ? Number(form.enderecoId) : undefined,
             dataValidade: dataValidadeIso,
+            dataEvento: dataEventoIso,
             valorFrete: form.valorFrete ? Number(form.valorFrete) : undefined,
             observacao: form.observacao || undefined,
             itens: buildItens(),
@@ -229,6 +234,7 @@ export default function OrcamentoFormPage() {
           clienteId: Number(form.clienteId),
           enderecoId: form.enderecoId ? Number(form.enderecoId) : undefined,
           dataValidade: dataValidadeIso,
+          dataEvento: dataEventoIso,
           valorFrete: form.valorFrete ? Number(form.valorFrete) : undefined,
           observacao: form.observacao || undefined,
           itens: buildItens(),
@@ -353,6 +359,21 @@ export default function OrcamentoFormPage() {
                 disabled={isReadOnly}
                 className={inputClass}
               />
+            </Field>
+
+            <Field label="Data do Evento">
+              <input
+                name="dataEvento"
+                type="datetime-local"
+                value={form.dataEvento}
+                onChange={handleChange}
+                disabled={isReadOnly}
+                className={inputClass}
+              />
+              <p className="text-xs text-gray-500 mt-1.5">
+                Dia da festa em si — diferente de "Válido até" (prazo da proposta). Se o orçamento for aprovado, vira a
+                Data de Entrega do pedido gerado.
+              </p>
             </Field>
 
             <Field label="Valor de Frete (R$)">
@@ -492,6 +513,15 @@ export default function OrcamentoFormPage() {
         </div>
 
         <ResumoValoresCard resumo={resumo} />
+
+        {isEditing && (
+          <ApoioOrcamentoSection
+            orcamentoId={numericId}
+            podeAdicionar={buildItens().length > 0}
+            readOnly={isReadOnly}
+            dataEvento={form.dataEvento}
+          />
+        )}
 
         <div className="flex items-center justify-end gap-3">
           <button

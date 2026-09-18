@@ -10,6 +10,7 @@ import ComplementoPicker, { ComplementoResolvido } from '../components/Complemen
 import ResumoValoresCard from '../components/ResumoValoresCard'
 import PedidoPagamentoCard from '../components/PedidoPagamentoCard'
 import RegistrarPagamentoModal from '../components/RegistrarPagamentoModal'
+import ApoioFestaSection from '../../apoioFesta/components/ApoioFestaSection'
 import { calcularResumo } from '../lib/resumoValores'
 import { formatEndereco } from '../lib/endereco'
 import { STATUS_COLORS, STATUS_QUE_SUGEREM_PAGAMENTO } from '../lib/pedidoStatus'
@@ -593,6 +594,10 @@ export default function PedidoFormPage() {
         </div>
 
         <ResumoValoresCard resumo={resumo} />
+
+        {isEditing && pedido && (
+          <ApoioFestaSection pedidoId={numericId} podeAdicionar={buildItens().length > 0} dataEntrega={form.dataEntrega} />
+        )}
 
         {isEditing && pedido && (
           <PedidoPagamentoCard pedidoId={numericId} pedido={pedido} />

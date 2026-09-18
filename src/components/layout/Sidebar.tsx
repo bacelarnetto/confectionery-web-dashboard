@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { NavLink, useLocation } from 'react-router'
 import { useAuth } from 'react-oidc-context'
-import { Truck, ShoppingCart, Cookie, Package, PackagePlus, ArrowDownToLine, ArrowUpFromLine, Archive, Activity, LayoutDashboard, Users, Bell, Settings, ChevronDown, Store, UtensilsCrossed, FlaskConical, Layers, KanbanSquare, CalendarClock, BookOpen, TrendingUp, PiggyBank, FileText, Tags, Receipt, Banknote, Building2, CreditCard, X } from 'lucide-react'
+import { Truck, ShoppingCart, Cookie, Package, PackagePlus, ArrowDownToLine, ArrowUpFromLine, Archive, Activity, LayoutDashboard, Users, Bell, Settings, ChevronDown, Store, UtensilsCrossed, FlaskConical, Layers, KanbanSquare, CalendarClock, BookOpen, TrendingUp, PiggyBank, FileText, Tags, Receipt, Banknote, Building2, CreditCard, Boxes, PartyPopper, HardHat, X } from 'lucide-react'
 import { useAlertasCountAtivos } from '../../modules/estoqueInsumos/hooks/useAlertas'
 import { useCountAlertasPedidoAtivos } from '../../modules/vendas/hooks/useAlertasPedido'
 import { useAlertasProdutoCountAtivos } from '../../modules/estoqueProdutos/hooks/useAlertasProduto'
@@ -105,6 +105,9 @@ const navigation: NavSection[] = [
       { label: 'Clientes', to: '/vendas/clientes', icon: <Users size={18} /> },
       { label: 'Complementos', to: '/vendas/complementos', icon: <Package size={18} /> },
       { label: 'Formas de Pagamento', to: '/vendas/formas-pagamento', icon: <CreditCard size={18} /> },
+      { label: 'Itens de Apoio', to: '/vendas/itens-apoio', icon: <Boxes size={18} /> },
+      { label: 'Apoios de Festa', to: '/vendas/apoios-festa', icon: <PartyPopper size={18} /> },
+      { label: 'Colaboradores', to: '/vendas/colaboradores', icon: <HardHat size={18} /> },
       { label: 'Orçamentos', to: '/vendas/orcamentos', icon: <FileText size={18} /> },
       { label: 'Pedidos', to: '/vendas/pedidos', icon: <Store size={18} /> },
       { label: 'Mural da Semana', to: '/vendas/mural', icon: <KanbanSquare size={18} /> },
