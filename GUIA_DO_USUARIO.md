@@ -376,6 +376,19 @@ Os complementos padrão do produto aparecem sozinhos, marcados **Incluso** (sem 
 
 O valor total do pedido é sempre calculado pelo sistema, somando os itens, complementos, descontos e o frete.
 
+> **💡 O que acontece com o estoque quando você salva o pedido:** os **complementos** do pedido
+> **reservam** a quantidade correspondente de insumo. Reservar **não tira nada do estoque** — nenhum
+> insumo sai do lugar; é só um compromisso de que aquela quantidade já está destinada a esse pedido.
+> O sistema passa a enxergar o **"disponível" = o que existe − o que já está reservado em outros
+> pedidos**: se um novo pedido estourar esse disponível, ele é recusado na hora de salvar, com o
+> aviso de estoque insuficiente — antes de virar problema na produção.
+>
+> A reserva é liberada sozinha quando o pedido é **cancelado** antes da produção, ou quando um
+> **rascunho fica parado por mais de 7 dias** (liberação automática, todo dia às 8h). Nesse último
+> caso, **nada "volta" pro estoque** — e é por um bom motivo: como a reserva nunca removeu insumo
+> nenhum, liberar só devolve o *espaço* que ela segurava, pra outros pedidos usarem. O rascunho
+> continua salvo; se você produzi-lo depois, o sistema confere o estoque real naquele momento.
+
 ### 5. Avance o status direto na lista
 
 Na lista de **Pedidos**, o status aparece como um seletor colorido na própria linha — não precisa abrir o pedido pra avançar de uma etapa pra outra.
