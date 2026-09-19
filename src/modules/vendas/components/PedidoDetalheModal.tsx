@@ -9,6 +9,7 @@ import PedidoPagamentoCard from './PedidoPagamentoCard'
 import RegistrarPagamentoModal from './RegistrarPagamentoModal'
 import ComandaProducaoModal from './ComandaProducaoModal'
 import ConfirmarMudancaStatusModal from './ConfirmarMudancaStatusModal'
+import PedidoErroModal from './PedidoErroModal'
 import { STATUS_COLORS, STATUS_QUE_SUGEREM_PAGAMENTO, PEDIDO_STATUS_ORDEM, statusDisponiveisPara, tituloStatusPill } from '../lib/pedidoStatus'
 import { formatEndereco } from '../lib/endereco'
 
@@ -51,6 +52,7 @@ export default function PedidoDetalheModal({ pedido, onClose, onUpdated }: Props
   const [showPagamentoPrompt, setShowPagamentoPrompt] = useState(false)
   const [showComanda, setShowComanda] = useState(false)
   const [statusConfirmTarget, setStatusConfirmTarget] = useState<string | null>(null)
+  const [erroModal, setErroModal] = useState<{ erro: unknown; pedidoId?: number } | null>(null)
 
   function handleStatusChange(status: string) {
     statusMutation.mutate(
@@ -62,6 +64,9 @@ export default function PedidoDetalheModal({ pedido, onClose, onUpdated }: Props
             setPercentualSugerido(STATUS_QUE_SUGEREM_PAGAMENTO[status])
             setShowPagamentoPrompt(true)
           }
+        },
+        onError: (err) => {
+          setErroModal({ erro: err, pedidoId: pedido.id })
         },
       },
     )
@@ -284,6 +289,15 @@ export default function PedidoDetalheModal({ pedido, onClose, onUpdated }: Props
         onConfirm={handleConfirmarMudancaStatus}
         onCancel={() => setStatusConfirmTarget(null)}
       />
+
+      {erroModal && (
+        <PedidoErroModal
+          open={!!erroModal}
+          onClose={() => setErroModal(null)}
+          erro={erroModal.erro}
+          pedidoId={erroModal.pedidoId}
+        />
+      )}
     </div>
   )
 }

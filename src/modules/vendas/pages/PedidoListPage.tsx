@@ -13,6 +13,7 @@ import { useTodasContasReceberPendentes } from '../../financeiro/hooks/useFinanc
 import RegistrarPagamentoModal from '../components/RegistrarPagamentoModal'
 import ComandaProducaoModal from '../components/ComandaProducaoModal'
 import ConfirmarMudancaStatusModal from '../components/ConfirmarMudancaStatusModal'
+import PedidoErroModal from '../components/PedidoErroModal'
 import { STATUS_COLORS, STATUS_QUE_SUGEREM_PAGAMENTO, STATUS_TERMINAIS, getPrazoEntrega, statusDisponiveisPara } from '../lib/pedidoStatus'
 
 const TABLE_HEADERS = ['ID', 'Cliente', 'Status', 'Valor Total', 'Frete', 'Retirada', 'Criado em', 'Entrega', 'Ações']
@@ -66,6 +67,7 @@ export default function PedidoListPage() {
     statusNovo: string
     statusAtual: string | undefined
   } | null>(null)
+  const [erroModal, setErroModal] = useState<{ erro: unknown; pedidoId?: number } | null>(null)
 
   function handleStatusChange(pedidoId: number, status: string) {
     statusMutation.mutate(
@@ -75,6 +77,9 @@ export default function PedidoListPage() {
           if (status in STATUS_QUE_SUGEREM_PAGAMENTO) {
             setPagamentoPrompt({ pedidoId, percentualSugerido: STATUS_QUE_SUGEREM_PAGAMENTO[status] })
           }
+        },
+        onError: (err) => {
+          setErroModal({ erro: err, pedidoId })
         },
       },
     )
@@ -99,9 +104,15 @@ export default function PedidoListPage() {
 
   function handleCancelConfirm() {
     if (!cancelTarget) return
+    const id = cancelTarget.id
     statusMutation.mutate(
-      { id: cancelTarget.id, status: 'CANCELADO' },
-      { onSettled: () => setCancelTarget(null) },
+      { id, status: 'CANCELADO' },
+      {
+        onSettled: () => setCancelTarget(null),
+        onError: (err) => {
+          setErroModal({ erro: err, pedidoId: id })
+        },
+      },
     )
   }
 
@@ -350,6 +361,15 @@ export default function PedidoListPage() {
           pedido={comandaPedido}
           open={!!comandaPedido}
           onClose={() => setComandaPedido(null)}
+        />
+      )}
+
+      {erroModal && (
+        <PedidoErroModal
+          open={!!erroModal}
+          onClose={() => setErroModal(null)}
+          erro={erroModal.erro}
+          pedidoId={erroModal.pedidoId}
         />
       )}
     </div>

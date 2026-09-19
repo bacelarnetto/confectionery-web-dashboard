@@ -17,6 +17,7 @@ import { calcularResumo } from '../lib/resumoValores'
 import { formatEndereco } from '../lib/endereco'
 import { STATUS_COLORS, STATUS_QUE_SUGEREM_PAGAMENTO, PEDIDO_STATUS_ORDEM, statusDisponiveisPara, tituloStatusPill } from '../lib/pedidoStatus'
 import ConfirmarMudancaStatusModal from '../components/ConfirmarMudancaStatusModal'
+import PedidoErroModal from '../components/PedidoErroModal'
 import { useProdutos } from '../../estoqueProdutos/hooks/useProdutos'
 import precificacaoProdutoService from '../../estoqueProdutos/services/precificacaoProdutoService'
 import complementoService from '../services/complementoService'
@@ -106,6 +107,7 @@ export default function PedidoFormPage() {
   const [percentualSugerido, setPercentualSugerido] = useState<number | undefined>()
   const [showPagamentoPrompt, setShowPagamentoPrompt] = useState(false)
   const [statusConfirmTarget, setStatusConfirmTarget] = useState<string | null>(null)
+  const [erroModal, setErroModal] = useState<{ erro: unknown; pedidoId?: number } | null>(null)
 
   function handleStatusChange(status: string) {
     statusMutation.mutate(
@@ -121,12 +123,14 @@ export default function PedidoFormPage() {
         onError: (err) => {
           const { mensagem } = parseApiError(err)
           const nomesSemEstoque = extrairNomesProdutosSemEstoque(mensagem)
-          if (nomesSemEstoque.length === 0) return
-          const indices = itens
-            .map((it, i) => ({ i, nome: produtos.find((p) => p.id === Number(it.produtoId))?.nome }))
-            .filter(({ nome }) => nome && nomesSemEstoque.some((n) => n.toLowerCase() === nome.toLowerCase()))
-            .map(({ i }) => i)
-          setItemErroIndices(new Set(indices))
+          if (nomesSemEstoque.length > 0) {
+            const indices = itens
+              .map((it, i) => ({ i, nome: produtos.find((p) => p.id === Number(it.produtoId))?.nome }))
+              .filter(({ nome }) => nome && nomesSemEstoque.some((n) => n.toLowerCase() === nome.toLowerCase()))
+              .map(({ i }) => i)
+            setItemErroIndices(new Set(indices))
+          }
+          setErroModal({ erro: err, pedidoId: numericId })
         },
       },
     )
@@ -266,10 +270,12 @@ export default function PedidoFormPage() {
       if (index >= 0) {
         setItemErroIndices(new Set([index]))
         setErroGeral(mensagem)
+        setErroModal({ erro: err, pedidoId: isEditing ? numericId : undefined })
         return
       }
     }
     setErroGeral(mensagem)
+    setErroModal({ erro: err, pedidoId: isEditing ? numericId : undefined })
   }
 
   function handleSubmit(e: FormEvent) {
@@ -721,6 +727,15 @@ export default function PedidoFormPage() {
         onConfirm={handleConfirmarMudancaStatus}
         onCancel={() => setStatusConfirmTarget(null)}
       />
+
+      {erroModal && (
+        <PedidoErroModal
+          open={!!erroModal}
+          onClose={() => setErroModal(null)}
+          erro={erroModal.erro}
+          pedidoId={erroModal.pedidoId}
+        />
+      )}
     </div>
   )
 }
