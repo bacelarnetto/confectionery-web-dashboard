@@ -41,7 +41,7 @@ export const STATUS_COLORS: Record<string, string> = {
   EM_PRODUCAO: 'bg-purple-100 text-purple-800',
   PRONTO: 'bg-green-100 text-green-800',
   A_CAMINHO: 'bg-amber-100 text-amber-800',
-  ENTREGUE: 'bg-gray-100 text-gray-700',
+  ENTREGUE: 'bg-orange-100 text-orange-800',
   CONCLUIDO: 'bg-emerald-100 text-emerald-800',
   CANCELADO: 'bg-red-100 text-red-800',
 }
