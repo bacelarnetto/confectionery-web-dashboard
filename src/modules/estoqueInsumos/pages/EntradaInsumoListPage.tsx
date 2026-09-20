@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { Plus, Pencil, Trash2, Search, X, ShoppingCart, FileText, AlertCircle, CheckCircle2, Info, Bell } from 'lucide-react'
+import { useAuth } from 'react-oidc-context'
+import { Plus, Pencil, Trash2, Search, X, ShoppingCart, FileText, AlertCircle, CheckCircle2, Info, Bell, Eye } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
 import PageableTable from '../../../components/ui/PageableTable'
 import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal'
 import { useEntradasInsumo, useDeleteEntradaInsumo } from '../hooks/useEntradasInsumo'
 import { useDebounce } from '../../../hooks/useDebounce'
 import { formatCurrency } from '../../../lib/format'
+import { hasRole } from '../../../lib/auth'
 
 const TABLE_HEADERS = ['ID', 'Tipo / Origem', 'Insumos', 'Valor Total', 'NF', 'Criado por', 'Ações']
 
@@ -33,6 +35,8 @@ function getDiasAteVencimento(dataValidade?: string): number | null {
 
 export default function EntradaInsumoListPage() {
   const navigate = useNavigate()
+  const auth = useAuth()
+  const isAdmin = hasRole(auth.user, 'ADMIN')
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState(20)
   const [filters, setFilters] = useState<{
@@ -186,13 +190,15 @@ export default function EntradaInsumoListPage() {
             </div>
           </div>
 
-          <button
-            onClick={() => navigate('/estoque-insumos/entradas/nova')}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 transition-colors cursor-pointer"
-          >
-            <Plus size={16} />
-            Nova Entrada
-          </button>
+          {isAdmin && (
+            <button
+              onClick={() => navigate('/estoque-insumos/entradas/nova')}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 transition-colors cursor-pointer"
+            >
+              <Plus size={16} />
+              Nova Entrada
+            </button>
+          )}
         </div>
       </PageHeader>
 
@@ -369,7 +375,16 @@ export default function EntradaInsumoListPage() {
 
           return (
             <tr key={e.id} className="hover:bg-gray-50 transition-colors">
-              <td className="px-4 py-3 font-medium text-gray-900">#{e.id}</td>
+              <td className="px-4 py-3 font-medium text-gray-900">
+                <button
+                  type="button"
+                  onClick={() => navigate(`/estoque-insumos/entradas/${e.id}/editar`)}
+                  className="font-semibold text-gray-900 hover:text-blue-600 hover:underline cursor-pointer"
+                  title={isAdmin ? 'Editar entrada' : 'Visualizar detalhes da entrada'}
+                >
+                  #{e.id}
+                </button>
+              </td>
               <td className="px-4 py-3">
                 {isCompra ? (
                   <div className="flex flex-col items-start gap-1">
@@ -404,7 +419,9 @@ export default function EntradaInsumoListPage() {
                             )}
                           </ul>
                           <div className="mt-2 pt-1.5 border-t border-gray-700 text-amber-200 text-[10px]">
-                            💡 Clique em Editar (✏️) para preencher esses dados.
+                            {isAdmin
+                              ? '💡 Clique em Editar (✏️) para preencher esses dados.'
+                              : '🔒 Dados pendentes. Contate um administrador para completar estes dados.'}
                           </div>
                         </div>
                       </div>
@@ -471,24 +488,37 @@ export default function EntradaInsumoListPage() {
               <td className="px-4 py-3 text-gray-600">{e.createdBy}</td>
               <td className="px-4 py-3">
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => navigate(`/estoque-insumos/entradas/${e.id}/editar`)}
-                    className={`p-1.5 rounded-md transition-colors ${
-                      temPendencias
-                        ? 'text-amber-700 hover:text-amber-800 bg-amber-50 hover:bg-amber-100 ring-1 ring-amber-300'
-                        : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50'
-                    }`}
-                    title={temPendencias ? 'Completar dados dos insumos (lote, validade, fabricação)' : 'Editar'}
-                  >
-                    <Pencil size={15} />
-                  </button>
-                  <button
-                    onClick={() => setDeleteTarget({ id: e.id })}
-                    className="p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                    title="Remover"
-                  >
-                    <Trash2 size={15} />
-                  </button>
+                  {isAdmin ? (
+                    <>
+                      <button
+                        onClick={() => navigate(`/estoque-insumos/entradas/${e.id}/editar`)}
+                        className={`p-1.5 rounded-md transition-colors cursor-pointer ${
+                          temPendencias
+                            ? 'text-amber-700 hover:text-amber-800 bg-amber-50 hover:bg-amber-100 ring-1 ring-amber-300'
+                            : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50'
+                        }`}
+                        title={temPendencias ? 'Completar dados dos insumos (lote, validade, fabricação)' : 'Editar entrada'}
+                      >
+                        <Pencil size={15} />
+                      </button>
+                      <button
+                        onClick={() => setDeleteTarget({ id: e.id })}
+                        className="p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                        title="Remover entrada"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => navigate(`/estoque-insumos/entradas/${e.id}/editar`)}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-gray-700 hover:text-blue-700 bg-gray-50 hover:bg-blue-50 border border-gray-200 transition-colors cursor-pointer shadow-2xs"
+                      title="Visualizar detalhes da entrada e dos itens"
+                    >
+                      <Eye size={14} className="text-blue-600" />
+                      <span>Visualizar</span>
+                    </button>
+                  )}
                 </div>
               </td>
             </tr>

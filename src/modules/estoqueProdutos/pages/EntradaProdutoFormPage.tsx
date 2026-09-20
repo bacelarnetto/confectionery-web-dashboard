@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router'
 import { Plus, Trash2, AlertCircle } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
 import Button from '../../../components/ui/Button'
+import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal'
 import { useCreateEntradaProduto } from '../hooks/useEntradasProduto'
 import { useProdutos } from '../hooks/useProdutos'
 import { useFornecedores } from '../../compras/hooks/useFornecedores'
@@ -85,8 +86,12 @@ export default function EntradaProdutoFormPage() {
     setItens((prev) => [...prev, { ...emptyItem }])
   }
 
-  function removeItem(index: number) {
-    setItens((prev) => prev.filter((_, i) => i !== index))
+  const [itemToDeleteIndex, setItemToDeleteIndex] = useState<number | null>(null)
+
+  function handleConfirmRemoveItem() {
+    if (itemToDeleteIndex === null) return
+    setItens((prev) => prev.filter((_, i) => i !== itemToDeleteIndex))
+    setItemToDeleteIndex(null)
   }
 
   function buildItens() {
@@ -215,8 +220,9 @@ export default function EntradaProdutoFormPage() {
                     {itens.length > 1 && (
                       <button
                         type="button"
-                        onClick={() => removeItem(index)}
-                        className="p-1 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                        onClick={() => setItemToDeleteIndex(index)}
+                        className="p-1 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                        title="Remover este item"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -306,6 +312,19 @@ export default function EntradaProdutoFormPage() {
           </Button>
         </div>
       </form>
+
+      <DeleteConfirmModal
+        isOpen={itemToDeleteIndex !== null}
+        onClose={() => setItemToDeleteIndex(null)}
+        onConfirm={handleConfirmRemoveItem}
+        itemName={
+          itemToDeleteIndex !== null && itens[itemToDeleteIndex]
+            ? produtos.find(p => p.id === Number(itens[itemToDeleteIndex].produtoId))?.nome
+              ? `o produto "${produtos.find(p => p.id === Number(itens[itemToDeleteIndex].produtoId))?.nome}"`
+              : `o item #${itemToDeleteIndex + 1}`
+            : 'este item'
+        }
+      />
     </div>
   )
 }

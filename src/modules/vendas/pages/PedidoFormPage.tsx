@@ -3,6 +3,7 @@ import { useNavigate, useParams, useLocation } from 'react-router'
 import { Plus, Trash2, AlertCircle } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
 import Button from '../../../components/ui/Button'
+import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal'
 import { usePedido, useCreatePedido, useUpdatePedido, useUpdatePedidoStatus } from '../hooks/usePedidos'
 import { useClientes } from '../hooks/useClientes'
 import EnderecoClienteField from '../components/EnderecoClienteField'
@@ -244,8 +245,12 @@ export default function PedidoFormPage() {
     setItens((prev) => [...prev, { ...emptyItem }])
   }
 
-  function removeItem(index: number) {
-    setItens((prev) => prev.filter((_, i) => i !== index))
+  const [itemToDeleteIndex, setItemToDeleteIndex] = useState<number | null>(null)
+
+  function handleConfirmRemoveItem() {
+    if (itemToDeleteIndex === null) return
+    setItens((prev) => prev.filter((_, i) => i !== itemToDeleteIndex))
+    setItemToDeleteIndex(null)
   }
 
   function buildItens() {
@@ -566,7 +571,7 @@ export default function PedidoFormPage() {
                       {itens.length > 1 && (
                         <button
                           type="button"
-                          onClick={() => removeItem(index)}
+                          onClick={() => setItemToDeleteIndex(index)}
                           className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                           title="Remover este item"
                         >
@@ -736,6 +741,19 @@ export default function PedidoFormPage() {
           pedidoId={erroModal.pedidoId}
         />
       )}
+
+      <DeleteConfirmModal
+        isOpen={itemToDeleteIndex !== null}
+        onClose={() => setItemToDeleteIndex(null)}
+        onConfirm={handleConfirmRemoveItem}
+        itemName={
+          itemToDeleteIndex !== null && itens[itemToDeleteIndex]
+            ? itens[itemToDeleteIndex].produtoId
+              ? `o item ${itemToDeleteIndex + 1} (${produtos.find((p) => p.id === Number(itens[itemToDeleteIndex].produtoId))?.nome ?? `Produto #${itens[itemToDeleteIndex].produtoId}`})`
+              : `o item ${itemToDeleteIndex + 1}`
+            : 'este item'
+        }
+      />
     </div>
   )
 }

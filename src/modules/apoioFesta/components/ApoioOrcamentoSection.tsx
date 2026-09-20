@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Plus, Trash2, Clock } from 'lucide-react'
 import Modal from '../../../components/ui/Modal'
 import Button from '../../../components/ui/Button'
+import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal'
 import { useApoiosOrcamento, useCreateApoioOrcamento, useRemoverApoioOrcamento } from '../hooks/useApoiosOrcamento'
 import { ApoioOrcamento, ApoioOrcamentoInsertForm } from '../types/apoioOrcamento'
 import { formatCurrency } from '../../../lib/format'
@@ -53,6 +54,13 @@ export default function ApoioOrcamentoSection({
   const [showAdicionar, setShowAdicionar] = useState(false)
   const [defaults, setDefaults] = useState<ApoioFormDefaults | undefined>(undefined)
   const [removeTarget, setRemoveTarget] = useState<ApoioOrcamento | null>(null)
+  const [itemLocalToDeleteIndex, setItemLocalToDeleteIndex] = useState<number | null>(null)
+
+  function handleConfirmRemoverLocal() {
+    if (itemLocalToDeleteIndex === null) return
+    onRemoverLocal?.(itemLocalToDeleteIndex)
+    setItemLocalToDeleteIndex(null)
+  }
 
   const lista = isModoEdicao ? (apoios ?? []) : []
 
@@ -172,7 +180,7 @@ export default function ApoioOrcamentoSection({
                       <td className="py-1.5 text-right">
                         <button
                           type="button"
-                          onClick={() => onRemoverLocal?.(idx)}
+                          onClick={() => setItemLocalToDeleteIndex(idx)}
                           className="p-1 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
                           title="Remover da proposta"
                         >
@@ -218,6 +226,17 @@ export default function ApoioOrcamentoSection({
               </Button>
             </div>
           </Modal>
+
+          <DeleteConfirmModal
+            isOpen={itemLocalToDeleteIndex !== null}
+            onClose={() => setItemLocalToDeleteIndex(null)}
+            onConfirm={handleConfirmRemoverLocal}
+            itemName={
+              itemLocalToDeleteIndex !== null && itensLocais[itemLocalToDeleteIndex]
+                ? `o apoio "${itensLocais[itemLocalToDeleteIndex].itemApoioNome}"`
+                : 'este apoio'
+            }
+          />
         </>
       )}
     </div>

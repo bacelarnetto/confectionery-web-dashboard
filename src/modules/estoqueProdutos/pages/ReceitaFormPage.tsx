@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router'
 import { Plus, Trash2, AlertCircle } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
 import Button from '../../../components/ui/Button'
+import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal'
 import RadioToggle from '../../../components/ui/RadioToggle'
 import { useReceita, useReceitas, useCreateReceita, useUpdateReceita } from '../hooks/useReceitas'
 import { useProduto } from '../hooks/useProdutos'
@@ -120,8 +121,12 @@ export default function ReceitaFormPage() {
     setIngredientes((prev) => [...prev, { ...emptyIngrediente }])
   }
 
-  function removeIngrediente(index: number) {
-    setIngredientes((prev) => prev.filter((_, i) => i !== index))
+  const [ingredienteToDeleteIndex, setIngredienteToDeleteIndex] = useState<number | null>(null)
+
+  function handleConfirmRemoveIngrediente() {
+    if (ingredienteToDeleteIndex === null) return
+    setIngredientes((prev) => prev.filter((_, i) => i !== ingredienteToDeleteIndex))
+    setIngredienteToDeleteIndex(null)
   }
 
   function tratarErro(err: unknown) {
@@ -422,7 +427,7 @@ export default function ReceitaFormPage() {
                       {ingredientes.length > 1 && (
                         <button
                           type="button"
-                          onClick={() => removeIngrediente(index)}
+                          onClick={() => setIngredienteToDeleteIndex(index)}
                           className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                           title="Remover este ingrediente"
                         >
@@ -496,6 +501,19 @@ export default function ReceitaFormPage() {
           </Button>
         </div>
       </form>
+
+      <DeleteConfirmModal
+        isOpen={ingredienteToDeleteIndex !== null}
+        onClose={() => setIngredienteToDeleteIndex(null)}
+        onConfirm={handleConfirmRemoveIngrediente}
+        itemName={
+          ingredienteToDeleteIndex !== null && ingredientes[ingredienteToDeleteIndex]
+            ? insumosData?.content.find(i => i.id === Number(ingredientes[ingredienteToDeleteIndex].insumoId))?.nome
+              ? `o ingrediente "${insumosData.content.find(i => i.id === Number(ingredientes[ingredienteToDeleteIndex].insumoId))?.nome}"`
+              : `o ingrediente #${ingredienteToDeleteIndex + 1}`
+            : 'este ingrediente'
+        }
+      />
     </div>
   )
 }

@@ -88,6 +88,7 @@ export default function App() {
         <Route path="/estoque-insumos/entradas" element={<EntradaInsumoListPage />} />
         <Route path="/estoque-insumos/entradas/nova" element={<EntradaInsumoFormPage />} />
         <Route path="/estoque-insumos/entradas/:id/editar" element={<EntradaInsumoFormPage />} />
+        <Route path="/estoque-insumos/entradas/:id" element={<EntradaInsumoFormPage />} />
         <Route path="/estoque-insumos/saidas" element={<SaidaInsumoListPage />} />
         <Route path="/estoque-insumos/saidas/nova" element={<SaidaInsumoFormPage />} />
         <Route path="/estoque-insumos/estoque" element={<EstoqueInsumoListPage />} />

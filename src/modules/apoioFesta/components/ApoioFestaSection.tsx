@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Plus, Ban, Clock, Trash2 } from 'lucide-react'
 import Modal from '../../../components/ui/Modal'
 import Button from '../../../components/ui/Button'
+import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal'
 import { useApoiosFesta, useCreateApoioFesta, useCancelarApoioFesta } from '../hooks/useApoiosFesta'
 import { ApoioFesta, ApoioFestaInsertForm } from '../types/apoioFesta'
 import { formatCurrency } from '../../../lib/format'
@@ -49,6 +50,13 @@ export default function ApoioFestaSection({
   const [showAdicionar, setShowAdicionar] = useState(false)
   const [defaults, setDefaults] = useState<ApoioFormDefaults | undefined>(undefined)
   const [cancelTarget, setCancelTarget] = useState<ApoioFesta | null>(null)
+  const [itemLocalToDeleteIndex, setItemLocalToDeleteIndex] = useState<number | null>(null)
+
+  function handleConfirmRemoverLocal() {
+    if (itemLocalToDeleteIndex === null) return
+    onRemoverLocal?.(itemLocalToDeleteIndex)
+    setItemLocalToDeleteIndex(null)
+  }
 
   function abrirModal(comDiaInteiro: boolean) {
     setDefaults(comDiaInteiro && dataEntrega ? diaInteiroBrasilia(dataEntrega) : undefined)
@@ -177,7 +185,7 @@ export default function ApoioFestaSection({
                     <td className="py-1.5 text-right">
                       <button
                         type="button"
-                        onClick={() => onRemoverLocal?.(idx)}
+                        onClick={() => setItemLocalToDeleteIndex(idx)}
                         className="p-1 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
                         title="Remover apoio"
                       >
@@ -220,6 +228,17 @@ export default function ApoioFestaSection({
           </Button>
         </div>
       </Modal>
+
+      <DeleteConfirmModal
+        isOpen={itemLocalToDeleteIndex !== null}
+        onClose={() => setItemLocalToDeleteIndex(null)}
+        onConfirm={handleConfirmRemoverLocal}
+        itemName={
+          itemLocalToDeleteIndex !== null && itensLocais[itemLocalToDeleteIndex]
+            ? `o apoio "${itensLocais[itemLocalToDeleteIndex].itemApoioNome}"`
+            : 'este apoio'
+        }
+      />
     </div>
   )
 }

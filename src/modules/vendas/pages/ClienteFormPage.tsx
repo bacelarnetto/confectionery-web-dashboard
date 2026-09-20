@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router'
 import { Plus, Trash2 } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
 import Button from '../../../components/ui/Button'
+import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal'
 import { useCliente, useCreateCliente, useUpdateCliente } from '../hooks/useClientes'
 import { Endereco } from '../types/cliente'
 import ClienteHistoricoPedidos from './ClienteHistoricoPedidos'
@@ -81,8 +82,12 @@ export default function ClienteFormPage() {
     setEnderecos((prev) => [...prev, { ...emptyEndereco }])
   }
 
-  function removeEndereco(index: number) {
-    setEnderecos((prev) => prev.filter((_, i) => i !== index))
+  const [enderecoToDeleteIndex, setEnderecoToDeleteIndex] = useState<number | null>(null)
+
+  function handleConfirmRemoveEndereco() {
+    if (enderecoToDeleteIndex === null) return
+    setEnderecos((prev) => prev.filter((_, i) => i !== enderecoToDeleteIndex))
+    setEnderecoToDeleteIndex(null)
   }
 
   function handleSubmit(e: FormEvent) {
@@ -176,8 +181,9 @@ export default function ClienteFormPage() {
                 <span className="text-sm font-medium text-gray-600">Endereço {index + 1}</span>
                 <button
                   type="button"
-                  onClick={() => removeEndereco(index)}
-                  className="p-1 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                  onClick={() => setEnderecoToDeleteIndex(index)}
+                  className="p-1 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                  title="Remover endereço"
                 >
                   <Trash2 size={14} />
                 </button>
@@ -240,6 +246,19 @@ export default function ClienteFormPage() {
           <ClienteHistoricoPedidos clienteId={numericId} />
         </div>
       )}
+
+      <DeleteConfirmModal
+        isOpen={enderecoToDeleteIndex !== null}
+        onClose={() => setEnderecoToDeleteIndex(null)}
+        onConfirm={handleConfirmRemoveEndereco}
+        itemName={
+          enderecoToDeleteIndex !== null && enderecos[enderecoToDeleteIndex]
+            ? enderecos[enderecoToDeleteIndex].descricao
+              ? `o endereço "${enderecos[enderecoToDeleteIndex].descricao}"`
+              : `o endereço #${enderecoToDeleteIndex + 1}`
+            : 'este endereço'
+        }
+      />
     </div>
   )
 }

@@ -4,6 +4,7 @@ import { Plus, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 import PageHeader from '../../../components/ui/PageHeader'
 import Button from '../../../components/ui/Button'
+import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal'
 import { useCompra, useCreateCompra, useUpdateCompra } from '../hooks/useCompras'
 import { useFornecedores } from '../hooks/useFornecedores'
 import InsumoField from '../../estoqueInsumos/components/InsumoField'
@@ -75,8 +76,12 @@ export default function CompraFormPage() {
     setItens((prev) => [...prev, emptyItem()])
   }
 
-  function removeItem(index: number) {
-    setItens((prev) => prev.filter((_, i) => i !== index))
+  const [itemToDeleteIndex, setItemToDeleteIndex] = useState<number | null>(null)
+
+  function handleConfirmRemoveItem() {
+    if (itemToDeleteIndex === null) return
+    setItens((prev) => prev.filter((_, i) => i !== itemToDeleteIndex))
+    setItemToDeleteIndex(null)
   }
 
   function buildItens(): ItemCompra[] {
@@ -274,7 +279,7 @@ export default function CompraFormPage() {
                 <div className="col-span-1 flex justify-center">
                   <button
                     type="button"
-                    onClick={() => removeItem(index)}
+                    onClick={() => setItemToDeleteIndex(index)}
                     disabled={itens.length === 1}
                     className="p-1.5 rounded text-gray-300 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-30 transition-colors cursor-pointer"
                     title="Remover item"
@@ -317,6 +322,13 @@ export default function CompraFormPage() {
           </Button>
         </div>
       </form>
+
+      <DeleteConfirmModal
+        isOpen={itemToDeleteIndex !== null}
+        onClose={() => setItemToDeleteIndex(null)}
+        onConfirm={handleConfirmRemoveItem}
+        itemName={itemToDeleteIndex !== null ? `o item #${itemToDeleteIndex + 1}` : 'este item'}
+      />
     </div>
   )
 }

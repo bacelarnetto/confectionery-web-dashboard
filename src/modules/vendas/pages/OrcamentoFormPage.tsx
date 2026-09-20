@@ -5,6 +5,7 @@ import PageHeader from '../../../components/ui/PageHeader'
 import Button from '../../../components/ui/Button'
 import Badge from '../../../components/ui/Badge'
 import Modal from '../../../components/ui/Modal'
+import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal'
 import { useOrcamento, useCreateOrcamento, useUpdateOrcamento, useUpdateOrcamentoStatus, useDownloadOrcamentoPdf } from '../hooks/useOrcamentos'
 import { useClientes } from '../hooks/useClientes'
 import EnderecoClienteField from '../components/EnderecoClienteField'
@@ -175,8 +176,12 @@ export default function OrcamentoFormPage() {
     setItens((prev) => [...prev, { ...emptyItem }])
   }
 
-  function removeItem(index: number) {
-    setItens((prev) => prev.filter((_, i) => i !== index))
+  const [itemToDeleteIndex, setItemToDeleteIndex] = useState<number | null>(null)
+
+  function handleConfirmRemoveItem() {
+    if (itemToDeleteIndex === null) return
+    setItens((prev) => prev.filter((_, i) => i !== itemToDeleteIndex))
+    setItemToDeleteIndex(null)
   }
 
   function buildItens() {
@@ -464,8 +469,9 @@ export default function OrcamentoFormPage() {
                     {!isReadOnly && itens.length > 1 && (
                       <button
                         type="button"
-                        onClick={() => removeItem(index)}
-                        className="p-1 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                        onClick={() => setItemToDeleteIndex(index)}
+                        className="p-1 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                        title="Remover este item"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -629,6 +635,19 @@ export default function OrcamentoFormPage() {
           </Button>
         </div>
       </Modal>
+
+      <DeleteConfirmModal
+        isOpen={itemToDeleteIndex !== null}
+        onClose={() => setItemToDeleteIndex(null)}
+        onConfirm={handleConfirmRemoveItem}
+        itemName={
+          itemToDeleteIndex !== null && itens[itemToDeleteIndex]
+            ? itens[itemToDeleteIndex].produtoId
+              ? `o item ${itemToDeleteIndex + 1} (${produtosData?.content.find(p => p.id === Number(itens[itemToDeleteIndex].produtoId))?.nome ?? `Produto #${itens[itemToDeleteIndex].produtoId}`})`
+              : `o item ${itemToDeleteIndex + 1}`
+            : 'este item'
+        }
+      />
     </div>
   )
 }

@@ -1,15 +1,29 @@
 import { useState, useEffect, FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router'
-import { Plus, Trash2, AlertCircle, Info, X, ShoppingCart, FileText } from 'lucide-react'
+import { useAuth } from 'react-oidc-context'
+import { Plus, Trash2, AlertCircle, Info, X, ShoppingCart, FileText, Lock } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
 import Button from '../../../components/ui/Button'
+import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal'
 import { useEntradaInsumo, useCreateEntradaInsumo, useUpdateEntradaInsumo } from '../hooks/useEntradasInsumo'
 import { useInsumos } from '../hooks/useInsumos'
 import { ItemEntradaInsumo } from '../types/entradaInsumo'
 import { Insumo } from '../types/insumo'
 import { parseApiError } from '../../../lib/apiError'
+import { hasRole } from '../../../lib/auth'
+import { formatCurrency } from '../../../lib/format'
 
 type CampoItem = 'quantidade' | 'dataValidade' | 'dataFabricacao' | 'lote'
+
+function formatData(dateStr?: string): string {
+  if (!dateStr) return '—'
+  try {
+    const d = new Date(dateStr)
+    return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(d)
+  } catch {
+    return dateStr
+  }
+}
 
 /**
  * O backend não devolve erro estruturado por campo — só uma frase livre com "(insumoId=X)"
@@ -80,10 +94,16 @@ function Field({
 const inputClass =
   'w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent placeholder:text-gray-400'
 
+const inputClassReadOnly =
+  'w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 text-gray-900 font-medium cursor-default focus:outline-none'
+
 export default function EntradaInsumoFormPage() {
   const navigate = useNavigate()
+  const auth = useAuth()
+  const isAdmin = hasRole(auth.user, 'ADMIN')
   const { id } = useParams<{ id: string }>()
   const isEditing = !!id
+  const isReadOnly = isEditing && !isAdmin
   const numericId = Number(id ?? 0)
 
   const { data: entrada, isLoading } = useEntradaInsumo(numericId)
@@ -138,8 +158,12 @@ export default function EntradaInsumoFormPage() {
     ])
   }
 
-  function removeItem(index: number) {
-    setItens((prev) => prev.filter((_, i) => i !== index))
+  const [itemToDeleteIndex, setItemToDeleteIndex] = useState<number | null>(null)
+
+  function handleConfirmRemoveItem() {
+    if (itemToDeleteIndex === null) return
+    setItens((prev) => prev.filter((_, i) => i !== itemToDeleteIndex))
+    setItemToDeleteIndex(null)
   }
 
   function updateItem(index: number, field: string, value: string | number) {
@@ -179,6 +203,7 @@ export default function EntradaInsumoFormPage() {
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
+    if (isReadOnly) return
     setErroGeral(null)
     setItemErros({})
 
@@ -246,100 +271,149 @@ export default function EntradaInsumoFormPage() {
     )
   }
 
+  if (!isEditing && !isAdmin) {
+    return (
+      <div className="max-w-md mx-auto py-16 text-center space-y-4">
+        <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-50 flex items-center justify-center border border-amber-200">
+          <Lock size={24} className="text-amber-600" />
+        </div>
+        <div>
+          <h2 className="text-lg font-semibold text-gray-900">Acesso Restrito</h2>
+          <p className="mt-1 text-sm text-gray-500 leading-relaxed">
+            Apenas administradores podem cadastrar novas entradas de insumo no estoque.
+          </p>
+        </div>
+        <Button variant="secondary" onClick={() => navigate('/estoque-insumos/entradas')}>
+          Voltar para Entradas
+        </Button>
+      </div>
+    )
+  }
+
   return (
     <div className="max-w-4xl">
       <PageHeader
-        title={isEditing ? 'Editar Entrada' : 'Nova Entrada'}
-        subtitle={isEditing ? 'Atualize os dados da entrada' : 'Cadastre uma nova entrada de insumo'}
+        title={isReadOnly ? `Visualizar Entrada #${numericId}` : isEditing ? 'Editar Entrada' : 'Nova Entrada'}
+        subtitle={
+          isReadOnly
+            ? 'Visualize os dados e os insumos desta entrada (somente leitura)'
+            : isEditing
+            ? 'Atualize os dados da entrada'
+            : 'Cadastre uma nova entrada de insumo'
+        }
         backTo="/estoque-insumos/entradas"
       >
-        <div className="relative group">
-          <button
-            type="button"
-            onClick={() => setShowGuia((v) => !v)}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-all cursor-pointer shadow-xs ${
-              showGuia
-                ? 'bg-blue-600 text-white border-blue-600'
-                : 'text-blue-700 bg-blue-50 hover:bg-blue-100 border-blue-200'
-            }`}
-            title="Clique ou passe o mouse para ver as orientações sobre os campos"
-          >
-            <Info size={14} />
-            {isEditing ? 'Orientações da Entrada' : 'Orientações de Preenchimento'}
-          </button>
+        <div className="flex items-center gap-2">
+          {isReadOnly && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs">
+              <Lock size={13} />
+              Somente Leitura
+            </span>
+          )}
 
-          <div
-            className={`absolute right-0 top-full pt-2 w-96 max-w-[90vw] z-50 transition-all duration-150 ${
-              showGuia
-                ? 'opacity-100 visible pointer-events-auto'
-                : 'opacity-0 invisible group-hover:opacity-100 group-hover:visible pointer-events-none group-hover:pointer-events-auto'
-            }`}
-          >
-            <div className="p-4 bg-white border border-gray-200 rounded-xl shadow-2xl text-gray-800">
-              <div className="flex items-center justify-between gap-2 mb-2.5 pb-2 border-b border-gray-100">
-                <div className="flex items-center gap-2">
-                  <Info size={16} className="text-blue-600 shrink-0" />
-                  <h4 className="font-semibold text-gray-900 text-xs">
-                    {isEditing ? 'Atualização da Entrada e dos Insumos' : 'Orientações para Preenchimento da Entrada'}
-                  </h4>
-                </div>
-                {showGuia && (
-                  <button
-                    type="button"
-                    onClick={() => setShowGuia(false)}
-                    className="text-gray-400 hover:text-gray-600 p-0.5 rounded cursor-pointer"
-                    title="Fechar"
-                  >
-                    <X size={14} />
-                  </button>
-                )}
-              </div>
+          <div className="relative group">
+            <button
+              type="button"
+              onClick={() => setShowGuia((v) => !v)}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-all cursor-pointer shadow-xs ${
+                showGuia
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'text-blue-700 bg-blue-50 hover:bg-blue-100 border-blue-200'
+              }`}
+              title="Clique ou passe o mouse para ver as orientações sobre os campos"
+            >
+              <Info size={14} />
+              {isEditing ? 'Orientações da Entrada' : 'Orientações de Preenchimento'}
+            </button>
 
-            <p className="text-xs text-gray-600 mb-3 leading-relaxed">
-              {isEditing
-                ? 'Ao editar esta entrada, você pode atualizar os dados fiscais e os atributos de cada insumo que deu entrada no estoque:'
-                : 'Nova entrada manual de insumo no estoque. Informe os dados fiscais e os atributos dos insumos recebidos:'}
-            </p>
-
-            <div className="space-y-2.5 text-xs">
-              {isEditing && entrada?.compraId && (
-                <div className="bg-amber-50 p-2.5 rounded-lg border border-amber-200">
-                  <span className="font-semibold block text-amber-950 mb-0.5">🛒 Entrada via Compra #{entrada.compraId}:</span>
-                  <p className="text-amber-900 leading-relaxed text-[11px]">
-                    Certifique-se de preencher os dados de conferência física dos insumos recebidos: <strong>Lote</strong>, <strong>Data de Fabricação</strong> e <strong>Data de Vencimento</strong> em cada item.
-                  </p>
-                </div>
-              )}
-
-              <div className="bg-blue-50/70 p-2.5 rounded-lg border border-blue-100">
-                <span className="font-semibold block text-blue-950 mb-1">📦 Itens de Insumo:</span>
-                <ul className="list-disc list-inside space-y-1 text-blue-900">
-                  <li><strong>Quantidade:</strong> volume recebido que sensibiliza o estoque;</li>
-                  <li><strong>Lote:</strong> código de lote (obrigatório se perecível 🌡);</li>
-                  <li><strong>Data de Fabricação, Data de Vencimento e Custo Unitário:</strong> obrigatórios em entrada{' '}
-                    <strong>manual</strong> (e também se o insumo for perecível 🌡) — numa entrada via Compra, dá pra
-                    deixar em branco e preencher depois, ao confirmar a conferência física.</li>
-                </ul>
-              </div>
-
-              <div className="bg-gray-50 p-2.5 rounded-lg border border-gray-200">
-                <span className="font-semibold block text-gray-900 mb-1">📋 Dados Gerais da Entrada:</span>
-                <ul className="list-disc list-inside space-y-0.5 text-gray-600">
-                  {isEditing ? (
-                    <li><strong>Origem & NF:</strong> origem da entrada (compra ou manual) e número da NF;</li>
-                  ) : (
-                    <li><strong>Nota Fiscal (NF):</strong> número da NF associada à entrada;</li>
+            <div
+              className={`absolute right-0 top-full pt-2 w-96 max-w-[90vw] z-50 transition-all duration-150 ${
+                showGuia
+                  ? 'opacity-100 visible pointer-events-auto'
+                  : 'opacity-0 invisible group-hover:opacity-100 group-hover:visible pointer-events-none group-hover:pointer-events-auto'
+              }`}
+            >
+              <div className="p-4 bg-white border border-gray-200 rounded-xl shadow-2xl text-gray-800">
+                <div className="flex items-center justify-between gap-2 mb-2.5 pb-2 border-b border-gray-100">
+                  <div className="flex items-center gap-2">
+                    <Info size={16} className="text-blue-600 shrink-0" />
+                    <h4 className="font-semibold text-gray-900 text-xs">
+                      {isEditing ? 'Atualização da Entrada e dos Insumos' : 'Orientações para Preenchimento da Entrada'}
+                    </h4>
+                  </div>
+                  {showGuia && (
+                    <button
+                      type="button"
+                      onClick={() => setShowGuia(false)}
+                      className="text-gray-400 hover:text-gray-600 p-0.5 rounded cursor-pointer"
+                      title="Fechar"
+                    >
+                      <X size={14} />
+                    </button>
                   )}
-                  <li><strong>Valores Adicionais:</strong> frete e impostos incidentes;</li>
-                  <li><strong>Valor Total:</strong> valor consolidado da entrada;</li>
-                  <li><strong>Usuário ID:</strong> responsável pelo registro da entrada.</li>
-                </ul>
+                </div>
+
+              <p className="text-xs text-gray-600 mb-3 leading-relaxed">
+                {isEditing
+                  ? 'Ao consultar ou editar esta entrada, você pode verificar os dados fiscais e os atributos de cada insumo que deu entrada no estoque:'
+                  : 'Nova entrada manual de insumo no estoque. Informe os dados fiscais e os atributos dos insumos recebidos:'}
+              </p>
+
+              <div className="space-y-2.5 text-xs">
+                {isEditing && entrada?.compraId && (
+                  <div className="bg-amber-50 p-2.5 rounded-lg border border-amber-200">
+                    <span className="font-semibold block text-amber-950 mb-0.5">🛒 Entrada via Compra #{entrada.compraId}:</span>
+                    <p className="text-amber-900 leading-relaxed text-[11px]">
+                      Certifique-se de preencher os dados de conferência física dos insumos recebidos: <strong>Lote</strong>, <strong>Data de Fabricação</strong> e <strong>Data de Vencimento</strong> em cada item.
+                    </p>
+                  </div>
+                )}
+
+                <div className="bg-blue-50/70 p-2.5 rounded-lg border border-blue-100">
+                  <span className="font-semibold block text-blue-950 mb-1">📦 Itens de Insumo:</span>
+                  <ul className="list-disc list-inside space-y-1 text-blue-900">
+                    <li><strong>Quantidade:</strong> volume recebido que sensibiliza o estoque;</li>
+                    <li><strong>Lote:</strong> código de lote (obrigatório se perecível 🌡);</li>
+                    <li><strong>Data de Fabricação, Data de Vencimento e Custo Unitário:</strong> obrigatórios em entrada{' '}
+                      <strong>manual</strong> (e também se o insumo for perecível 🌡) — numa entrada via Compra, dá pra
+                      deixar em branco e preencher depois, ao confirmar a conferência física.</li>
+                  </ul>
+                </div>
+
+                <div className="bg-gray-50 p-2.5 rounded-lg border border-gray-200">
+                  <span className="font-semibold block text-gray-900 mb-1">📋 Dados Gerais da Entrada:</span>
+                  <ul className="list-disc list-inside space-y-0.5 text-gray-600">
+                    {isEditing ? (
+                      <li><strong>Origem & NF:</strong> origem da entrada (compra ou manual) e número da NF;</li>
+                    ) : (
+                      <li><strong>Nota Fiscal (NF):</strong> número da NF associada à entrada;</li>
+                    )}
+                    <li><strong>Valores Adicionais:</strong> frete e impostos incidentes;</li>
+                    <li><strong>Valor Total:</strong> valor consolidado da entrada;</li>
+                    <li><strong>Usuário ID:</strong> responsável pelo registro da entrada.</li>
+                  </ul>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
     </PageHeader>
+
+      {isReadOnly && (
+        <div className="mb-5 flex items-start gap-3 p-4 bg-amber-50/80 border border-amber-200 rounded-xl text-amber-900 text-sm shadow-2xs">
+          <Lock size={18} className="text-amber-700 shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold text-amber-950">Visualização de Entrada (Somente Leitura)</p>
+            <p className="text-xs text-amber-800 mt-0.5 leading-relaxed">
+              Para editar ou alterar uma entrada de insumo é necessário ter permissão de <strong>Administrador</strong>.
+              {entrada?.compraId
+                ? ` Esta entrada originou-se da Compra #${entrada.compraId}. Você pode consultar os detalhes do pedido e a conferência física dos insumos abaixo.`
+                : ' Você pode consultar todos os dados e itens conferidos desta entrada abaixo.'}
+            </p>
+          </div>
+        </div>
+      )}
 
       {erroGeral && (
         <div className="mb-4 flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
@@ -353,11 +427,21 @@ export default function EntradaInsumoFormPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             {isEditing && (
               <Field label="Origem">
-                <div className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 text-gray-700 font-medium">
+                <div className="flex items-center justify-between gap-2 px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 text-gray-700 font-medium">
                   {entrada?.compraId ? (
                     <>
-                      <ShoppingCart size={15} className="text-blue-600 shrink-0" />
-                      <span className="text-blue-700 font-semibold">Compra #{entrada.compraId}</span>
+                      <div className="flex items-center gap-2">
+                        <ShoppingCart size={15} className="text-blue-600 shrink-0" />
+                        <span className="text-blue-700 font-semibold">Compra #{entrada.compraId}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => navigate('/compras/compras')}
+                        className="text-xs text-blue-600 hover:text-blue-800 font-semibold underline cursor-pointer"
+                        title="Ver pedidos de compra"
+                      >
+                        Ver Compras
+                      </button>
                     </>
                   ) : (
                     <>
@@ -369,15 +453,16 @@ export default function EntradaInsumoFormPage() {
               </Field>
             )}
 
-            <Field label="Valor Total" required>
+            <Field label="Valor Total" required={!isReadOnly}>
               <input
                 name="valorTotal"
-                type="number"
+                type={isReadOnly ? 'text' : 'number'}
                 step="0.01"
-                value={form.valorTotal}
+                value={isReadOnly ? formatCurrency(Number(form.valorTotal) || 0) : form.valorTotal}
                 onChange={handleChange}
-                required
-                className={inputClass}
+                required={!isReadOnly}
+                readOnly={isReadOnly}
+                className={isReadOnly ? inputClassReadOnly : inputClass}
                 placeholder="0,00"
               />
             </Field>
@@ -385,35 +470,38 @@ export default function EntradaInsumoFormPage() {
             <Field label="Valor Frete">
               <input
                 name="valorFrete"
-                type="number"
+                type={isReadOnly ? 'text' : 'number'}
                 step="0.01"
-                value={form.valorFrete}
+                value={isReadOnly ? (form.valorFrete ? formatCurrency(Number(form.valorFrete)) : '—') : form.valorFrete}
                 onChange={handleChange}
-                className={inputClass}
-                placeholder="0,00"
+                readOnly={isReadOnly}
+                className={isReadOnly ? inputClassReadOnly : inputClass}
+                placeholder={isReadOnly ? '—' : '0,00'}
               />
             </Field>
 
             <Field label="NF">
               <input
                 name="numeroNotaFiscal"
-                type="number"
-                value={form.numeroNotaFiscal}
+                type={isReadOnly ? 'text' : 'number'}
+                value={form.numeroNotaFiscal || (isReadOnly ? '—' : '')}
                 onChange={handleChange}
-                className={inputClass}
-                placeholder="Número da NF"
+                readOnly={isReadOnly}
+                className={isReadOnly ? inputClassReadOnly : inputClass}
+                placeholder={isReadOnly ? '—' : 'Número da NF'}
               />
             </Field>
 
             <Field label="Valor Imposto">
               <input
                 name="valorImposto"
-                type="number"
+                type={isReadOnly ? 'text' : 'number'}
                 step="0.01"
-                value={form.valorImposto}
+                value={isReadOnly ? (form.valorImposto ? formatCurrency(Number(form.valorImposto)) : '—') : form.valorImposto}
                 onChange={handleChange}
-                className={inputClass}
-                placeholder="0,00"
+                readOnly={isReadOnly}
+                className={isReadOnly ? inputClassReadOnly : inputClass}
+                placeholder={isReadOnly ? '—' : '0,00'}
               />
             </Field>
           </div>
@@ -424,14 +512,16 @@ export default function EntradaInsumoFormPage() {
                 <h3 className="text-sm font-semibold text-gray-900">Itens da Entrada</h3>
                 <p className="text-xs text-gray-500">Insumos que darão entrada no estoque</p>
               </div>
-              <button
-                type="button"
-                onClick={addItem}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors"
-              >
-                <Plus size={16} />
-                Adicionar item
-              </button>
+              {!isReadOnly && (
+                <button
+                  type="button"
+                  onClick={addItem}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors cursor-pointer"
+                >
+                  <Plus size={16} />
+                  Adicionar item
+                </button>
+              )}
             </div>
 
             {itens.length === 0 ? (
@@ -474,15 +564,17 @@ export default function EntradaInsumoFormPage() {
                           )}
                         </div>
 
-                        <button
-                          type="button"
-                          onClick={() => removeItem(index)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                          title="Remover este item"
-                        >
-                          <Trash2 size={14} />
-                          <span>Remover</span>
-                        </button>
+                        {!isReadOnly && (
+                          <button
+                            type="button"
+                            onClick={() => setItemToDeleteIndex(index)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                            title="Remover este item"
+                          >
+                            <Trash2 size={14} />
+                            <span>Remover</span>
+                          </button>
+                        )}
                       </div>
 
                       {/* Grid de Campos em 2 Linhas */}
@@ -490,37 +582,47 @@ export default function EntradaInsumoFormPage() {
                         {/* Linha 1: Insumo (Ocupa 2 colunas) */}
                         <div className="sm:col-span-2 md:col-span-2">
                           <label className="block text-xs font-medium text-gray-700 mb-1">
-                            Insumo <span className="text-red-500">*</span>
+                            Insumo {!isReadOnly && <span className="text-red-500">*</span>}
                           </label>
-                          <select
-                            value={item.insumoId}
-                            onChange={(e) => updateItem(index, 'insumoId', Number(e.target.value))}
-                            className={inputClass}
-                            required
-                          >
-                            <option value={0}>Selecione um insumo...</option>
-                            {insumos.map((ins) => (
-                              <option key={ins.id} value={ins.id}>
-                                {ins.nome}{ins.perecivel ? ' 🌡' : ''}
-                              </option>
-                            ))}
-                          </select>
+                          {isReadOnly ? (
+                            <div className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 text-gray-900 font-semibold truncate">
+                              {insumo ? insumo.nome : `Insumo #${item.insumoId}`}
+                              {insumo?.marca ? ` — ${insumo.marca}` : ''}
+                              {insumo?.unidadeMedida ? ` (${insumo.unidadeMedida})` : ''}
+                              {perecivel ? ' 🌡' : ''}
+                            </div>
+                          ) : (
+                            <select
+                              value={item.insumoId}
+                              onChange={(e) => updateItem(index, 'insumoId', Number(e.target.value))}
+                              className={inputClass}
+                              required
+                            >
+                              <option value={0}>Selecione um insumo...</option>
+                              {insumos.map((ins) => (
+                                <option key={ins.id} value={ins.id}>
+                                  {ins.nome}{ins.perecivel ? ' 🌡' : ''}
+                                </option>
+                              ))}
+                            </select>
+                          )}
                         </div>
 
                         {/* Linha 1: Quantidade */}
                         <div className="sm:col-span-1 md:col-span-1">
                           <label className="block text-xs font-medium text-gray-700 mb-1">
-                            Quantidade <span className="text-red-500">*</span>
+                            Quantidade {!isReadOnly && <span className="text-red-500">*</span>}
                           </label>
                           <input
-                            type="number"
+                            type={isReadOnly ? 'text' : 'number'}
                             step="0.01"
                             min="0.01"
                             placeholder="0,00"
-                            value={item.quantidade || ''}
+                            value={isReadOnly ? `${item.quantidade || 0} ${insumo?.unidadeMedida ?? ''}`.trim() : (item.quantidade || '')}
                             onChange={(e) => updateItem(index, 'quantidade', Number(e.target.value))}
-                            required
-                            className={`${inputClass} ${itemErro?.campo === 'quantidade' ? 'border-red-400 bg-red-50/50' : ''}`}
+                            required={!isReadOnly}
+                            readOnly={isReadOnly}
+                            className={isReadOnly ? inputClassReadOnly : `${inputClass} ${itemErro?.campo === 'quantidade' ? 'border-red-400 bg-red-50/50' : ''}`}
                           />
                           {itemErro?.campo === 'quantidade' && (
                             <p className="text-xs text-red-600 mt-1">{itemErro.mensagem}</p>
@@ -530,15 +632,16 @@ export default function EntradaInsumoFormPage() {
                         {/* Linha 1: Lote */}
                         <div className="sm:col-span-1 md:col-span-1">
                           <label className="block text-xs font-medium text-gray-700 mb-1">
-                            Lote {perecivel && <span className="text-red-500">*</span>}
+                            Lote {!isReadOnly && perecivel && <span className="text-red-500">*</span>}
                           </label>
                           <input
                             type="text"
-                            placeholder={perecivel ? 'Obrigatório (perecível)' : 'Lote (opcional)'}
-                            value={item.lote ?? ''}
+                            placeholder={isReadOnly ? 'Não informado' : perecivel ? 'Obrigatório (perecível)' : 'Lote (opcional)'}
+                            value={item.lote ?? (isReadOnly ? 'Não informado' : '')}
                             onChange={(e) => updateItem(index, 'lote', e.target.value)}
-                            required={perecivel}
-                            className={`${inputClass} ${(perecivel && !item.lote) || itemErro?.campo === 'lote' ? 'border-red-400 bg-red-50/50' : ''}`}
+                            required={!isReadOnly && perecivel}
+                            readOnly={isReadOnly}
+                            className={isReadOnly ? `${inputClassReadOnly} ${!item.lote ? 'text-gray-400 italic' : ''}` : `${inputClass} ${(perecivel && !item.lote) || itemErro?.campo === 'lote' ? 'border-red-400 bg-red-50/50' : ''}`}
                           />
                           {itemErro?.campo === 'lote' && (
                             <p className="text-xs text-red-600 mt-1">{itemErro.mensagem}</p>
@@ -548,14 +651,15 @@ export default function EntradaInsumoFormPage() {
                         {/* Linha 2: Data Fabricação */}
                         <div className="sm:col-span-1 md:col-span-1">
                           <label className="block text-xs font-medium text-gray-700 mb-1">
-                            Data Fabricação {isManual && <span className="text-red-500">*</span>}
+                            Data Fabricação {!isReadOnly && isManual && <span className="text-red-500">*</span>}
                           </label>
                           <input
-                            type="date"
-                            value={item.dataFabricacao?.split('T')[0] || ''}
+                            type={isReadOnly ? 'text' : 'date'}
+                            value={isReadOnly ? (item.dataFabricacao ? formatData(item.dataFabricacao) : 'Não informada') : (item.dataFabricacao?.split('T')[0] || '')}
                             onChange={(e) => updateItem(index, 'dataFabricacao', e.target.value)}
-                            required={isManual}
-                            className={`${inputClass} ${(isManual && !item.dataFabricacao) || itemErro?.campo === 'dataFabricacao' ? 'border-red-400 bg-red-50/50' : ''}`}
+                            required={!isReadOnly && isManual}
+                            readOnly={isReadOnly}
+                            className={isReadOnly ? `${inputClassReadOnly} ${!item.dataFabricacao ? 'text-gray-400 italic' : ''}` : `${inputClass} ${(isManual && !item.dataFabricacao) || itemErro?.campo === 'dataFabricacao' ? 'border-red-400 bg-red-50/50' : ''}`}
                             title={isManual ? 'Data de fabricação do lote (obrigatória em entrada manual)' : 'Data de fabricação do lote'}
                           />
                           {itemErro?.campo === 'dataFabricacao' && (
@@ -566,14 +670,15 @@ export default function EntradaInsumoFormPage() {
                         {/* Linha 2: Data Vencimento */}
                         <div className="sm:col-span-1 md:col-span-1">
                           <label className="block text-xs font-medium text-gray-700 mb-1">
-                            Data Vencimento {dataVencimentoObrigatoria && <span className="text-red-500">*</span>}
+                            Data Vencimento {!isReadOnly && dataVencimentoObrigatoria && <span className="text-red-500">*</span>}
                           </label>
                           <input
-                            type="date"
-                            value={item.dataValidade?.split('T')[0] || ''}
+                            type={isReadOnly ? 'text' : 'date'}
+                            value={isReadOnly ? (item.dataValidade ? formatData(item.dataValidade) : 'Não informada') : (item.dataValidade?.split('T')[0] || '')}
                             onChange={(e) => updateItem(index, 'dataValidade', e.target.value)}
-                            required={dataVencimentoObrigatoria}
-                            className={`${inputClass} ${(dataVencimentoObrigatoria && !item.dataValidade) || itemErro?.campo === 'dataValidade' ? 'border-red-400 bg-red-50/50' : ''}`}
+                            required={!isReadOnly && dataVencimentoObrigatoria}
+                            readOnly={isReadOnly}
+                            className={isReadOnly ? `${inputClassReadOnly} ${!item.dataValidade ? 'text-gray-400 italic' : ''}` : `${inputClass} ${(dataVencimentoObrigatoria && !item.dataValidade) || itemErro?.campo === 'dataValidade' ? 'border-red-400 bg-red-50/50' : ''}`}
                             title={perecivel ? 'Data de validade/vencimento obrigatória para insumos perecíveis' : isManual ? 'Data de vencimento (obrigatória em entrada manual)' : 'Data de vencimento'}
                           />
                           {itemErro?.campo === 'dataValidade' && (
@@ -584,17 +689,18 @@ export default function EntradaInsumoFormPage() {
                         {/* Linha 2: Custo Unitário */}
                         <div className="sm:col-span-1 md:col-span-1">
                           <label className="block text-xs font-medium text-gray-700 mb-1">
-                            Custo Unitário (R$) {isManual && <span className="text-red-500">*</span>}
+                            Custo Unitário (R$) {!isReadOnly && isManual && <span className="text-red-500">*</span>}
                           </label>
                           <input
-                            type="number"
+                            type={isReadOnly ? 'text' : 'number'}
                             step="0.01"
                             min={isManual ? '0.01' : undefined}
                             placeholder="0,00"
-                            value={item.valorCustoUnitario || ''}
+                            value={isReadOnly ? (item.valorCustoUnitario ? formatCurrency(item.valorCustoUnitario) : 'Não informado') : (item.valorCustoUnitario || '')}
                             onChange={(e) => updateItem(index, 'valorCustoUnitario', Number(e.target.value))}
-                            required={isManual}
-                            className={`${inputClass} ${isManual && !item.valorCustoUnitario ? 'border-red-400 bg-red-50/50' : ''}`}
+                            required={!isReadOnly && isManual}
+                            readOnly={isReadOnly}
+                            className={isReadOnly ? `${inputClassReadOnly} ${!item.valorCustoUnitario ? 'text-gray-400 italic' : ''}` : `${inputClass} ${isManual && !item.valorCustoUnitario ? 'border-red-400 bg-red-50/50' : ''}`}
                             title={isManual ? 'Custo unitário (obrigatório em entrada manual) — evita que o valor imobilizado do insumo fique zerado sem aviso' : 'Custo unitário'}
                           />
                         </div>
@@ -605,12 +711,10 @@ export default function EntradaInsumoFormPage() {
                             Custo Total (R$)
                           </label>
                           <input
-                            type="number"
-                            step="0.01"
-                            placeholder="0,00"
-                            value={item.valorCustoTotal || ''}
+                            type="text"
+                            value={formatCurrency(item.valorCustoTotal || 0)}
                             readOnly
-                            className={`${inputClass} bg-gray-100/80 font-medium text-gray-600 cursor-not-allowed`}
+                            className={`${inputClassReadOnly} font-semibold`}
                             title="Calculado automaticamente: Quantidade × Custo Unitário"
                           />
                         </div>
@@ -625,7 +729,7 @@ export default function EntradaInsumoFormPage() {
                 🌡 Insumos perecíveis exigem lote e data de validade.
               </p>
             )}
-            {isManual && itens.length > 0 && (
+            {!isReadOnly && isManual && itens.length > 0 && (
               <p className="text-xs text-amber-600 mt-2">
                 📋 Entrada manual exige data de fabricação, data de vencimento e custo unitário em todos os itens.
               </p>
@@ -634,18 +738,43 @@ export default function EntradaInsumoFormPage() {
         </div>
 
         <div className="flex items-center justify-end gap-3 mt-5">
-          <button
-            type="button"
-            onClick={() => navigate('/estoque-insumos/entradas')}
-            className="px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
-          >
-            Cancelar
-          </button>
-          <Button type="submit" isLoading={isPending}>
-            {isEditing ? 'Salvar alterações' : 'Cadastrar entrada'}
-          </Button>
+          {isReadOnly ? (
+            <button
+              type="button"
+              onClick={() => navigate('/estoque-insumos/entradas')}
+              className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer shadow-xs"
+            >
+              Voltar para Entradas
+            </button>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => navigate('/estoque-insumos/entradas')}
+                className="px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 transition-colors cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <Button type="submit" isLoading={isPending}>
+                {isEditing ? 'Salvar alterações' : 'Cadastrar entrada'}
+              </Button>
+            </>
+          )}
         </div>
       </form>
+
+      <DeleteConfirmModal
+        isOpen={itemToDeleteIndex !== null}
+        onClose={() => setItemToDeleteIndex(null)}
+        onConfirm={handleConfirmRemoveItem}
+        itemName={
+          itemToDeleteIndex !== null && itens[itemToDeleteIndex]
+            ? insumosData?.content.find(i => i.id === itens[itemToDeleteIndex].insumoId)?.nome
+              ? `o item "${insumosData.content.find(i => i.id === itens[itemToDeleteIndex].insumoId)?.nome}"`
+              : `o item #${itemToDeleteIndex + 1}`
+            : 'este item'
+        }
+      />
     </div>
   )
 }

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
 import Table from '../../../components/ui/Table'
-import Modal from '../../../components/ui/Modal'
+import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal'
 import { useParametrizacaoAlertasProduto, useDeleteParametrizacaoAlertaProduto } from '../hooks/useParametrizacaoAlertasProduto'
 
 const TABLE_HEADERS = ['ID', 'Produto', 'Qtd Mínima', 'Dias Vencimento', 'Ações']
@@ -76,17 +76,13 @@ export default function ParametrizacaoAlertaProdutoListPage() {
         )}
       </Table>
 
-      <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="Confirmar exclusão">
-        <p className="text-sm text-gray-600 mb-5">
-          Tem certeza que deseja remover a parametrização <span className="font-semibold">#{deleteTarget?.id}</span>?
-        </p>
-        <div className="flex justify-end gap-2">
-          <button onClick={() => setDeleteTarget(null)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">Cancelar</button>
-          <button onClick={handleDeleteConfirm} disabled={deleteMutation.isPending} className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-60">
-            {deleteMutation.isPending ? 'Removendo...' : 'Remover'}
-          </button>
-        </div>
-      </Modal>
+      <DeleteConfirmModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDeleteConfirm}
+        itemName={`parametrização #${deleteTarget?.id}`}
+        isPending={deleteMutation.isPending}
+      />
     </div>
   )
 }

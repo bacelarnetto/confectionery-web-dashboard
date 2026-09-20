@@ -4,6 +4,7 @@ import { ImagePlus, Trash2, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 import PageHeader from '../../../components/ui/PageHeader'
 import Button from '../../../components/ui/Button'
+import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal'
 import {
   useDadosEmissor,
   useUpdateDadosEmissor,
@@ -83,6 +84,7 @@ export default function DadosEmissorFormPage() {
   const [arquivoSelecionado, setArquivoSelecionado] = useState<File | null>(null)
   const [previewLocal, setPreviewLocal] = useState<string | null>(null)
   const [previewSalvo, setPreviewSalvo] = useState<string | null>(null)
+  const [showDeleteLogoModal, setShowDeleteLogoModal] = useState(false)
 
   const { data: logoBlob } = useLogoDadosEmissor(!!dadosEmissor?.temLogo)
   const uploadLogoMutation = useUploadLogoDadosEmissor()
@@ -132,8 +134,10 @@ export default function DadosEmissorFormPage() {
     )
   }
 
-  function handleRemoverLogo() {
-    deleteLogoMutation.mutate(getUsername(auth.user))
+  function handleConfirmRemoverLogo() {
+    deleteLogoMutation.mutate(getUsername(auth.user), {
+      onSettled: () => setShowDeleteLogoModal(false),
+    })
   }
 
   function handleSubmit(e: FormEvent) {
@@ -222,9 +226,9 @@ export default function DadosEmissorFormPage() {
                   {dadosEmissor?.temLogo && (
                     <button
                       type="button"
-                      onClick={handleRemoverLogo}
+                      onClick={() => setShowDeleteLogoModal(true)}
                       disabled={deleteLogoMutation.isPending}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50 cursor-pointer"
                     >
                       <Trash2 size={14} />
                       Remover
@@ -316,6 +320,14 @@ export default function DadosEmissorFormPage() {
           </Button>
         </div>
       </form>
+
+      <DeleteConfirmModal
+        isOpen={showDeleteLogoModal}
+        onClose={() => setShowDeleteLogoModal(false)}
+        onConfirm={handleConfirmRemoverLogo}
+        itemName="o logo da empresa"
+        isPending={deleteLogoMutation.isPending}
+      />
     </div>
   )
 }
