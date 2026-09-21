@@ -16,8 +16,15 @@ export default function Modal({ open, onClose, title, children }: ModalProps) {
   // partir de dentro de um <form> (ex: PedidoPagamentoCard dentro do form de PedidoFormPage) cria
   // HTML inválido -- <form> aninhado dentro de <form> -- e o navegador descarta o form interno
   // silenciosamente, fazendo o submit do modal disparar o form errado (o de fora).
+  //
+  // No React, mesmo renderizado via Portal no document.body, eventos sintéticos (como onSubmit)
+  // continuam borbulhando pela árvore de componentes React pai. O onSubmit={(e) => e.stopPropagation()}
+  // garante que formulários internos de modais nunca disparem acidentalmente o submit da página-mãe.
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      onSubmit={(e) => e.stopPropagation()}
+    >
       {/* Overlay */}
       <div
         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
@@ -29,6 +36,7 @@ export default function Modal({ open, onClose, title, children }: ModalProps) {
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
           <h2 className="text-base font-semibold text-gray-800">{title}</h2>
           <button
+            type="button"
             onClick={onClose}
             className="p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
           >

@@ -30,6 +30,8 @@ const statusStyles: Record<string, string> = {
   // Contas a receber (financeiro)
   PARCIAL:      'bg-blue-100 text-blue-700',
   PAGO:         'bg-green-100 text-green-800',
+  // Pedidos
+  ENTREGUE:     'bg-orange-100 text-orange-800',
 }
 
 const statusLabels: Record<string, string> = {
@@ -53,6 +55,7 @@ const statusLabels: Record<string, string> = {
   ESTORNO_CANCELAMENTO: 'Estorno Cancelamento',
   PARCIAL:      'Parcial',
   PAGO:         'Pago',
+  ENTREGUE:     'Entregue',
 }
 
 export default function Badge({ status }: BadgeProps) {

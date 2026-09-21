@@ -71,6 +71,20 @@ export default function Vendas() {
           O botão <span className="font-medium text-gray-800">PDF</span> (na lista ou dentro do orçamento) gera um
           documento com os itens, complementos e o total — pronto pra imprimir ou enviar pro cliente.
         </p>
+        <p>
+          O campo <span className="font-medium text-gray-800">Data do Evento</span> é o dia da festa em si — diferente
+          de <span className="font-medium text-gray-800">Válido até</span>, que é só o prazo da proposta. Se o
+          orçamento for aprovado, essa data vira a <span className="font-medium text-gray-800">Data de Entrega</span> do
+          pedido gerado automaticamente.
+        </p>
+        <p>
+          Também dá pra propor um <span className="font-medium text-gray-800">Apoio de Festa</span> já no orçamento
+          (mesma seção que existe no Pedido, veja o passo 7 mais abaixo, incluindo o atalho{' '}
+          <span className="font-medium text-gray-800">"Carrinho (dia inteiro)"</span> baseado na Data do Evento) — mas é
+          só uma proposta, sem reserva de verdade: não trava a frota nem entra no valor do orçamento. Só quando o
+          cliente aprova é que a proposta vira um Apoio de Festa de verdade no Pedido gerado, com a disponibilidade
+          sendo travada só nesse momento.
+        </p>
       </GuiaCard>
 
       <GuiaCard step={4} title="Monte o pedido">
@@ -180,6 +194,49 @@ export default function Vendas() {
           Pra ver todo saldo pendente de uma vez — de pedidos e de contas avulsas — sem abrir um por um, use{' '}
           <span className="font-medium text-gray-800">Financeiro → Contas a Receber</span>. A lista lá também é paginada
           de verdade agora, então dá pra navegar tranquilo mesmo com muitas pendências em aberto.
+        </p>
+      </GuiaCard>
+
+      <GuiaCard
+        step={7}
+        title="Alugue equipamento de apoio, se o evento precisar"
+        dica="A disponibilidade trava por dia inteiro, não por horário: se a frota daquele item já estiver toda ocupada num dia (mesmo em turnos diferentes, como manhã e noite), o sistema recusa qualquer novo horário nesse mesmo dia — só libera no dia seguinte. O modal já mostra quantas unidades sobram antes de você tentar salvar."
+      >
+        <p>
+          <span className="font-medium text-gray-800">Apoio de Festa</span> é o aluguel de um equipamento junto com o
+          pedido — carrinho de doces, tacho, decoração, bandeja, toalha de mesa... O catálogo do que existe pra alugar
+          fica em <span className="font-medium text-gray-800">Vendas → Itens de Apoio</span> (nome, tipo, valor por hora
+          e a frota — quantas unidades daquele item você tem).
+        </p>
+        <p>
+          Ele só existe vinculado a um pedido: dentro da tela de editar um pedido já salvo, a seção{' '}
+          <span className="font-medium text-gray-800">Apoio de Festa</span> deixa você adicionar um aluguel — escolha o
+          item, a hora de início e a hora de fim (sempre no mesmo dia). O valor é calculado sozinho (valor por hora ×
+          horas contratadas) e soma automaticamente no total do pedido, sem precisar editar mais nada.
+        </p>
+        <p>
+          O botão <span className="font-medium text-gray-800">"Carrinho (dia inteiro)"</span> é um atalho pro caso mais
+          comum — pré-preenche o horário como 08h às 22h (horário de Brasília) no mesmo dia da{' '}
+          <span className="font-medium text-gray-800">Data de Entrega</span> do pedido, mas os dois horários continuam
+          editáveis se precisar ajustar. Só fica disponível depois que a Data de Entrega do pedido é preenchida.
+        </p>
+        <p>
+          Alguns itens também oferecem um <span className="font-medium text-gray-800">atendente</span> que
+          acompanha/entrega o equipamento durante o evento — quando o item tem essa opção cadastrada, aparece uma
+          caixinha <span className="font-medium text-gray-800">"Incluir atendente"</span> no momento de adicionar o
+          aluguel, com uma tarifa extra por hora somada junto.
+        </p>
+        <p>
+          Dá pra designar também um <span className="font-medium text-gray-800">Colaborador</span> específico pro
+          aluguel (cadastrado em <span className="font-medium text-gray-800">Vendas → Colaboradores</span>: nome,
+          telefone, e-mail e endereço) — é independente da caixinha de atendente acima, então dá pra designar um
+          colaborador sem cobrar mão de obra, ou cobrar mão de obra sem designar ninguém ainda.
+        </p>
+        <p>
+          Pra cancelar, use o ícone de cancelamento na própria lista do pedido — o valor sai do total do pedido na hora,
+          sem desfazer. Em <span className="font-medium text-gray-800">Vendas → Apoios de Festa</span> fica a lista geral
+          de todos os aluguéis, de todos os pedidos, com filtro por item, pedido, status e dia — útil pra ver a agenda da
+          frota sem abrir pedido por pedido.
         </p>
       </GuiaCard>
 

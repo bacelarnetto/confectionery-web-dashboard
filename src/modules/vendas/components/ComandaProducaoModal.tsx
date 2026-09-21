@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import { X, Printer, Calendar, Clock, MapPin, Package, AlertCircle } from 'lucide-react'
 import { Pedido } from '../types/pedido'
 import { useProdutos } from '../../estoqueProdutos/hooks/useProdutos'
+import { useApoiosFesta } from '../../apoioFesta/hooks/useApoiosFesta'
 
 interface Props {
   pedido: Pedido
@@ -22,6 +23,9 @@ export default function ComandaProducaoModal({ pedido, open, onClose }: Props) {
   const printRef = useRef<HTMLDivElement>(null)
   const { data: produtosData } = useProdutos(0, 100)
   const produtos = produtosData?.content ?? []
+
+  const { data: apoioData } = useApoiosFesta(0, 50, { pedidoId: pedido.id, status: 'ATIVO' })
+  const apoiosAtivos = apoioData?.content ?? []
 
   if (!open) return null
 
@@ -158,6 +162,33 @@ export default function ComandaProducaoModal({ pedido, open, onClose }: Props) {
                 ))}
               </div>
             </div>
+
+            {/* Apoio de Festa / Locação de Equipamentos */}
+            {apoiosAtivos.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs font-bold uppercase tracking-wider text-amber-900">
+                  🎪 Equipamento / Apoio de Festa (Locação):
+                </p>
+                <div className="divide-y divide-amber-200 border-2 border-amber-300 rounded-lg bg-amber-50/60 p-3 text-xs space-y-2">
+                  {apoiosAtivos.map((a) => (
+                    <div key={a.id} className="pt-2 first:pt-0">
+                      <div className="flex items-center justify-between font-bold text-gray-900 text-sm">
+                        <span>{a.itemApoioNome}</span>
+                        {a.incluiMaoDeObra && (
+                          <span className="text-[10px] bg-blue-100 text-blue-900 px-2 py-0.5 rounded font-bold border border-blue-200">
+                            + ATENDENTE
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-gray-700 text-xs mt-0.5">
+                        ⏰ Horário: {formatDateTimeParts(a.horaInicio).data} {formatDateTimeParts(a.horaInicio).hora ?? '08:00'} às {formatDateTimeParts(a.horaFim).hora ?? '22:00'}
+                        {a.colaboradorNome && ` • Colaborador(a): ${a.colaboradorNome}`}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Observações / Recado da Encomenda */}
             {pedido.observacao && (

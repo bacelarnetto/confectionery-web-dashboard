@@ -6,6 +6,7 @@ import toast from 'react-hot-toast'
 import PageHeader from '../../../components/ui/PageHeader'
 import Button from '../../../components/ui/Button'
 import Modal from '../../../components/ui/Modal'
+import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal'
 import { useProduto, useCreateProduto, useUpdateProduto } from '../hooks/useProdutos'
 import { useCategoriasProduto } from '../hooks/useCategoriasProduto'
 import PrecificacaoProdutoForm from './PrecificacaoProdutoForm'
@@ -83,6 +84,15 @@ export default function ProdutoFormPage() {
   })
 
   const [produtoForm, setProdutoForm] = useState<ProdutoFormState>(emptyProduto)
+  const [complementoToRemove, setComplementoToRemove] = useState<{ id: number; nome: string } | null>(null)
+
+  function handleConfirmDesassociar() {
+    if (!complementoToRemove) return
+    desassociarMutation.mutate(
+      { produtoId: numericId, complementoId: complementoToRemove.id },
+      { onSettled: () => setComplementoToRemove(null) }
+    )
+  }
 
   const categorias = categoriasData?.content ?? []
 
@@ -232,10 +242,10 @@ export default function ProdutoFormPage() {
                     </div>
                     <button
                       type="button"
-                      onClick={() => desassociarMutation.mutate({ produtoId: numericId, complementoId: c.id })}
+                      onClick={() => setComplementoToRemove({ id: c.id, nome: c.nome })}
                       disabled={desassociarMutation.isPending}
-                      className="p-1 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-60"
-                      title="Remover"
+                      className="p-1 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-60 cursor-pointer"
+                      title="Remover complemento"
                     >
                       <XIcon size={14} />
                     </button>
@@ -283,6 +293,14 @@ export default function ProdutoFormPage() {
           <div className="mt-6">
             <PrecificacaoProdutoForm produtoId={numericId} />
           </div>
+
+          <DeleteConfirmModal
+            isOpen={!!complementoToRemove}
+            onClose={() => setComplementoToRemove(null)}
+            onConfirm={handleConfirmDesassociar}
+            itemName={`complemento "${complementoToRemove?.nome}"`}
+            isPending={desassociarMutation.isPending}
+          />
         </>
       ) : (
         <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex gap-3">

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router'
 import { Plus, Trash2, Info, X, AlertCircle } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
 import Button from '../../../components/ui/Button'
+import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal'
 import { useCreateSaidaInsumo } from '../hooks/useSaidasInsumo'
 import { useInsumos } from '../hooks/useInsumos'
 import { ItemSaidaInsumo, TipoSaidaInsumo, TIPO_SAIDA_LABELS } from '../types/saidaInsumo'
@@ -87,8 +88,12 @@ export default function SaidaInsumoFormPage() {
     ])
   }
 
-  function removeItem(index: number) {
-    setItens((prev) => prev.filter((_, i) => i !== index))
+  const [itemToDeleteIndex, setItemToDeleteIndex] = useState<number | null>(null)
+
+  function handleConfirmRemoveItem() {
+    if (itemToDeleteIndex === null) return
+    setItens((prev) => prev.filter((_, i) => i !== itemToDeleteIndex))
+    setItemToDeleteIndex(null)
   }
 
   function updateItem(index: number, field: string, value: string | number) {
@@ -351,7 +356,7 @@ export default function SaidaInsumoFormPage() {
 
                         <button
                           type="button"
-                          onClick={() => removeItem(index)}
+                          onClick={() => setItemToDeleteIndex(index)}
                           className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                           title="Remover este item"
                         >
@@ -512,6 +517,19 @@ export default function SaidaInsumoFormPage() {
           </Button>
         </div>
       </form>
+
+      <DeleteConfirmModal
+        isOpen={itemToDeleteIndex !== null}
+        onClose={() => setItemToDeleteIndex(null)}
+        onConfirm={handleConfirmRemoveItem}
+        itemName={
+          itemToDeleteIndex !== null && itens[itemToDeleteIndex]
+            ? insumosData?.content.find(i => i.id === itens[itemToDeleteIndex].insumoId)?.nome
+              ? `o item "${insumosData.content.find(i => i.id === itens[itemToDeleteIndex].insumoId)?.nome}"`
+              : `o item #${itemToDeleteIndex + 1}`
+            : 'este item'
+        }
+      />
     </div>
   )
 }

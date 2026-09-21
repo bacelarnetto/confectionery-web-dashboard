@@ -1,11 +1,13 @@
 import { useState, useEffect, FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { Plus, X } from 'lucide-react'
+import toast from 'react-hot-toast'
 import PageHeader from '../../../components/ui/PageHeader'
 import Button from '../../../components/ui/Button'
+import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal'
 import { useCompra, useCreateCompra, useUpdateCompra } from '../hooks/useCompras'
 import { useFornecedores } from '../hooks/useFornecedores'
-import { useInsumos } from '../../estoqueInsumos/hooks/useInsumos'
+import InsumoField from '../../estoqueInsumos/components/InsumoField'
 import { ItemCompra } from '../types/compra'
 
 const STATUS_OPTIONS = ['RASCUNHO', 'EM_ANDAMENTO', 'CONFIRMADA', 'CANCELADA']
@@ -30,6 +32,8 @@ const emptyItem = (): ItemFormRow => ({
   comprado: false,
 })
 
+const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+
 export default function CompraFormPage() {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
@@ -39,10 +43,6 @@ export default function CompraFormPage() {
   const { data: compra, isLoading: loadingCompra } = useCompra(numericId)
   const { data: fornecedoresPage } = useFornecedores(0, 100)
   const fornecedores = fornecedoresPage?.content ?? []
-
-  // Busca lista de insumos
-  const { data: insumosPage } = useInsumos(0, 100)
-  const insumos = insumosPage?.content ?? []
 
   const createMutation = useCreateCompra()
   const updateMutation = useUpdateCompra()
@@ -76,8 +76,12 @@ export default function CompraFormPage() {
     setItens((prev) => [...prev, emptyItem()])
   }
 
-  function removeItem(index: number) {
-    setItens((prev) => prev.filter((_, i) => i !== index))
+  const [itemToDeleteIndex, setItemToDeleteIndex] = useState<number | null>(null)
+
+  function handleConfirmRemoveItem() {
+    if (itemToDeleteIndex === null) return
+    setItens((prev) => prev.filter((_, i) => i !== itemToDeleteIndex))
+    setItemToDeleteIndex(null)
   }
 
   function buildItens(): ItemCompra[] {
@@ -94,6 +98,11 @@ export default function CompraFormPage() {
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
     const parsedItens = buildItens()
+
+    if (parsedItens.length === 0) {
+      toast.error('Adicione ao menos um item com insumo, quantidade e valor unitário.')
+      return
+    }
 
     if (isEditing) {
       updateMutation.mutate(
@@ -123,6 +132,11 @@ export default function CompraFormPage() {
 
   const isPending = createMutation.isPending || updateMutation.isPending
 
+  const valorTotalPrevisto = itens.reduce(
+    (acc, it) => acc + (Number(it.quantidade) || 0) * (Number(it.valorCustoUnitario) || 0),
+    0,
+  )
+
   if (isEditing && loadingCompra) {
     return (
       <div className="flex items-center justify-center h-48 text-gray-400 text-sm">
@@ -132,7 +146,7 @@ export default function CompraFormPage() {
   }
 
   return (
-    <div className="max-w-3xl">
+    <div className="max-w-4xl">
       <PageHeader
         title={isEditing ? 'Editar Compra' : 'Nova Compra'}
         subtitle={isEditing ? 'Atualize os dados da ordem de compra' : 'Registre uma nova ordem de compra'}
@@ -183,11 +197,14 @@ export default function CompraFormPage() {
         {/* Itens */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-gray-700">Itens da compra</h2>
+            <div>
+              <h2 className="text-sm font-semibold text-gray-900">Itens da compra</h2>
+              <p className="text-xs text-gray-500">Insumos que compõem este pedido de compra</p>
+            </div>
             <button
               type="button"
               onClick={addItem}
-              className="inline-flex items-center gap-1.5 text-sm text-amber-600 hover:text-amber-700 font-medium"
+              className="inline-flex items-center gap-1.5 text-sm text-amber-700 hover:text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200/80 px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer"
             >
               <Plus size={15} />
               Adicionar item
@@ -200,13 +217,13 @@ export default function CompraFormPage() {
               <span className="col-span-1 text-xs font-semibold text-gray-500 uppercase tracking-wide text-center" title="Marcar como comprado">
                 OK
               </span>
-              <span className="col-span-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <span className="col-span-5 text-xs font-semibold text-gray-500 uppercase tracking-wide">
                 Nome do Insumo
               </span>
-              <span className="col-span-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <span className="col-span-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
                 Quantidade
               </span>
-              <span className="col-span-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <span className="col-span-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
                 V. Unit. (R$)
               </span>
               <span className="col-span-1" />
@@ -223,21 +240,21 @@ export default function CompraFormPage() {
                     title="Marcar como item comprado"
                   />
                 </div>
-                <div className="col-span-3">
-                  <select
-                    value={item.insumoId}
-                    onChange={(e) => handleItemChange(index, 'insumoId', e.target.value)}
-                    className={selectClass}
-                  >
-                    <option value="">Selecione...</option>
-                    {insumos.map((i) => (
-                      <option key={i.id} value={i.id}>
-                        {i.nome}
-                      </option>
-                    ))}
-                  </select>
+                <div className="col-span-5">
+                  <InsumoField
+                    value={Number(item.insumoId) || 0}
+                    onChange={(id, insumo) => {
+                      handleItemChange(index, 'insumoId', id ? String(id) : '')
+                      // Sugere o custo cadastrado no insumo se o valor ainda estiver em branco
+                      if (insumo?.valor != null && !item.valorCustoUnitario) {
+                        handleItemChange(index, 'valorCustoUnitario', String(insumo.valor))
+                      }
+                    }}
+                    compact
+                    placeholder="Buscar insumo..."
+                  />
                 </div>
-                <div className="col-span-3">
+                <div className="col-span-2">
                   <input
                     type="number"
                     value={item.quantidade}
@@ -248,7 +265,7 @@ export default function CompraFormPage() {
                     step="0.01"
                   />
                 </div>
-                <div className="col-span-4">
+                <div className="col-span-3">
                   <input
                     type="number"
                     value={item.valorCustoUnitario}
@@ -262,9 +279,9 @@ export default function CompraFormPage() {
                 <div className="col-span-1 flex justify-center">
                   <button
                     type="button"
-                    onClick={() => removeItem(index)}
+                    onClick={() => setItemToDeleteIndex(index)}
                     disabled={itens.length === 1}
-                    className="p-1 rounded text-gray-300 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-40 transition-colors"
+                    className="p-1.5 rounded text-gray-300 hover:text-red-500 disabled:cursor-not-allowed disabled:opacity-30 transition-colors cursor-pointer"
                     title="Remover item"
                   >
                     <X size={16} />
@@ -278,6 +295,16 @@ export default function CompraFormPage() {
                 Nenhum item adicionado.
               </p>
             )}
+
+            {/* Totalizador de itens */}
+            {itens.some((it) => it.quantidade && it.valorCustoUnitario) && (
+              <div className="flex justify-end items-center gap-3 pt-3 border-t border-gray-100 text-sm">
+                <span className="text-gray-500 font-medium">Total previsto da compra:</span>
+                <span className="font-bold text-gray-900 text-base">
+                  {currency.format(valorTotalPrevisto)}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -286,7 +313,7 @@ export default function CompraFormPage() {
           <button
             type="button"
             onClick={() => navigate('/compras/compras')}
-            className="px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 transition-colors cursor-pointer"
           >
             Cancelar
           </button>
@@ -295,6 +322,13 @@ export default function CompraFormPage() {
           </Button>
         </div>
       </form>
+
+      <DeleteConfirmModal
+        isOpen={itemToDeleteIndex !== null}
+        onClose={() => setItemToDeleteIndex(null)}
+        onConfirm={handleConfirmRemoveItem}
+        itemName={itemToDeleteIndex !== null ? `o item #${itemToDeleteIndex + 1}` : 'este item'}
+      />
     </div>
   )
 }

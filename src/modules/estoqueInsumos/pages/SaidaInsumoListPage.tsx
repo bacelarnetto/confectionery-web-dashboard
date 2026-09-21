@@ -1,18 +1,33 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { Plus, Trash2, Search, X } from 'lucide-react'
+import { useAuth } from 'react-oidc-context'
+import { Plus, Trash2, Search, X, Eye } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
 import PageableTable from '../../../components/ui/PageableTable'
 import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal'
 import { useSaidasInsumo, useDeleteSaidaInsumo } from '../hooks/useSaidasInsumo'
 import { useDebounce } from '../../../hooks/useDebounce'
 import { formatCurrency } from '../../../lib/format'
-import { TIPO_SAIDA_CODIGOS, TIPO_SAIDA_LABELS, TipoSaidaInsumo } from '../types/saidaInsumo'
+import { TIPO_SAIDA_CODIGOS, TIPO_SAIDA_LABELS, TipoSaidaInsumo, SaidaInsumo } from '../types/saidaInsumo'
+import { hasRole } from '../../../lib/auth'
+
+function formatData(dateStr?: string): string {
+  if (!dateStr) return '—'
+  try {
+    const d = new Date(dateStr)
+    if (isNaN(d.getTime())) return dateStr
+    return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(d)
+  } catch {
+    return dateStr
+  }
+}
 
 const TABLE_HEADERS = ['ID', 'Tipo', 'Insumos', 'Valor Total', 'Produto ID', 'Usuário', 'Ações']
 
 export default function SaidaInsumoListPage() {
   const navigate = useNavigate()
+  const auth = useAuth()
+  const isAdmin = hasRole(auth.user, 'ADMIN')
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState(20)
   const [filters, setFilters] = useState({
@@ -21,6 +36,7 @@ export default function SaidaInsumoListPage() {
     dataFinal: '',
   })
   const [showFilters, setShowFilters] = useState(false)
+  const [detalheTarget, setDetalheTarget] = useState<SaidaInsumo | null>(null)
 
   const debouncedFilters = useDebounce(filters)
   const filterParams = {
@@ -48,7 +64,7 @@ export default function SaidaInsumoListPage() {
   }
 
   function handleDeleteConfirm() {
-    if (!deleteTarget) return
+    if (!deleteTarget || !isAdmin) return
     deleteMutation.mutate(deleteTarget.id, {
       onSettled: () => setDeleteTarget(null),
     })
@@ -62,7 +78,7 @@ export default function SaidaInsumoListPage() {
       >
         <button
           onClick={() => navigate('/estoque-insumos/saidas/nova')}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 transition-colors cursor-pointer"
         >
           <Plus size={16} />
           Nova Saída
@@ -72,7 +88,7 @@ export default function SaidaInsumoListPage() {
       <div className="mb-4">
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className={`inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border transition-colors ${
+          className={`inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border transition-colors cursor-pointer ${
             showFilters || Object.values(filters).some(v => v)
               ? 'bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100'
               : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
@@ -127,7 +143,7 @@ export default function SaidaInsumoListPage() {
             {Object.values(filters).some(v => v) && (
               <button
                 onClick={clearFilters}
-                className="mt-3 inline-flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900"
+                className="mt-3 inline-flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 cursor-pointer"
               >
                 <X size={14} />
                 Limpar filtros
@@ -150,7 +166,16 @@ export default function SaidaInsumoListPage() {
       >
         {saidas.map((s) => (
           <tr key={s.id} className="hover:bg-gray-50 transition-colors">
-            <td className="px-4 py-3 font-medium text-gray-900">#{s.id}</td>
+            <td className="px-4 py-3 font-medium text-gray-900">
+              <button
+                type="button"
+                onClick={() => setDetalheTarget(s)}
+                className="font-semibold text-gray-900 hover:text-amber-600 hover:underline cursor-pointer"
+                title="Visualizar detalhes da saída"
+              >
+                #{s.id}
+              </button>
+            </td>
             <td className="px-4 py-3 text-gray-600">{TIPO_SAIDA_LABELS[s.tipo as TipoSaidaInsumo] ?? s.tipo}</td>
             <td className="px-4 py-3 text-gray-600">
               {s.itens.map((item) => item.insumoNome ?? `#${item.insumoId}`).join(', ') || '—'}
@@ -161,12 +186,21 @@ export default function SaidaInsumoListPage() {
             <td className="px-4 py-3">
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => setDeleteTarget({ id: s.id })}
-                  className="p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                  title="Remover"
+                  onClick={() => setDetalheTarget(s)}
+                  className="p-1.5 rounded-md text-gray-400 hover:text-amber-600 hover:bg-amber-50 transition-colors cursor-pointer"
+                  title="Visualizar detalhes"
                 >
-                  <Trash2 size={15} />
+                  <Eye size={15} />
                 </button>
+                {isAdmin && (
+                  <button
+                    onClick={() => setDeleteTarget({ id: s.id })}
+                    className="p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                    title="Remover saída"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                )}
               </div>
             </td>
           </tr>
@@ -180,6 +214,164 @@ export default function SaidaInsumoListPage() {
         itemName={`Saída #${deleteTarget?.id}`}
         isPending={deleteMutation.isPending}
       />
+
+      {/* Modal de Detalhes da Saída */}
+      {detalheTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-amber-50 text-amber-600 rounded-lg">
+                  <Eye size={20} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Detalhes da Saída #{detalheTarget.id}
+                  </h3>
+                  <p className="text-xs text-gray-500">
+                    Tipo: {TIPO_SAIDA_LABELS[detalheTarget.tipo as TipoSaidaInsumo] ?? detalheTarget.tipo}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDetalheTarget(null)}
+                className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                title="Fechar"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 overflow-y-auto space-y-5">
+              {/* Summary Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                <div>
+                  <span className="text-xs text-gray-500 block">Tipo</span>
+                  <span className="text-sm font-semibold text-gray-800">
+                    {TIPO_SAIDA_LABELS[detalheTarget.tipo as TipoSaidaInsumo] ?? detalheTarget.tipo}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-500 block">Valor Total</span>
+                  <span className="text-sm font-semibold text-amber-600">
+                    {formatCurrency(detalheTarget.valorTotal)}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-500 block">Registrado por</span>
+                  <span className="text-sm font-medium text-gray-700">
+                    {detalheTarget.createdBy || '—'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-500 block">Data</span>
+                  <span className="text-sm font-medium text-gray-700">
+                    {formatData(detalheTarget.createdOn)}
+                  </span>
+                </div>
+                {detalheTarget.produtoId && (
+                  <div>
+                    <span className="text-xs text-gray-500 block">Produto ID</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      #{detalheTarget.produtoId}
+                    </span>
+                  </div>
+                )}
+                {detalheTarget.pedidoId && (
+                  <div>
+                    <span className="text-xs text-gray-500 block">Pedido ID</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      #{detalheTarget.pedidoId}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Items List */}
+              <div>
+                <h4 className="text-sm font-semibold text-gray-900 mb-2">
+                  Itens da Saída ({detalheTarget.itens.length})
+                </h4>
+                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-gray-50 text-gray-600 uppercase font-medium border-b border-gray-200">
+                      <tr>
+                        <th className="px-3 py-2.5">Insumo</th>
+                        <th className="px-3 py-2.5">Qtd</th>
+                        <th className="px-3 py-2.5">Custo Unit.</th>
+                        <th className="px-3 py-2.5">Custo Total</th>
+                        <th className="px-3 py-2.5">Lote</th>
+                        <th className="px-3 py-2.5">Validade</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {detalheTarget.itens.map((it, idx) => (
+                        <tr key={idx} className="hover:bg-gray-50">
+                          <td className="px-3 py-2 font-medium text-gray-900">
+                            {it.insumoNome ?? `#${it.insumoId}`}
+                          </td>
+                          <td className="px-3 py-2 text-gray-600">
+                            {it.quantidade}
+                          </td>
+                          <td className="px-3 py-2 text-gray-600">
+                            {formatCurrency(it.valorCustoUnitario)}
+                          </td>
+                          <td className="px-3 py-2 font-medium text-gray-800">
+                            {formatCurrency(it.valorCustoTotal)}
+                          </td>
+                          <td className="px-3 py-2 text-gray-500">
+                            {it.lote || '—'}
+                          </td>
+                          <td className="px-3 py-2 text-gray-500">
+                            {formatData(it.dataValidade)}
+                          </td>
+                        </tr>
+                      ))}
+                      {detalheTarget.itens.length === 0 && (
+                        <tr>
+                          <td colSpan={6} className="px-3 py-4 text-center text-gray-400">
+                            Nenhum item registrado nesta saída.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-between px-6 py-3 border-t border-gray-100 bg-gray-50">
+              {isAdmin ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const idToDelete = detalheTarget.id
+                    setDetalheTarget(null)
+                    setDeleteTarget({ id: idToDelete })
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-colors cursor-pointer"
+                >
+                  <Trash2 size={13} />
+                  <span>Excluir Saída</span>
+                </button>
+              ) : (
+                <span className="text-xs text-gray-400">Somente administradores podem excluir saídas.</span>
+              )}
+              <button
+                type="button"
+                onClick={() => setDetalheTarget(null)}
+                className="px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors ml-auto cursor-pointer"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

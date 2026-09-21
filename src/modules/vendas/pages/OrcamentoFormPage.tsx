@@ -5,11 +5,14 @@ import PageHeader from '../../../components/ui/PageHeader'
 import Button from '../../../components/ui/Button'
 import Badge from '../../../components/ui/Badge'
 import Modal from '../../../components/ui/Modal'
+import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal'
 import { useOrcamento, useCreateOrcamento, useUpdateOrcamento, useUpdateOrcamentoStatus, useDownloadOrcamentoPdf } from '../hooks/useOrcamentos'
 import { useClientes } from '../hooks/useClientes'
 import EnderecoClienteField from '../components/EnderecoClienteField'
 import ComplementoPicker, { ComplementoResolvido } from '../components/ComplementoPicker'
 import ResumoValoresCard from '../components/ResumoValoresCard'
+import ApoioOrcamentoSection, { ApoioOrcamentoLocal } from '../../apoioFesta/components/ApoioOrcamentoSection'
+import apoioOrcamentoService from '../../apoioFesta/services/apoioOrcamentoService'
 import { calcularResumo } from '../lib/resumoValores'
 import { useProdutos } from '../../estoqueProdutos/hooks/useProdutos'
 import precificacaoProdutoService from '../../estoqueProdutos/services/precificacaoProdutoService'
@@ -44,11 +47,12 @@ interface FormState {
   clienteId: string
   enderecoId: string
   dataValidade: string
+  dataEvento: string
   valorFrete: string
   observacao: string
 }
 
-const emptyForm: FormState = { clienteId: '', enderecoId: '', dataValidade: '', valorFrete: '', observacao: '' }
+const emptyForm: FormState = { clienteId: '', enderecoId: '', dataValidade: '', dataEvento: '', valorFrete: '', observacao: '' }
 const emptyItem: ItemForm = { produtoId: '', quantidade: '1', valorUnitario: '', desconto: '', complementoIds: [], complementosResolvidos: [] }
 
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
@@ -85,6 +89,8 @@ export default function OrcamentoFormPage() {
   const [erroGeral, setErroGeral] = useState<string | null>(null)
   const [itemErroIndex, setItemErroIndex] = useState<number | null>(null)
   const [confirmAcao, setConfirmAcao] = useState<'CONVERTIDO' | 'REJEITADO' | null>(null)
+  const [apoiosLocais, setApoiosLocais] = useState<ApoioOrcamentoLocal[]>([])
+  const [isSavingApoios, setIsSavingApoios] = useState(false)
 
   const clientes = clientesData?.content ?? []
   const produtos = produtosData?.content ?? []
@@ -109,6 +115,7 @@ export default function OrcamentoFormPage() {
         clienteId: String(orcamento.clienteId ?? ''),
         enderecoId: String(orcamento.enderecoId ?? ''),
         dataValidade: orcamento.dataValidade ? dateToLocalYMD(orcamento.dataValidade) : '',
+        dataEvento: orcamento.dataEvento ? new Date(orcamento.dataEvento).toISOString().slice(0, 16) : '',
         valorFrete: String(orcamento.valorFrete ?? ''),
         observacao: orcamento.observacao ?? '',
       })
@@ -169,8 +176,12 @@ export default function OrcamentoFormPage() {
     setItens((prev) => [...prev, { ...emptyItem }])
   }
 
-  function removeItem(index: number) {
-    setItens((prev) => prev.filter((_, i) => i !== index))
+  const [itemToDeleteIndex, setItemToDeleteIndex] = useState<number | null>(null)
+
+  function handleConfirmRemoveItem() {
+    if (itemToDeleteIndex === null) return
+    setItens((prev) => prev.filter((_, i) => i !== itemToDeleteIndex))
+    setItemToDeleteIndex(null)
   }
 
   function buildItens() {
@@ -207,6 +218,7 @@ export default function OrcamentoFormPage() {
     setErroGeral(null)
     setItemErroIndex(null)
     const dataValidadeIso = form.dataValidade ? new Date(`${form.dataValidade}T23:59:59`).toISOString() : undefined
+    const dataEventoIso = form.dataEvento ? new Date(form.dataEvento).toISOString() : undefined
 
     if (isEditing) {
       updateMutation.mutate(
@@ -215,6 +227,7 @@ export default function OrcamentoFormPage() {
           data: {
             enderecoId: form.enderecoId ? Number(form.enderecoId) : undefined,
             dataValidade: dataValidadeIso,
+            dataEvento: dataEventoIso,
             valorFrete: form.valorFrete ? Number(form.valorFrete) : undefined,
             observacao: form.observacao || undefined,
             itens: buildItens(),
@@ -229,12 +242,40 @@ export default function OrcamentoFormPage() {
           clienteId: Number(form.clienteId),
           enderecoId: form.enderecoId ? Number(form.enderecoId) : undefined,
           dataValidade: dataValidadeIso,
+          dataEvento: dataEventoIso,
           valorFrete: form.valorFrete ? Number(form.valorFrete) : undefined,
           observacao: form.observacao || undefined,
           itens: buildItens(),
           createdBy: '',
         },
-        { onSuccess: () => navigate('/vendas/orcamentos'), onError: tratarErro },
+        {
+          onSuccess: async (novoOrcamento) => {
+            if (apoiosLocais.length > 0 && novoOrcamento?.id) {
+              setIsSavingApoios(true)
+              try {
+                await Promise.all(
+                  apoiosLocais.map((a) =>
+                    apoioOrcamentoService.create({
+                      orcamentoId: novoOrcamento.id,
+                      itemApoioId: a.itemApoioId,
+                      horaInicio: a.horaInicio,
+                      horaFim: a.horaFim,
+                      incluiMaoDeObra: a.incluiMaoDeObra,
+                      colaboradorId: a.colaboradorId,
+                      createdBy: '',
+                    }),
+                  ),
+                )
+              } catch (err) {
+                console.error('Erro ao salvar apoio de orçamento em cascata:', err)
+              } finally {
+                setIsSavingApoios(false)
+              }
+            }
+            navigate('/vendas/orcamentos')
+          },
+          onError: tratarErro,
+        },
       )
     }
   }
@@ -260,7 +301,7 @@ export default function OrcamentoFormPage() {
     )
   }
 
-  const isPending = createMutation.isPending || updateMutation.isPending
+  const isPending = createMutation.isPending || updateMutation.isPending || isSavingApoios
   const resumo = calcularResumo(itens, Number(form.valorFrete) || 0)
 
   if (isEditing && isLoading) {
@@ -355,6 +396,21 @@ export default function OrcamentoFormPage() {
               />
             </Field>
 
+            <Field label="Data do Evento">
+              <input
+                name="dataEvento"
+                type="datetime-local"
+                value={form.dataEvento}
+                onChange={handleChange}
+                disabled={isReadOnly}
+                className={inputClass}
+              />
+              <p className="text-xs text-gray-500 mt-1.5">
+                Dia da festa em si — diferente de "Válido até" (prazo da proposta). Se o orçamento for aprovado, vira a
+                Data de Entrega do pedido gerado.
+              </p>
+            </Field>
+
             <Field label="Valor de Frete (R$)">
               <input
                 name="valorFrete"
@@ -413,8 +469,9 @@ export default function OrcamentoFormPage() {
                     {!isReadOnly && itens.length > 1 && (
                       <button
                         type="button"
-                        onClick={() => removeItem(index)}
-                        className="p-1 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                        onClick={() => setItemToDeleteIndex(index)}
+                        className="p-1 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                        title="Remover este item"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -490,6 +547,16 @@ export default function OrcamentoFormPage() {
             })}
           </div>
         </div>
+
+        <ApoioOrcamentoSection
+          orcamentoId={isEditing ? numericId : undefined}
+          podeAdicionar={buildItens().length > 0}
+          readOnly={isReadOnly}
+          dataEvento={form.dataEvento}
+          itensLocais={apoiosLocais}
+          onAdicionarLocal={(novoApoio) => setApoiosLocais((prev) => [...prev, novoApoio])}
+          onRemoverLocal={(idx) => setApoiosLocais((prev) => prev.filter((_, i) => i !== idx))}
+        />
 
         <ResumoValoresCard resumo={resumo} />
 
@@ -568,6 +635,19 @@ export default function OrcamentoFormPage() {
           </Button>
         </div>
       </Modal>
+
+      <DeleteConfirmModal
+        isOpen={itemToDeleteIndex !== null}
+        onClose={() => setItemToDeleteIndex(null)}
+        onConfirm={handleConfirmRemoveItem}
+        itemName={
+          itemToDeleteIndex !== null && itens[itemToDeleteIndex]
+            ? itens[itemToDeleteIndex].produtoId
+              ? `o item ${itemToDeleteIndex + 1} (${produtosData?.content.find(p => p.id === Number(itens[itemToDeleteIndex].produtoId))?.nome ?? `Produto #${itens[itemToDeleteIndex].produtoId}`})`
+              : `o item ${itemToDeleteIndex + 1}`
+            : 'este item'
+        }
+      />
     </div>
   )
 }

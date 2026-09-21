@@ -5,7 +5,7 @@ interface DeleteConfirmModalProps {
   onClose: () => void
   onConfirm: () => void
   itemName?: string
-  isPending: boolean
+  isPending?: boolean
 }
 
 export default function DeleteConfirmModal({
@@ -13,7 +13,7 @@ export default function DeleteConfirmModal({
   onClose,
   onConfirm,
   itemName = 'este item',
-  isPending,
+  isPending = false,
 }: DeleteConfirmModalProps) {
   return (
     <Modal open={isOpen} onClose={onClose} title="Confirmar exclusão">

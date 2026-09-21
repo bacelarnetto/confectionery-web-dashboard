@@ -115,7 +115,7 @@ export default function VendasBlock({
       {/* Gráficos de Vendas */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
         {/* Top 5 Produtos */}
-        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-xs">
+        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-xs min-w-0">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-sm font-bold text-gray-900">Top 5 Produtos Mais Vendidos</h3>
@@ -129,8 +129,8 @@ export default function VendasBlock({
               Nenhuma venda registrada no período
             </div>
           ) : (
-            <div className="h-72">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="w-full h-72 min-w-0">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 300, height: 288 }}>
                 <BarChart data={topProdutos} margin={{ top: 5, right: 20, bottom: 5, left: 0 }} layout="vertical">
                   <CartesianGrid stroke="#f3f4f6" strokeDasharray="3 3" horizontal={false} />
                   <XAxis type="number" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
@@ -160,7 +160,7 @@ export default function VendasBlock({
         </div>
 
         {/* Pedidos por Status */}
-        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-xs">
+        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-xs min-w-0">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-sm font-bold text-gray-900">Distribuição de Pedidos por Status</h3>
@@ -174,8 +174,8 @@ export default function VendasBlock({
               Nenhum pedido registrado
             </div>
           ) : (
-            <div className="h-72">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="w-full h-72 min-w-0">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 300, height: 288 }}>
                 <BarChart data={pedidosStatus} margin={{ top: 10, right: 10, bottom: 5, left: 0 }}>
                   <CartesianGrid stroke="#f3f4f6" strokeDasharray="3 3" vertical={false} />
                   <XAxis

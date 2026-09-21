@@ -28,6 +28,7 @@ export default function ResumoValoresCard({ resumo, mostrarFrete = true }: Resum
       {resumo.totalComplementos > 0 && <Linha label="Complementos extra" valor={resumo.totalComplementos} />}
       {resumo.totalDesconto > 0 && <Linha label="Descontos" valor={resumo.totalDesconto} negativo />}
       {mostrarFrete && <Linha label="Frete" valor={resumo.valorFrete} />}
+      {resumo.valorApoioFesta > 0 && <Linha label="Apoio de Festa (locação)" valor={resumo.valorApoioFesta} />}
 
       <div className="pt-2.5 mt-1 border-t border-gray-200 flex items-center justify-between">
         <span className="text-sm font-semibold text-gray-800">Total</span>

@@ -16,6 +16,9 @@ export interface Orcamento {
   enderecoId?: number
   status?: string
   dataValidade?: string
+  /** Dia do evento/festa -- distinto de dataValidade (validade da proposta em si). Copiado
+   * direto pra dataEntrega do Pedido quando o orçamento é aprovado. */
+  dataEvento?: string
   valorTotal?: number
   valorFrete?: number
   pedidoId?: number
@@ -31,6 +34,7 @@ export interface OrcamentoInsertForm {
   clienteId: number
   enderecoId?: number
   dataValidade?: string
+  dataEvento?: string
   valorFrete?: number
   observacao?: string
   itens: {
@@ -47,6 +51,7 @@ export interface OrcamentoInsertForm {
 export interface OrcamentoUpdateForm {
   enderecoId?: number
   dataValidade?: string
+  dataEvento?: string
   valorFrete?: number
   observacao?: string
   itens?: {

@@ -46,6 +46,12 @@ import OrcamentoListPage from './modules/vendas/pages/OrcamentoListPage'
 import OrcamentoFormPage from './modules/vendas/pages/OrcamentoFormPage'
 import FormaPagamentoListPage from './modules/vendas/pages/FormaPagamentoListPage'
 import FormaPagamentoFormPage from './modules/vendas/pages/FormaPagamentoFormPage'
+import ItemApoioListPage from './modules/apoioFesta/pages/ItemApoioListPage'
+import ItemApoioFormPage from './modules/apoioFesta/pages/ItemApoioFormPage'
+import ApoioFestaListPage from './modules/apoioFesta/pages/ApoioFestaListPage'
+import DisponibilidadeApoioPage from './modules/apoioFesta/pages/DisponibilidadeApoioPage'
+import ColaboradorListPage from './modules/apoioFesta/pages/ColaboradorListPage'
+import ColaboradorFormPage from './modules/apoioFesta/pages/ColaboradorFormPage'
 import AlertaPedidoListPage from './modules/vendas/pages/AlertaPedidoListPage'
 import PedidoMuralPage from './modules/vendas/pages/PedidoMuralPage'
 import GuiaPage from './modules/guia/pages/GuiaPage'
@@ -82,6 +88,7 @@ export default function App() {
         <Route path="/estoque-insumos/entradas" element={<EntradaInsumoListPage />} />
         <Route path="/estoque-insumos/entradas/nova" element={<EntradaInsumoFormPage />} />
         <Route path="/estoque-insumos/entradas/:id/editar" element={<EntradaInsumoFormPage />} />
+        <Route path="/estoque-insumos/entradas/:id" element={<EntradaInsumoFormPage />} />
         <Route path="/estoque-insumos/saidas" element={<SaidaInsumoListPage />} />
         <Route path="/estoque-insumos/saidas/nova" element={<SaidaInsumoFormPage />} />
         <Route path="/estoque-insumos/estoque" element={<EstoqueInsumoListPage />} />
@@ -129,6 +136,15 @@ export default function App() {
         <Route path="/vendas/formas-pagamento" element={<FormaPagamentoListPage />} />
         <Route path="/vendas/formas-pagamento/novo" element={<FormaPagamentoFormPage />} />
         <Route path="/vendas/formas-pagamento/:id/editar" element={<FormaPagamentoFormPage />} />
+        <Route path="/vendas/itens-apoio" element={<ItemApoioListPage />} />
+        <Route path="/vendas/itens-apoio/novo" element={<ItemApoioFormPage />} />
+        <Route path="/vendas/itens-apoio/:id/editar" element={<ItemApoioFormPage />} />
+        <Route path="/vendas/apoios-festa" element={<ApoioFestaListPage />} />
+        <Route path="/vendas/apoios-festa/disponibilidade" element={<DisponibilidadeApoioPage />} />
+        <Route path="/vendas/apoio-festa/disponibilidade" element={<DisponibilidadeApoioPage />} />
+        <Route path="/vendas/colaboradores" element={<ColaboradorListPage />} />
+        <Route path="/vendas/colaboradores/novo" element={<ColaboradorFormPage />} />
+        <Route path="/vendas/colaboradores/:id/editar" element={<ColaboradorFormPage />} />
         <Route path="/vendas/mural" element={<PedidoMuralPage />} />
         <Route path="/alertas-pedido" element={<AlertaPedidoListPage />} />
 

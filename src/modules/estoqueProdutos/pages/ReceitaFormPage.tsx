@@ -3,12 +3,14 @@ import { useNavigate, useParams } from 'react-router'
 import { Plus, Trash2, AlertCircle } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
 import Button from '../../../components/ui/Button'
+import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal'
 import RadioToggle from '../../../components/ui/RadioToggle'
 import { useReceita, useReceitas, useCreateReceita, useUpdateReceita } from '../hooks/useReceitas'
-import { useProdutos, useProduto } from '../hooks/useProdutos'
+import { useProduto } from '../hooks/useProdutos'
 import { useCategoriasProduto } from '../hooks/useCategoriasProduto'
 import { useInsumos } from '../../estoqueInsumos/hooks/useInsumos'
 import InsumoField from '../components/InsumoField'
+import ProdutoField from '../components/ProdutoField'
 import { Ingrediente, ProdutoRefForm } from '../types/receita'
 import { parseApiError } from '../../../lib/apiError'
 
@@ -71,7 +73,6 @@ export default function ReceitaFormPage() {
 
   const { data: receita, isLoading } = useReceita(numericId)
   const { data: produtoAtual } = useProduto(receita?.produtoId ?? 0)
-  const { data: produtosData } = useProdutos(0, 100)
   const { data: categoriasData } = useCategoriasProduto(0, 100)
   const { data: receitasData } = useReceitas(0, 100)
   const { data: insumosData } = useInsumos(0, 200)
@@ -120,8 +121,12 @@ export default function ReceitaFormPage() {
     setIngredientes((prev) => [...prev, { ...emptyIngrediente }])
   }
 
-  function removeIngrediente(index: number) {
-    setIngredientes((prev) => prev.filter((_, i) => i !== index))
+  const [ingredienteToDeleteIndex, setIngredienteToDeleteIndex] = useState<number | null>(null)
+
+  function handleConfirmRemoveIngrediente() {
+    if (ingredienteToDeleteIndex === null) return
+    setIngredientes((prev) => prev.filter((_, i) => i !== ingredienteToDeleteIndex))
+    setIngredienteToDeleteIndex(null)
   }
 
   function tratarErro(err: unknown) {
@@ -162,6 +167,11 @@ export default function ReceitaFormPage() {
         { onSuccess: () => navigate('/estoque-produtos/receitas'), onError: tratarErro },
       )
     } else {
+      if (produtoMode === 'existente' && (!produtoId || Number(produtoId) <= 0)) {
+        setErroProduto('Selecione um produto para a receita.')
+        return
+      }
+
       const produto: ProdutoRefForm =
         produtoMode === 'existente'
           ? { produtoId: Number(produtoId) }
@@ -192,7 +202,6 @@ export default function ReceitaFormPage() {
   const isPending = createMutation.isPending || updateMutation.isPending
   const categorias = categoriasData?.content ?? []
   const produtosComReceita = new Set((receitasData?.content ?? []).map((r) => r.produtoId))
-  const produtos = (produtosData?.content ?? []).filter((p) => !produtosComReceita.has(p.id))
   const insumos = insumosData?.content ?? []
 
   if (isEditing && isLoading) {
@@ -248,21 +257,14 @@ export default function ReceitaFormPage() {
 
             {produtoMode === 'existente' ? (
               <Field label="Produto" required>
-                <select
-                  value={produtoId}
-                  onChange={(e) => setProdutoId(e.target.value)}
+                <ProdutoField
+                  value={Number(produtoId) || 0}
+                  onChange={(id) => setProdutoId(id ? String(id) : '')}
+                  excludeIds={Array.from(produtosComReceita)}
                   required
-                  className={inputClass}
-                >
-                  <option value="">Selecione um produto...</option>
-                  {produtos.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.nome} ({p.categoriaProdutoNome})
-                    </option>
-                  ))}
-                </select>
+                />
                 <p className="text-xs text-gray-400 mt-1">
-                  Produtos que já têm uma receita cadastrada não aparecem aqui (cada produto só pode ter uma receita).
+                  Produtos que já têm uma receita cadastrada não aparecem na busca (cada produto só pode ter uma receita).
                 </p>
               </Field>
             ) : (
@@ -425,7 +427,7 @@ export default function ReceitaFormPage() {
                       {ingredientes.length > 1 && (
                         <button
                           type="button"
-                          onClick={() => removeIngrediente(index)}
+                          onClick={() => setIngredienteToDeleteIndex(index)}
                           className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                           title="Remover este ingrediente"
                         >
@@ -499,6 +501,19 @@ export default function ReceitaFormPage() {
           </Button>
         </div>
       </form>
+
+      <DeleteConfirmModal
+        isOpen={ingredienteToDeleteIndex !== null}
+        onClose={() => setIngredienteToDeleteIndex(null)}
+        onConfirm={handleConfirmRemoveIngrediente}
+        itemName={
+          ingredienteToDeleteIndex !== null && ingredientes[ingredienteToDeleteIndex]
+            ? insumosData?.content.find(i => i.id === Number(ingredientes[ingredienteToDeleteIndex].insumoId))?.nome
+              ? `o ingrediente "${insumosData.content.find(i => i.id === Number(ingredientes[ingredienteToDeleteIndex].insumoId))?.nome}"`
+              : `o ingrediente #${ingredienteToDeleteIndex + 1}`
+            : 'este ingrediente'
+        }
+      />
     </div>
   )
 }

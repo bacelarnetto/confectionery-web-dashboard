@@ -127,14 +127,14 @@ export default function FaturamentoMensalPage() {
         </div>
       </div>
 
-      <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm mb-6">
+      <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm mb-6 min-w-0">
         {isLoading ? (
           <div className="h-72 bg-gray-100 rounded-lg animate-pulse" />
         ) : chartData.length === 0 ? (
           <div className="h-72 flex items-center justify-center text-sm text-gray-400">Sem dados no período</div>
         ) : (
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="w-full h-72 min-w-0">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 300, height: 288 }}>
               <BarChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                 <CartesianGrid stroke="#e5e7eb" strokeDasharray="5 5" vertical={false} />
                 <XAxis dataKey="mesLabel" stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false} />
