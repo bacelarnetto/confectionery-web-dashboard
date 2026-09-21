@@ -7,6 +7,8 @@ import { maskPhone } from '../../../lib/format'
 
 interface FormState {
   nome: string
+  cidade: string
+  estado: string
   endereco: string
   numero: string
   bairro: string
@@ -20,6 +22,8 @@ interface FormState {
 
 const emptyForm: FormState = {
   nome: '',
+  cidade: '',
+  estado: '',
   endereco: '',
   numero: '',
   bairro: '',
@@ -70,6 +74,8 @@ export default function FornecedorFormPage() {
     if (fornecedor) {
       setForm({
         nome: fornecedor.nome ?? '',
+        cidade: fornecedor.cidade ?? '',
+        estado: fornecedor.estado ?? '',
         endereco: fornecedor.endereco ?? '',
         numero: fornecedor.numero != null ? String(fornecedor.numero) : '',
         bairro: fornecedor.bairro ?? '',
@@ -87,6 +93,11 @@ export default function FornecedorFormPage() {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
+  function handleEstadoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const value = e.target.value.toUpperCase().slice(0, 2)
+    setForm((prev) => ({ ...prev, estado: value }))
+  }
+
   function handleTelefoneChange(e: React.ChangeEvent<HTMLInputElement>) {
     setForm((prev) => ({ ...prev, telefone: maskPhone(e.target.value) }))
   }
@@ -95,6 +106,8 @@ export default function FornecedorFormPage() {
     e.preventDefault()
 
     const optional = {
+      cidade: form.cidade || undefined,
+      estado: form.estado ? form.estado.toUpperCase() : undefined,
       endereco: form.endereco || undefined,
       numero: form.numero ? Number(form.numero) : undefined,
       bairro: form.bairro || undefined,
@@ -183,6 +196,28 @@ export default function FornecedorFormPage() {
                 onChange={handleChange}
                 className={inputClass}
                 placeholder="Bairro"
+              />
+            </Field>
+
+            <Field label="Cidade">
+              <input
+                name="cidade"
+                value={form.cidade}
+                onChange={handleChange}
+                maxLength={100}
+                className={inputClass}
+                placeholder="Cidade"
+              />
+            </Field>
+
+            <Field label="Estado (UF)">
+              <input
+                name="estado"
+                value={form.estado}
+                onChange={handleEstadoChange}
+                maxLength={2}
+                className={inputClass}
+                placeholder="EX: SP"
               />
             </Field>
 

@@ -8,7 +8,7 @@ import { useFornecedores, useDeleteFornecedor } from '../hooks/useFornecedores'
 import { useDebounce } from '../../../hooks/useDebounce'
 import { maskPhone } from '../../../lib/format'
 
-const TABLE_HEADERS = ['ID', 'Nome', 'CNPJ', 'Telefone', 'E-mail', 'Ações']
+const TABLE_HEADERS = ['ID', 'Nome', 'Cidade/UF', 'CNPJ', 'Telefone', 'E-mail', 'Ações']
 
 export default function FornecedorListPage() {
   const navigate = useNavigate()
@@ -145,6 +145,9 @@ export default function FornecedorListPage() {
           <tr key={f.id} className="hover:bg-gray-50 transition-colors">
             <td className="px-4 py-3 text-gray-500 text-sm">{f.id}</td>
             <td className="px-4 py-3 font-medium text-gray-900">{f.nome}</td>
+            <td className="px-4 py-3 text-gray-600">
+              {f.cidade && f.estado ? `${f.cidade}/${f.estado}` : (f.cidade ?? f.estado ?? '—')}
+            </td>
             <td className="px-4 py-3 text-gray-600">{f.cnpj ?? '—'}</td>
             <td className="px-4 py-3 text-gray-600">{f.telefone ? maskPhone(f.telefone) : '—'}</td>
             <td className="px-4 py-3 text-gray-600">{f.email ?? '—'}</td>
