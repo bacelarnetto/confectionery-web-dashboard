@@ -329,6 +329,8 @@ usuário de que a remoção era "inócua".
 **✅ CORRIGIDO (2026-09-22).** `ApoioOrcamentoSection.tsx`: texto do modal trocado para "O valor
 desse apoio será subtraído do total do orçamento." `npx tsc --noEmit` limpo.
 
+**Verificação independente ao vivo (2026-09-22, rodada 3):** reproduzido o fluxo completo (propor apoio → conferir `valorTotal` via API → clicar em "Remover da proposta" → conferir texto do modal → confirmar remoção → conferir `valorTotal` via API novamente) no Orçamento #4. Texto do modal confirmado igual ao commit `36ecac0`, e `valorTotal` confirmado indo 30 → 430 ao propor e 430 → 30 ao remover, consistente com o texto exibido. Ver `doc/reteste-achados-2026-09-22.md` → seção "Verificação independente das correções dos achados #5 e #6".
+
 ### ✅ [BAIXO/UX — CORRIGIDO 2026-09-22] Ambiguidade entre "Lucro Real Estimado" (caixa) e "Receita de Vendas" (competência) no Dashboard
 **Achado novo**, mesmo reteste (`doc/reteste-achados-2026-09-22.md`, achado #6). Não era bug de
 cálculo — os dois cards mostravam números corretos, cada um dentro do próprio regime contábil
@@ -343,6 +345,8 @@ renomeados/esclarecidos: **"Receita Faturada"** (regime de competência, `Vendas
 `kpis.receitaMes`) e **"Receita Recebida"** (regime de caixa, `FinanceiroBlock` +
 `DestaquesExecutivos` — valor `resumo.receita`), cada um com subtítulo indicando o regime
 explicitamente. Nenhuma lógica de cálculo alterada. `npx tsc --noEmit` limpo.
+
+**Verificação independente ao vivo (2026-09-22, rodada 3):** recarregada a tela inicial (`/`) do zero e confirmados os 3 pontos renomeados pelo commit `7939391`: "Receita Recebida" (Destaques Executivos, subtítulo "regime de caixa"), "Receita Faturada" (Vendas & Pedidos, subtítulo "regime de competência") e "Receita Recebida" (Financeiro & Compras, subtítulo "regime de caixa"). Nenhum valor mudou, apenas título/subtítulo, como esperado. Ver `doc/reteste-achados-2026-09-22.md` → seção "Verificação independente das correções dos achados #5 e #6".
 
 ### Observação (não é achado) — RESUMO do Orçamento na tela não soma o Apoio de Festa
 Registrado no reteste (`doc/reteste-achados-2026-09-22.md` → seção do achado 1): o card "RESUMO"

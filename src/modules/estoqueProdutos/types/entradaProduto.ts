@@ -1,6 +1,7 @@
 export interface ItemEntradaProduto {
   id?: number
   produtoId: number
+  produtoNome?: string
   quantidade: number
   valorCustoUnitario: number
   valorCustoTotal?: number

@@ -7,6 +7,8 @@
 - Backend (`confectionery`): `1db585b` ("homologacao") — fix do valorTotal do Orçamento.
 - Frontend (`confectionery-web-dashboard`): `edc7e30` ("homologacao") — fix de fuso horário, crash e modal.
 - Docs: `45a5f64` — marca os achados como corrigidos em `PROJECT_CONTEXT.md` e no relatório.
+- Frontend (rodada 2, achados #5 e #6): `36ecac0` — texto do modal de remoção de Apoio de Festa; `7939391` — renomeação dos cards de receita do Dashboard.
+- Docs (rodada 2): `89d46df`, `18602a9` — registram e marcam #5/#6 como corrigidos e validam D3.
 
 ## Resumo
 
@@ -16,8 +18,8 @@
 | 2 | Drift de +3h em "Data do Evento"/"Data de Entrega" | ALTO | ✅ Corrigido |
 | 3 | Crash de tela branca com data inválida | MÉDIO | ✅ Corrigido |
 | 4 | Modal "Estoque Insuficiente" com copy errado para insumo | BAIXO | ✅ Corrigido |
-| 5 | Modal de remoção de Apoio de Festa com texto desatualizado (novo, achado nesta rodada) | BAIXO | 🆕 Não corrigido |
-| 6 | Ambiguidade entre "Lucro Real Estimado" (caixa) e "Receita de Vendas" (competência) no Dashboard (novo, achado nesta rodada) | BAIXO/UX | 🆕 Não corrigido |
+| 5 | Modal de remoção de Apoio de Festa com texto desatualizado (novo, achado nesta rodada) | BAIXO | ✅ Corrigido — confirmado ao vivo (rodada 3) |
+| 6 | Ambiguidade entre "Lucro Real Estimado" (caixa) e "Receita de Vendas" (competência) no Dashboard (novo, achado nesta rodada) | BAIXO/UX | ✅ Corrigido (renomeação de cards) — confirmado ao vivo (rodada 3) |
 
 ---
 
@@ -32,18 +34,17 @@ Testado ponta a ponta pela UI, criando um Orçamento novo (Orçamento #3):
 - **Conversão para Pedido sem duplicar o valor**: aprovado o Orçamento #3 → gerou Pedido #3 com `valorTotal = 190` (não 330). Confirmado que a materialização do `ApoioOrcamento` em `ApoioFesta` real soma o apoio **exatamente uma vez** no Pedido. ✅
 - **Exclusão do apoio devolvendo o valor** (Orçamento #4, teste isolado): item R$ 30 + Apoio "Carrinho de Doces" (2h × R$ 50 = R$ 100) → total 130 ao criar. Removida a proposta de apoio → `valorTotal` voltou para **30**. ✅
 
-### Ressalva encontrada durante o reteste — Achado #5 (novo, BAIXO)
+### Ressalva encontrada durante o reteste — Achado #5 (novo, BAIXO) — ✅ corrigido, ver seção de verificação independente abaixo
 
-O modal de confirmação ao remover um Apoio de Festa proposto de um Orçamento ainda exibe o texto:
+O modal de confirmação ao remover um Apoio de Festa proposto de um Orçamento exibia o texto:
 
 > "Tem certeza que deseja remover o apoio "X" da proposta? **Isso não afeta o valor do orçamento** (apoio proposto não soma no total até o orçamento ser aprovado)."
 
-Esse texto ficou **desatualizado pela própria correção**: antes do fix, era verdade (o apoio proposto realmente não entrava no total). Agora ele entra imediatamente (confirmado acima: 130 → 30 ao remover). O texto do modal deveria ser atualizado para refletir o novo comportamento, ou o usuário é informado incorretamente de que a remoção é "inócua" quando na verdade ela reduz o valor total do orçamento.
-Local: `confectionery-web-dashboard/src/modules/.../` — componente do diálogo de remoção de `ApoioOrcamentoSection` (não localizado o arquivo exato nesta rodada, apenas o texto renderizado).
+Esse texto tinha ficado **desatualizado pela própria correção**: antes do fix, era verdade (o apoio proposto realmente não entrava no total). Depois do fix, ele passou a entrar imediatamente (confirmado acima: 130 → 30 ao remover). O texto do modal precisava ser atualizado para refletir o novo comportamento — ver correção e reteste independente na seção dedicada, mais abaixo.
 
-### Observação (não é bug, é UX menor)
+### Observação (não é bug, é UX menor — ainda não corrigida, fora do escopo desta rodada)
 
-O card "RESUMO" nas telas de criação/edição de Orçamento continua mostrando apenas itens + frete (sem o apoio), tanto na criação quanto na edição — ex.: total exibido "R$ 50,00" enquanto o valor persistido/lista mostra corretamente "R$ 190,00". Isso é puramente client-side (não afeta o dado persistido, que está correto), mas pode confundir o usuário durante o preenchimento. Diferente do Pedido, cujo RESUMO já soma o Apoio de Festa corretamente.
+O card "RESUMO" nas telas de criação/edição de Orçamento continua mostrando apenas itens + frete (sem o apoio), tanto na criação quanto na edição — ex.: total exibido "R$ 30,00" enquanto o valor persistido/lista mostra corretamente "R$ 430,00" (com apoio proposto somado). Isso é puramente client-side (não afeta o dado persistido, que está correto), mas pode confundir o usuário durante o preenchimento. Diferente do Pedido, cujo RESUMO já soma o Apoio de Festa corretamente. **Reconfirmado ao vivo em 2026-09-22 (rodada 3)** durante a verificação do achado #5 (ver abaixo) — continua presente, sem alteração de comportamento. Já está registrado em `doc/homologacao-2026-09-19-frontend.md` como observação separada, fora do escopo dos achados #5/#6.
 
 ---
 
@@ -93,10 +94,69 @@ Nenhuma regressão no caso de produto acabado; o caso de insumo agora tem copy e
 
 ---
 
+## 6) Achado #6 (novo, BAIXO/UX) — Ambiguidade entre "Lucro Real Estimado" e "Receita de Vendas" no Dashboard — ✅ CORRIGIDO (renomeação), ver verificação independente abaixo
+
+**Onde:** tela inicial (`/`), card "Lucro Real Estimado" (topo) e card "Receita de Vendas" (bloco Vendas & Pedidos), ambos na mesma tela.
+
+**O que foi observado originalmente:** com a base de dados desta rodada (setembro/2026), o Dashboard mostrava simultaneamente:
+- **Lucro Real Estimado: -R$ 20,00** — subtítulo "Receita − Despesas − COGS"
+- **Receita de Vendas: R$ 284,00**
+
+À primeira vista os dois números pareciam contraditórios (teve R$ 284 de venda no mês, mas o lucro aparece negativo), o que pode gerar desconfiança do usuário em relação ao cálculo.
+
+**Verificação:** o cálculo do "Lucro Real Estimado" está correto e é internamente consistente. É produzido por `ResumoService.resumoDoMes()` (backend), que explicitamente implementa **regime de caixa** (comentário no próprio código: *"lucro_real = receita(mês, caixa) − gastos(data_pagamento) − COGS(saida_insumo no mês)"*):
+- Receita = soma de `pagamento_pedido.valor` com `data_pagamento` no mês.
+- Despesas = soma de `financeiro_gasto.valor` com `data_pagamento` no mês.
+- COGS = soma de `saida_insumo.valor_total` (tipo PRODUCAO) criadas no mês.
+
+Já o card **"Receita de Vendas"** (`DashboardService.getVendasKpis()`) usa **regime de competência**: soma `pedido.valor_total` de pedidos criados no mês, independentemente de terem sido pagos.
+
+Também validado o corte de mês em fuso de Brasília (item D3, não executado nas rodadas anteriores): os 2 gastos de teste "Teste QA Repetir Dia 31" (datados `2026-10-31T03:00:00Z` e `2026-11-30T03:00:00Z`, ou seja, 31/10 e 30/11 às 00:00 BRT) foram corretamente atribuídos a outubro e novembro respectivamente, sem vazamento entre meses. ✅ Sem bug de fronteira de mês.
+
+**Decisão do dono do produto (2026-09-22):** a coexistência dos dois regimes contábeis no mesmo painel é intencional; a correção é apenas de nomenclatura/UX, sem alterar nenhum cálculo — renomear os cards para deixar o regime explícito.
+
+**Correção aplicada:** ver verificação independente ao vivo, abaixo.
+
+---
+
+## Verificação independente das correções dos achados #5 e #6 — 2026-09-22 (rodada 3)
+
+Reteste ao vivo, após o time de desenvolvimento aplicar as correções dos achados #5 (commit frontend `36ecac0`) e #6 (commit frontend `7939391`), confirmadas por `git log`/`git show` antes do reteste.
+
+### Achado #5 — modal de remoção de Apoio de Festa
+
+Fluxo reproduzido do zero na aplicação viva, usando o Orçamento #4 (`ABERTO`, sem apoio):
+1. Adicionada uma proposta de Apoio de Festa ("Carrinho de Doces QA PG", 05/10/2026 10:00–18:00, R$ 400,00) via "Propor Apoio de Festa". Confirmado via API (`GET /api/orcamento/4`) que `valorTotal` subiu de **30 → 430** imediatamente ao propor (comportamento do fix do achado #1, correto).
+2. Clicado em "Remover da proposta" no item adicionado. O modal de confirmação agora exibe:
+   > "Tem certeza que deseja remover o apoio **"Carrinho de Doces QA PG"** da proposta? **O valor desse apoio será subtraído do total do orçamento.**"
+
+   Texto novo confirmado **igual ao commit `36ecac0`**, e agora **descreve corretamente** o comportamento real (antes, o texto antigo dizia o contrário — que a remoção não afetava o total). ✅
+3. Confirmada a remoção → `GET /api/orcamento/4` mostrou `valorTotal` voltar de **430 → 30**, exatamente como o texto do modal descreve. ✅
+
+**Achado #5: confirmado corrigido**, com o texto do modal agora consistente com o comportamento real do backend.
+
+**Nota lateral (não é regressão do #5, é a observação de UX já registrada acima):** durante o passo 1, o card "RESUMO" da própria tela de edição do Orçamento #4 permaneceu mostrando "Total: R$ 30,00" o tempo todo (antes e depois de propor o apoio de R$ 400,00), mesmo após reload da página — só a lista de Orçamentos (`/vendas/orcamentos`) mostrou o valor correto (R$ 430,00). Isso significa que, na mesma tela onde o novo modal do achado #5 avisa que "o valor desse apoio será subtraído do total", o campo "Total" visível nessa tela nunca chegou a mostrar esse valor somado em primeiro lugar — o aviso do modal é correto sobre o dado real (persistido/listado), mas continua desconectado do que a tela de edição exibe. Já estava registrado como observação de UX antes desta rodada; não é um achado novo, só uma reconfirmação de que segue sem correção (fora do escopo dos achados #5/#6).
+
+### Achado #6 — nomenclatura dos cards de receita no Dashboard
+
+Reteste ao vivo na tela inicial (`/`), recarregada do zero:
+- **Destaques (topo):** card renomeado para **"RECEITA RECEBIDA"**, subtítulo **"Entradas liquidadas no mês (regime de caixa)"** — valor R$ 0,00 (sem pagamentos registrados em setembro/2026 nesta base). ✅ conforme commit `7939391` (`DestaquesExecutivos.tsx`).
+- **Vendas & Pedidos:** card renomeado para **"RECEITA FATURADA"**, subtítulo **"Total faturado no mês corrente (regime de competência)"** — valor R$ 1.434,00 (soma dos pedidos do mês, incluindo os criados nas rodadas de reteste anteriores). ✅ conforme commit `7939391` (`VendasBlock.tsx`).
+- **Financeiro & Compras:** card renomeado para **"RECEITA RECEBIDA"**, subtítulo **"Entradas liquidadas no mês (regime de caixa)"** — valor R$ 0,00, igual ao card de Destaques (mesma fonte, `resumo.receita`). ✅ conforme commit `7939391` (`FinanceiroBlock.tsx`).
+- Nenhum valor mudou (os três cards continuam mostrando exatamente os mesmos números de antes da correção) — apenas título e subtítulo, como esperado para uma correção de nomenclatura/UX sem alteração de cálculo.
+
+**Achado #6: confirmado corrigido** nos 3 pontos do Dashboard que exibiam os cards de receita. Guia do usuário (`modules/guia/components/sections/Dashboard.tsx`) não reaberto nesta rodada de verificação, mas o diff do commit `7939391` mostra o texto atualizado de forma consistente com os cards.
+
+---
+
 ## Conclusão
 
-Os 4 achados da rodada de homologação 2026-09-19 foram corrigidos e verificados com sucesso nesta rodada, incluindo reprodução end-to-end do crash original (não apenas revisão de código) e testes de ciclo completo (criar → editar → remover apoio → converter em pedido) para o achado crítico do `valorTotal`.
+Os 4 achados da rodada de homologação 2026-09-19 foram corrigidos e verificados com sucesso, incluindo reprodução end-to-end do crash original (não apenas revisão de código) e testes de ciclo completo (criar → editar → remover apoio → converter em pedido) para o achado crítico do `valorTotal`.
 
-Um novo achado de baixa severidade foi identificado como efeito colateral da correção do item 1 (texto do modal de confirmação de remoção de Apoio de Festa desatualizado) e está documentado acima para correção em uma próxima rodada.
+Os 2 achados novos identificados durante o reteste (efeitos colaterais/observações da correção do item 1) foram corrigidos pelo time de desenvolvimento e **reconfirmados ao vivo de forma independente nesta rodada (rodada 3)**:
+- **Achado #5:** texto do modal de confirmação de remoção de Apoio de Festa agora reflete o comportamento real (subtração imediata do total), confirmado por reprodução completa do fluxo (propor → conferir total via API → remover → conferir total via API).
+- **Achado #6:** cards de receita do Dashboard renomeados nos 3 pontos onde apareciam (Destaques, Vendas & Pedidos, Financeiro & Compras), com subtítulo explicitando o regime contábil (caixa vs. competência) em cada um.
 
-**Ambiente de teste usado:** Orçamentos #3 e #4 e Pedido #3, criados nesta rodada especificamente para o reteste, permanecem na base como evidência (Pedido #3 ficou com item de 50 unidades de "Bolo QA PG" sem estoque suficiente — condição esperada, criada intencionalmente para os testes dos achados #3 e #4).
+Permanece **não corrigida** (fora do escopo destas correções, já registrada como observação de UX menor, sem risco ao dado persistido): o card "RESUMO" da tela de criação/edição de Orçamento não reflete o valor do Apoio de Festa proposto no "Total" exibido, mesmo quando o backend já soma esse valor (visível corretamente na lista de Orçamentos). Recomenda-se considerar essa correção numa próxima rodada, já que agora o modal do achado #5 faz referência explícita a "o total do orçamento" numa tela cujo próprio campo "Total" não reflete esse valor.
+
+**Ambiente de teste usado:** Orçamentos #3 e #4 e Pedido #3, criados na rodada 2 especificamente para o reteste, permanecem na base como evidência. Na rodada 3 (verificação independente), o Orçamento #4 foi reutilizado para o teste do achado #5 (uma proposta de apoio foi adicionada e depois removida — o orçamento voltou ao estado original, `valorTotal = 30`, sem apoio ativo).
