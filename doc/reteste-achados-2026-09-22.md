@@ -16,6 +16,8 @@
 | 2 | Drift de +3h em "Data do Evento"/"Data de Entrega" | ALTO | ✅ Corrigido |
 | 3 | Crash de tela branca com data inválida | MÉDIO | ✅ Corrigido |
 | 4 | Modal "Estoque Insuficiente" com copy errado para insumo | BAIXO | ✅ Corrigido |
+| 5 | Modal de remoção de Apoio de Festa com texto desatualizado (novo, achado nesta rodada) | BAIXO | 🆕 Não corrigido |
+| 6 | Ambiguidade entre "Lucro Real Estimado" (caixa) e "Receita de Vendas" (competência) no Dashboard (novo, achado nesta rodada) | BAIXO/UX | 🆕 Não corrigido |
 
 ---
 
@@ -30,7 +32,7 @@ Testado ponta a ponta pela UI, criando um Orçamento novo (Orçamento #3):
 - **Conversão para Pedido sem duplicar o valor**: aprovado o Orçamento #3 → gerou Pedido #3 com `valorTotal = 190` (não 330). Confirmado que a materialização do `ApoioOrcamento` em `ApoioFesta` real soma o apoio **exatamente uma vez** no Pedido. ✅
 - **Exclusão do apoio devolvendo o valor** (Orçamento #4, teste isolado): item R$ 30 + Apoio "Carrinho de Doces" (2h × R$ 50 = R$ 100) → total 130 ao criar. Removida a proposta de apoio → `valorTotal` voltou para **30**. ✅
 
-### Ressalva encontrada durante o reteste (novo achado, BAIXO)
+### Ressalva encontrada durante o reteste — Achado #5 (novo, BAIXO)
 
 O modal de confirmação ao remover um Apoio de Festa proposto de um Orçamento ainda exibe o texto:
 

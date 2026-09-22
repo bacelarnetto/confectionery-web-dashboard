@@ -222,8 +222,10 @@ confiabilidade do campo `dataEntrega` usado por este cenário.
 **Não executado nesta rodada.**
 
 ### D3 — Resumo financeiro do mês e alertas
-**Não executado nesta rodada** (confirmado apenas que `/financeiro/gastos` exibe corretamente
-"Setembro de 2026" como mês corrente em 22/09/2026 — não é um teste decisivo de fronteira de mês).
+**✅ CORRETO — validado incidentalmente (2026-09-22)**, investigando o achado #6 (ambiguidade
+Lucro Real × Receita de Vendas, ver "Achados adicionais"): gastos com `dataPagamento` 31/10/2026 e
+30/11/2026 caíram corretamente nos respectivos meses do resumo financeiro, sem vazamento pra
+mês adjacente por causa do fuso — corte de mês em `America/Sao_Paulo` confirmado.
 
 ### D4 — Repetir gasto preserva o dia
 **✅ CORRETO.** Criado gasto recorrente com `dataPagamento` = 31/10/2026. Usando a ação
@@ -315,6 +317,35 @@ complementos"/"estoque de insumo", o guia de ação sugere "Entrada de Insumo" (
 (em vez de `/estoque-produtos/fabricacoes/nova`). A exibição "Disponível no estoque" continua
 igual nos dois casos, como pedido. `npx tsc --noEmit` limpo.
 
+### ✅ [BAIXO — CORRIGIDO 2026-09-22] Modal de remoção de Apoio de Festa (Orçamento) com texto desatualizado
+**Achado novo**, encontrado no reteste ao vivo dos 4 achados acima (`doc/reteste-achados-2026-09-22.md`,
+achado #5) — efeito colateral direto da correção do total do Orçamento. O modal de confirmação ao
+remover um `ApoioOrcamento` proposto dizia: *"Isso não afeta o valor do orçamento (apoio proposto
+não soma no total até o orçamento ser aprovado)"* — verdade **antes** do fix do item crítico
+acima, mas falso depois: remover a proposta agora subtrai o valor do total imediatamente
+(confirmado no reteste: 130 → 30 ao remover). O texto desatualizado informava incorretamente o
+usuário de que a remoção era "inócua".
+
+**✅ CORRIGIDO (2026-09-22).** `ApoioOrcamentoSection.tsx`: texto do modal trocado para "O valor
+desse apoio será subtraído do total do orçamento." `npx tsc --noEmit` limpo.
+
+### 🆕 [BAIXO/UX — pendente decisão do dono] Ambiguidade entre "Lucro Real Estimado" (caixa) e "Receita de Vendas" (competência) no Dashboard
+**Achado novo**, mesmo reteste (`doc/reteste-achados-2026-09-22.md`, achado #6). Não é bug de
+cálculo — os dois cards mostram números corretos, cada um dentro do próprio regime contábil
+(caixa vs. competência). O achado é de **UX/nomeação**: os dois regimes coexistem no mesmo painel
+sem indicação visual de que usam critérios diferentes, o que pode confundir quem lê o Dashboard.
+**Não é decisão técnica — pendente confirmação do dono do produto:** se a coexistência dos dois
+regimes é intencional, a correção mais barata é só renomear os cards (ex.: "Receita Recebida" /
+"Receita Faturada") ou adicionar um tooltip curto explicando a diferença, sem mudar nenhuma lógica
+de cálculo. Nenhum código alterado para este achado.
+
+### Observação (não é achado) — RESUMO do Orçamento na tela não soma o Apoio de Festa
+Registrado no reteste (`doc/reteste-achados-2026-09-22.md` → seção do achado 1): o card "RESUMO"
+nas telas de criação/edição de Orçamento mostra só itens+frete (client-side), enquanto o valor
+persistido/listado já está correto (com apoio somado) desde a correção acima. Não afeta o dado
+salvo, só a exibição durante o preenchimento — diferente do Pedido, cujo RESUMO já soma o apoio
+corretamente. Não corrigido nesta rodada (fora do escopo dos achados originais).
+
 ---
 
 ## Resultados
@@ -339,19 +370,23 @@ igual nos dois casos, como pedido. `npx tsc --noEmit` limpo.
 | C7 | — | Não executado nesta rodada (testado cancelamento em C5 em vez de exclusão). |
 | D1 | — | Não executado nesta rodada. |
 | D2 | — | Não executado nesta rodada. |
-| D3 | — | Não executado nesta rodada (mês corrente exibido corretamente, mas não é teste de fronteira). |
+| D3 | ✅ | Validado incidentalmente (2026-09-22, investigando achado #6): gastos 31/10 e 30/11 caíram nos meses corretos do resumo financeiro, sem vazamento por fuso. |
 | D4 | ✅ | Repetir gasto 31/10 → 30/11 corretamente ajustado. Ação é manual (ícone "Repetir"), não automática. |
 
-**Achados adicionais fora da lista — todos corrigidos em 2026-09-22:** total do orçamento não
-somava apoio (crítico, ver B1); deslocamento cumulativo de +3h em campos de data/hora ao editar
-sem tocar no campo (alto); app quebrava com tela branca ao receber data/hora inválida, sem error
-boundary (médio); modal de estoque insuficiente usava texto de "produtos acabados" também para
-escassez de insumo (baixo). Detalhe técnico de cada correção na seção "Achados adicionais" acima.
-Backend: `mvn compile` limpo + suites relacionadas verdes (Orçamento/ApoioOrcamento 61,
-Pedido/ApoioFesta/trava de regressão de estoque sem novas falhas). Frontend: `npx tsc --noEmit`
-limpo. **Pendente:** reexecutar os cenários B1/A-datas/modal ao vivo pela UI para confirmar
-visualmente (esta rodada de correção validou via testes automatizados e compilação, não repetiu o
-passo a passo manual do script).
+**Achados adicionais fora da lista — todos os 4 originais corrigidos e reconfirmados ao vivo em
+2026-09-22:** total do orçamento não somava apoio (crítico, ver B1); deslocamento cumulativo de
++3h em campos de data/hora ao editar sem tocar no campo (alto); app quebrava com tela branca ao
+receber data/hora inválida, sem error boundary (médio); modal de estoque insuficiente usava texto
+de "produtos acabados" também para escassez de insumo (baixo). Detalhe técnico de cada correção na
+seção "Achados adicionais" acima; evidência do reteste ao vivo (ponta a ponta pela UI, incluindo
+reprodução real do crash original) em `doc/reteste-achados-2026-09-22.md`. **Dois achados novos
+encontrados durante o reteste:** #5 modal de remoção de Apoio de Festa com texto desatualizado
+(baixo, corrigido) e #6 ambiguidade "Lucro Real Estimado" × "Receita de Vendas" no Dashboard
+(baixo/UX, não é bug — pendente decisão do dono do produto). Backend: `mvn compile` limpo + suites
+relacionadas verdes (Orçamento/ApoioOrcamento 61, Pedido/ApoioFesta/trava de regressão de estoque
+sem novas falhas). Frontend: `npx tsc --noEmit` limpo. **Ainda não executados nesta rodada:** C7
+(exclusão de Apoio em RASCUNHO), D1 (alerta de pedido com entrega às 23h BR), D2 (relatório de
+movimentação, janela de 30 dias).
 
 Legenda: ✅ CORRETO · ❌ achado (anexar reprodução: passos, valores exibidos vs esperados, console) · — não executado nesta rodada.
 
