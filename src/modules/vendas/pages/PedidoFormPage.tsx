@@ -14,6 +14,7 @@ import RegistrarPagamentoModal from '../components/RegistrarPagamentoModal'
 import ApoioFestaSection, { ApoioFestaLocal } from '../../apoioFesta/components/ApoioFestaSection'
 import apoioFestaService from '../../apoioFesta/services/apoioFestaService'
 import { useApoiosFesta } from '../../apoioFesta/hooks/useApoiosFesta'
+import { instantParaDatetimeLocal, datetimeLocalParaIso } from '../../apoioFesta/lib/horarioBrasilia'
 import { calcularResumo } from '../lib/resumoValores'
 import { formatEndereco } from '../lib/endereco'
 import { STATUS_COLORS, STATUS_QUE_SUGEREM_PAGAMENTO, PEDIDO_STATUS_ORDEM, statusDisponiveisPara, tituloStatusPill } from '../lib/pedidoStatus'
@@ -165,7 +166,7 @@ export default function PedidoFormPage() {
         clienteId: String(pedido.clienteId ?? ''),
         enderecoId: String(pedido.enderecoId ?? ''),
         retirar: pedido.retirar,
-        dataEntrega: pedido.dataEntrega ? new Date(pedido.dataEntrega).toISOString().slice(0, 16) : '',
+        dataEntrega: pedido.dataEntrega ? instantParaDatetimeLocal(pedido.dataEntrega) : '',
         valorFrete: String(pedido.valorFrete ?? ''),
         observacao: pedido.observacao ?? '',
       })
@@ -287,9 +288,16 @@ export default function PedidoFormPage() {
     e.preventDefault()
     setErroGeral(null)
     setItemErroIndices(new Set())
+    let dataEntregaIso: string | undefined
+    try {
+      dataEntregaIso = form.dataEntrega ? datetimeLocalParaIso(form.dataEntrega) : undefined
+    } catch (err) {
+      setErroGeral(err instanceof Error ? err.message : 'Data/hora inválida.')
+      return
+    }
     const base = {
       retirar: form.retirar,
-      dataEntrega: form.dataEntrega ? new Date(form.dataEntrega).toISOString() : undefined,
+      dataEntrega: dataEntregaIso,
       valorFrete: form.valorFrete ? Number(form.valorFrete) : undefined,
       observacao: form.observacao || undefined,
       itens: buildItens(),

@@ -13,6 +13,7 @@ import ComplementoPicker, { ComplementoResolvido } from '../components/Complemen
 import ResumoValoresCard from '../components/ResumoValoresCard'
 import ApoioOrcamentoSection, { ApoioOrcamentoLocal } from '../../apoioFesta/components/ApoioOrcamentoSection'
 import apoioOrcamentoService from '../../apoioFesta/services/apoioOrcamentoService'
+import { instantParaDatetimeLocal, datetimeLocalParaIso } from '../../apoioFesta/lib/horarioBrasilia'
 import { calcularResumo } from '../lib/resumoValores'
 import { useProdutos } from '../../estoqueProdutos/hooks/useProdutos'
 import precificacaoProdutoService from '../../estoqueProdutos/services/precificacaoProdutoService'
@@ -115,7 +116,7 @@ export default function OrcamentoFormPage() {
         clienteId: String(orcamento.clienteId ?? ''),
         enderecoId: String(orcamento.enderecoId ?? ''),
         dataValidade: orcamento.dataValidade ? dateToLocalYMD(orcamento.dataValidade) : '',
-        dataEvento: orcamento.dataEvento ? new Date(orcamento.dataEvento).toISOString().slice(0, 16) : '',
+        dataEvento: orcamento.dataEvento ? instantParaDatetimeLocal(orcamento.dataEvento) : '',
         valorFrete: String(orcamento.valorFrete ?? ''),
         observacao: orcamento.observacao ?? '',
       })
@@ -217,8 +218,15 @@ export default function OrcamentoFormPage() {
     e.preventDefault()
     setErroGeral(null)
     setItemErroIndex(null)
-    const dataValidadeIso = form.dataValidade ? new Date(`${form.dataValidade}T23:59:59`).toISOString() : undefined
-    const dataEventoIso = form.dataEvento ? new Date(form.dataEvento).toISOString() : undefined
+    let dataValidadeIso: string | undefined
+    let dataEventoIso: string | undefined
+    try {
+      dataValidadeIso = form.dataValidade ? datetimeLocalParaIso(`${form.dataValidade}T23:59:59`) : undefined
+      dataEventoIso = form.dataEvento ? datetimeLocalParaIso(form.dataEvento) : undefined
+    } catch (err) {
+      setErroGeral(err instanceof Error ? err.message : 'Data/hora inválida.')
+      return
+    }
 
     if (isEditing) {
       updateMutation.mutate(
