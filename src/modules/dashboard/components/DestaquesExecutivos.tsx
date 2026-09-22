@@ -36,12 +36,12 @@ export default function DestaquesExecutivos({
       {/* 4 Cards Principais */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard
-          title="Receita do Mês"
+          title="Receita Recebida"
           value={resumo ? formatCurrency.format(resumo.receita) : (vendasKpis ? formatCurrency.format(vendasKpis.receitaMes) : '—')}
           icon={<DollarSign size={20} />}
           variant="emerald"
           isLoading={isLoadingResumo || isLoadingVendas}
-          subtitle="Faturamento total realizado"
+          subtitle="Entradas liquidadas no mês (regime de caixa)"
         />
         <KpiCard
           title="Lucro Real Estimado"

@@ -329,15 +329,20 @@ usuário de que a remoção era "inócua".
 **✅ CORRIGIDO (2026-09-22).** `ApoioOrcamentoSection.tsx`: texto do modal trocado para "O valor
 desse apoio será subtraído do total do orçamento." `npx tsc --noEmit` limpo.
 
-### 🆕 [BAIXO/UX — pendente decisão do dono] Ambiguidade entre "Lucro Real Estimado" (caixa) e "Receita de Vendas" (competência) no Dashboard
-**Achado novo**, mesmo reteste (`doc/reteste-achados-2026-09-22.md`, achado #6). Não é bug de
-cálculo — os dois cards mostram números corretos, cada um dentro do próprio regime contábil
-(caixa vs. competência). O achado é de **UX/nomeação**: os dois regimes coexistem no mesmo painel
-sem indicação visual de que usam critérios diferentes, o que pode confundir quem lê o Dashboard.
-**Não é decisão técnica — pendente confirmação do dono do produto:** se a coexistência dos dois
-regimes é intencional, a correção mais barata é só renomear os cards (ex.: "Receita Recebida" /
-"Receita Faturada") ou adicionar um tooltip curto explicando a diferença, sem mudar nenhuma lógica
-de cálculo. Nenhum código alterado para este achado.
+### ✅ [BAIXO/UX — CORRIGIDO 2026-09-22] Ambiguidade entre "Lucro Real Estimado" (caixa) e "Receita de Vendas" (competência) no Dashboard
+**Achado novo**, mesmo reteste (`doc/reteste-achados-2026-09-22.md`, achado #6). Não era bug de
+cálculo — os dois cards mostravam números corretos, cada um dentro do próprio regime contábil
+(caixa vs. competência). O achado era de **UX/nomeação**: os dois regimes coexistiam no mesmo
+painel sem indicação visual de que usam critérios diferentes.
+
+**Decisão do dono (2026-09-22):** coexistência dos dois regimes é intencional — corrigir só
+nomeando melhor os cards, sem mudar lógica de cálculo. **✅ CORRIGIDO:** os cards de receita nos 3
+componentes do Dashboard (`VendasBlock`, `FinanceiroBlock`, `DestaquesExecutivos`) e o texto
+correspondente no guia do usuário (`modules/guia/components/sections/Dashboard.tsx`) foram
+renomeados/esclarecidos: **"Receita Faturada"** (regime de competência, `VendasBlock` — valor
+`kpis.receitaMes`) e **"Receita Recebida"** (regime de caixa, `FinanceiroBlock` +
+`DestaquesExecutivos` — valor `resumo.receita`), cada um com subtítulo indicando o regime
+explicitamente. Nenhuma lógica de cálculo alterada. `npx tsc --noEmit` limpo.
 
 ### Observação (não é achado) — RESUMO do Orçamento na tela não soma o Apoio de Festa
 Registrado no reteste (`doc/reteste-achados-2026-09-22.md` → seção do achado 1): o card "RESUMO"
@@ -380,9 +385,9 @@ receber data/hora inválida, sem error boundary (médio); modal de estoque insuf
 de "produtos acabados" também para escassez de insumo (baixo). Detalhe técnico de cada correção na
 seção "Achados adicionais" acima; evidência do reteste ao vivo (ponta a ponta pela UI, incluindo
 reprodução real do crash original) em `doc/reteste-achados-2026-09-22.md`. **Dois achados novos
-encontrados durante o reteste:** #5 modal de remoção de Apoio de Festa com texto desatualizado
-(baixo, corrigido) e #6 ambiguidade "Lucro Real Estimado" × "Receita de Vendas" no Dashboard
-(baixo/UX, não é bug — pendente decisão do dono do produto). Backend: `mvn compile` limpo + suites
+encontrados durante o reteste, ambos corrigidos:** #5 modal de remoção de Apoio de Festa com texto
+desatualizado (baixo) e #6 ambiguidade "Lucro Real Estimado" × "Receita de Vendas" no Dashboard
+(baixo/UX, não era bug — dono decidiu manter os dois regimes e só renomear os cards). Backend: `mvn compile` limpo + suites
 relacionadas verdes (Orçamento/ApoioOrcamento 61, Pedido/ApoioFesta/trava de regressão de estoque
 sem novas falhas). Frontend: `npx tsc --noEmit` limpo. **Ainda não executados nesta rodada:** C7
 (exclusão de Apoio em RASCUNHO), D1 (alerta de pedido com entrega às 23h BR), D2 (relatório de

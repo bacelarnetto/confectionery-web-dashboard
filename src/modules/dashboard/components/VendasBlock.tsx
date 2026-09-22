@@ -86,12 +86,12 @@ export default function VendasBlock({
           to="/vendas/pedidos"
         />
         <KpiCard
-          title="Receita de Vendas"
+          title="Receita Faturada"
           value={kpis ? formatCurrency.format(kpis.receitaMes) : '—'}
           icon={<DollarSign size={20} />}
           variant="emerald"
           isLoading={isLoadingKpis}
-          subtitle="Total faturado no mês corrente"
+          subtitle="Total faturado no mês corrente (regime de competência)"
         />
         <KpiCard
           title="Pedidos em Aberto"
