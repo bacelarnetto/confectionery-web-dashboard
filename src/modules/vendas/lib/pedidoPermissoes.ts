@@ -24,13 +24,6 @@ export function podeRegistrarPagamentoPedido(perfis: string[]): boolean {
   return perfis.includes('ADMIN') || perfis.includes('VENDAS')
 }
 
-// Existe alguma ação de status pro perfil, em algum pedido -- usado pra decidir se mostra os
-// controles de status (pills/select) ou só um badge somente-leitura (caso do ESTOQUE, que não
-// tem nenhuma ação de status).
-export function podeAlterarStatusPedido(perfis: string[]): boolean {
-  return perfis.includes('ADMIN') || perfis.includes('VENDAS') || perfis.includes('PRODUCAO')
-}
-
 function podeTransicionarPara(destino: string, statusAtual: string | undefined, perfis: string[]): boolean {
   if (destino === 'CANCELADO') {
     return perfis.includes('VENDAS') && (!statusAtual || STATUS_ABERTO_VENDAS.includes(statusAtual))

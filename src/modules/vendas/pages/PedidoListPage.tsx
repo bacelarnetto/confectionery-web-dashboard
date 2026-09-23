@@ -17,7 +17,7 @@ import ComandaProducaoModal from '../components/ComandaProducaoModal'
 import ConfirmarMudancaStatusModal from '../components/ConfirmarMudancaStatusModal'
 import PedidoErroModal from '../components/PedidoErroModal'
 import { STATUS_COLORS, STATUS_QUE_SUGEREM_PAGAMENTO, getPrazoEntrega } from '../lib/pedidoStatus'
-import { podeCriarPedido, podeAlterarStatusPedido, statusDisponiveisParaPerfil, podeRegistrarPagamentoPedido } from '../lib/pedidoPermissoes'
+import { podeCriarPedido, statusDisponiveisParaPerfil, podeRegistrarPagamentoPedido } from '../lib/pedidoPermissoes'
 
 const TABLE_HEADERS = ['ID', 'Cliente', 'Status', 'Valor Total', 'Frete', 'Retirada', 'Criado em', 'Entrega', 'Ações']
 
@@ -215,38 +215,41 @@ export default function PedidoListPage() {
             <td className="px-4 py-3">
               <div className="flex items-center gap-1.5">
                 {p.status ? (
-                  podeAlterarStatusPedido(perfis) ? (
-                    (() => {
-                      const disponiveis = statusDisponiveisParaPerfil(p.status, perfis)
+                  (() => {
+                    // Por pedido, não por perfil: PRODUCAO pode alterar status em geral, mas não
+                    // necessariamente ESTE pedido (ex: ainda em RASCUNHO, fora da faixa dele) --
+                    // achado D2 do reteste (2026-09-23). Mesmo critério vale pra qualquer perfil.
+                    const disponiveis = statusDisponiveisParaPerfil(p.status, perfis)
+                    if (disponiveis.length === 0) {
                       return (
-                        <select
-                          value={p.status}
-                          onChange={(e) =>
-                            setStatusConfirmTarget({
-                              pedidoId: p.id,
-                              statusNovo: e.target.value,
-                              statusAtual: p.status,
-                            })
-                          }
-                          disabled={disponiveis.length === 0}
-                          className={`text-xs font-medium px-2 py-1 rounded-full border-0 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 ${STATUS_COLORS[p.status] ?? 'bg-gray-100 text-gray-700'}`}
-                        >
-                          <option value={p.status} disabled>
-                            {p.status.replace('_', ' ')} (atual)
-                          </option>
-                          {disponiveis.map((s) => (
-                            <option key={s} value={s}>
-                              {s.replace('_', ' ')}
-                            </option>
-                          ))}
-                        </select>
+                        <span className={`text-xs font-medium px-2 py-1 rounded-full ${STATUS_COLORS[p.status] ?? 'bg-gray-100 text-gray-700'}`}>
+                          {p.status.replace('_', ' ')}
+                        </span>
                       )
-                    })()
-                  ) : (
-                    <span className={`text-xs font-medium px-2 py-1 rounded-full ${STATUS_COLORS[p.status] ?? 'bg-gray-100 text-gray-700'}`}>
-                      {p.status.replace('_', ' ')}
-                    </span>
-                  )
+                    }
+                    return (
+                      <select
+                        value={p.status}
+                        onChange={(e) =>
+                          setStatusConfirmTarget({
+                            pedidoId: p.id,
+                            statusNovo: e.target.value,
+                            statusAtual: p.status,
+                          })
+                        }
+                        className={`text-xs font-medium px-2 py-1 rounded-full border-0 cursor-pointer ${STATUS_COLORS[p.status] ?? 'bg-gray-100 text-gray-700'}`}
+                      >
+                        <option value={p.status} disabled>
+                          {p.status.replace('_', ' ')} (atual)
+                        </option>
+                        {disponiveis.map((s) => (
+                          <option key={s} value={s}>
+                            {s.replace('_', ' ')}
+                          </option>
+                        ))}
+                      </select>
+                    )
+                  })()
                 ) : '—'}
                 {p.status === 'ENTREGUE' && pedidosNaoPagosIds.has(p.id) && (
                   <span title="Entregue mas ainda não pago" className="flex-shrink-0">

@@ -19,7 +19,7 @@ import { instantParaDatetimeLocal, datetimeLocalParaIso } from '../../apoioFesta
 import { calcularResumo } from '../lib/resumoValores'
 import { formatEndereco } from '../lib/endereco'
 import { STATUS_COLORS, STATUS_QUE_SUGEREM_PAGAMENTO, PEDIDO_STATUS_ORDEM } from '../lib/pedidoStatus'
-import { podeCriarPedido, podeEditarDadosPedido, podeAlterarStatusPedido, statusDisponiveisParaPerfil, tituloStatusPillPerfil, podeRegistrarPagamentoPedido } from '../lib/pedidoPermissoes'
+import { podeCriarPedido, podeEditarDadosPedido, statusDisponiveisParaPerfil, tituloStatusPillPerfil, podeRegistrarPagamentoPedido } from '../lib/pedidoPermissoes'
 import { getRoles } from '../../../lib/auth'
 import ConfirmarMudancaStatusModal from '../components/ConfirmarMudancaStatusModal'
 import PedidoErroModal from '../components/PedidoErroModal'
@@ -405,13 +405,15 @@ export default function PedidoFormPage() {
         </div>
       )}
 
-      {isEditing && statusAtual && (
+      {isEditing && statusAtual && (() => {
+        // Por pedido, não por perfil: PRODUCAO pode alterar status em geral, mas não
+        // necessariamente ESTE pedido (ex: ainda em RASCUNHO, fora da faixa dele) -- achado D2 do
+        // reteste (2026-09-23). Mesmo critério da lista de Pedidos e do Mural.
+        const disponiveis = statusDisponiveisParaPerfil(statusAtual, perfis)
+        return (
         <div className="mb-6 bg-white rounded-xl border border-gray-200 shadow-sm p-6">
           <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">Status do Pedido</h3>
-          {podeAlterarStatusPedido(perfis) ? (
-            (() => {
-              const disponiveis = statusDisponiveisParaPerfil(statusAtual, perfis)
-              return (
+          {disponiveis.length > 0 ? (
                 <div className="flex flex-wrap items-center gap-2">
                   {PEDIDO_STATUS_ORDEM.map((s) => {
                     const isAtual = s === statusAtual
@@ -456,15 +458,14 @@ export default function PedidoFormPage() {
                     Cancelado
                   </button>
                 </div>
-              )
-            })()
           ) : (
             <span className={`inline-flex text-xs font-medium px-3 py-1.5 rounded-full ${STATUS_COLORS[statusAtual] ?? 'bg-gray-100 text-gray-700'}`}>
               {statusAtual.replace('_', ' ')}
             </span>
           )}
         </div>
-      )}
+        )
+      })()}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {!podeEditar && (

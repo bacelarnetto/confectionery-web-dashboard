@@ -12,7 +12,7 @@ import ComandaProducaoModal from './ComandaProducaoModal'
 import ConfirmarMudancaStatusModal from './ConfirmarMudancaStatusModal'
 import PedidoErroModal from './PedidoErroModal'
 import { STATUS_COLORS, STATUS_QUE_SUGEREM_PAGAMENTO, PEDIDO_STATUS_ORDEM } from '../lib/pedidoStatus'
-import { podeAlterarStatusPedido, statusDisponiveisParaPerfil, tituloStatusPillPerfil, podeRegistrarPagamentoPedido } from '../lib/pedidoPermissoes'
+import { statusDisponiveisParaPerfil, tituloStatusPillPerfil, podeRegistrarPagamentoPedido } from '../lib/pedidoPermissoes'
 import { getRoles } from '../../../lib/auth'
 import { formatEndereco } from '../lib/endereco'
 
@@ -121,14 +121,16 @@ export default function PedidoDetalheModal({ pedido, onClose, onUpdated }: Props
             </div>
           </div>
 
-          {statusAtual && (
+          {statusAtual && (() => {
+            // Por pedido, não por perfil: PRODUCAO pode alterar status em geral, mas não
+            // necessariamente ESTE pedido (ex: ainda em RASCUNHO, fora da faixa dele) -- achado D2
+            // do reteste (2026-09-23). Mesmo critério da lista de Pedidos.
+            const disponiveis = statusDisponiveisParaPerfil(statusAtual, perfis)
+            return (
             <div>
               <p className="text-gray-500 text-xs mb-2">Status</p>
-              {podeAlterarStatusPedido(perfis) ? (
-                (() => {
-                  const disponiveis = statusDisponiveisParaPerfil(statusAtual, perfis)
-                  return (
-                    <div className="flex flex-wrap items-center gap-2">
+              {disponiveis.length > 0 ? (
+                  <div className="flex flex-wrap items-center gap-2">
                       {PEDIDO_STATUS_ORDEM.map((s) => {
                         const isAtual = s === statusAtual
                         const disponivel = disponiveis.includes(s)
@@ -172,15 +174,14 @@ export default function PedidoDetalheModal({ pedido, onClose, onUpdated }: Props
                         Cancelado
                       </button>
                     </div>
-                  )
-                })()
               ) : (
                 <span className={`inline-flex text-xs font-medium px-3 py-1.5 rounded-full ${STATUS_COLORS[statusAtual] ?? 'bg-gray-100 text-gray-700'}`}>
                   {statusAtual.replace('_', ' ')}
                 </span>
               )}
             </div>
-          )}
+            )
+          })()}
 
           {!atual.retirar && enderecoEntrega && (
             <div className="text-sm bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
