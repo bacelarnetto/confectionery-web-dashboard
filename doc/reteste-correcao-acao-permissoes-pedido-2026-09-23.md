@@ -136,3 +136,52 @@ Este reteste seguiu o mesmo padrão de testes ao vivo (chamadas diretas de API +
 ## Conclusão
 
 Todas as correções relacionadas aos Achados A, B, C, D e D2 reportados na homologação de 2026-09-23 foram **verificadas de forma independente e confirmadas como funcionando corretamente**. O Achado E permanece aberto, por decisão de produto (não é um defeito). Não foram encontradas regressões ou efeitos colaterais durante este reteste.
+## Addendum (2026-09-23) — Verificação da correção do D2 residual
+
+**Sugestão de melhoria levantada pelo QA (nesta mesma data), atendida no mesmo dia:**
+> Inconsistência de padrão entre perfis no D2: para PRODUCAO (em linhas onde falta ação), a coluna
+> Status mostrava um `<select>` de opção única desabilitado; para ESTOQUE, um `<span>` de badge de
+> verdade. Os dois efeitos eram visualmente equivalentes, mas eram dois caminhos de código
+> diferentes para o mesmo problema — sugerido unificar.
+
+**Commits que atenderam a sugestão:**
+- Backend `confectionery` — `4adda7c` — "docs: registra reteste dos achados A-D e correcao do D2 residual" (apenas documentação — sem mudança de código no backend).
+- Frontend `confectionery-web-dashboard` — `8b30d31` — "fix: D2 residual - status select vs badge passa a ser por pedido, nao por perfil".
+
+**O que a correção revelou:** não era só uma questão de estilo de código — era um **bug residual real**.
+A função antiga `podeAlterarStatusPedido(perfis)` decidia select-vs-badge checando o **perfil como um
+todo** (PRODUCAO sempre `true`, por ter ação em *algum* pedido). O critério correto é **por pedido**:
+`statusDisponiveisParaPerfil(pedido.status, perfis).length > 0`. Isso significa que, antes da correção,
+PRODUCAO numa linha RASCUNHO (fora da faixa dele, sem nenhuma transição disponível *para aquele
+pedido específico*) ainda via o `<select>` de opção única desabilitado, e não o badge — só ESTOQUE
+(que nunca tem ação, em nenhum pedido, sob nenhuma circunstância) estava correto por coincidência.
+
+A correção foi aplicada de forma consistente nos três lugares que replicavam a mesma lógica:
+`PedidoListPage.tsx` (select), `PedidoDetalheModal.tsx` e `PedidoFormPage.tsx` (pills) — e a função
+`podeAlterarStatusPedido`, que não tinha mais nenhum uso, foi removida de `pedidoPermissoes.ts` (sem
+deixar código morto).
+
+### Reteste independente (ao vivo, três perfis)
+
+| Perfil | Pedido | Status | Ação disponível para o perfil? | Esperado | Obtido |
+|---|---|---|---|---|---|
+| PRODUCAO | #5 | RASCUNHO | Não | Badge (sem `<select>`) | ✅ Badge — `hasSelectElement: false` |
+| PRODUCAO | #8 | ENTREGUE | Sim (→CONCLUIDO) | `<select>` com 2 opções | ✅ `<select>` com 2 opções |
+| PRODUCAO | #6 | ENTREGUE | Sim (→CONCLUIDO) | `<select>` com 2 opções | ✅ `<select>` com 2 opções |
+| ESTOQUE | #1–#8 (todos) | vários | Nunca | Badge em 100% das linhas | ✅ Badge em 8/8 linhas (sem regressão) |
+| VENDAS | #5 | RASCUNHO | Sim (→CONFIRMADO/CANCELADO) | `<select>` com 3 opções | ✅ `<select>` com 3 opções (sem regressão) |
+
+Verificado em `/vendas/pedidos` (lista) e em `/vendas/pedidos/5/editar` (`PedidoFormPage`, perfil
+PRODUCAO): a seção "Status do Pedido" também passou a mostrar apenas o badge somente-leitura
+("RASCUNHO"), sem os pills de transição, confirmando que a mesma correção se propagou corretamente
+para essa página.
+
+`PedidoDetalheModal.tsx` recebeu, pelo diff, exatamente o mesmo padrão de correção (`statusDisponiveisParaPerfil(...).length > 0`)
+aplicado nos outros dois arquivos — não foi possível exercitá-lo ao vivo neste reteste (o ícone de
+"olho" na coluna Ações da lista leva para a tela de edição, não para um modal; o modal não pôde ser
+localizado a partir do Mural da Semana nesta sessão, possivelmente por estar fora da janela da
+semana atual). Nível de confiança alto pela identidade do diff, mas **não confirmado ao vivo**.
+
+**Veredito: melhoria sugerida foi implementada corretamente, corrige um bug residual real (não apenas
+cosmético), e não introduziu regressões nos perfis PRODUCAO, ESTOQUE ou VENDAS.**
+
