@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
+import { useAuth } from 'react-oidc-context'
 import { Plus, Eye, Ban, Search, X, CircleDollarSign, Printer, Clock } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
 import PageableTable from '../../../components/ui/PageableTable'
@@ -9,12 +10,14 @@ import { usePedidos, useUpdatePedidoStatus } from '../hooks/usePedidos'
 import { useDebounce } from '../../../hooks/useDebounce'
 import { Pedido, PEDIDO_STATUS } from '../types/pedido'
 import { formatCurrency } from '../../../lib/format'
+import { getRoles } from '../../../lib/auth'
 import { useTodasContasReceberPendentes } from '../../financeiro/hooks/useFinanceiro'
 import RegistrarPagamentoModal from '../components/RegistrarPagamentoModal'
 import ComandaProducaoModal from '../components/ComandaProducaoModal'
 import ConfirmarMudancaStatusModal from '../components/ConfirmarMudancaStatusModal'
 import PedidoErroModal from '../components/PedidoErroModal'
-import { STATUS_COLORS, STATUS_QUE_SUGEREM_PAGAMENTO, STATUS_TERMINAIS, getPrazoEntrega, statusDisponiveisPara } from '../lib/pedidoStatus'
+import { STATUS_COLORS, STATUS_QUE_SUGEREM_PAGAMENTO, getPrazoEntrega } from '../lib/pedidoStatus'
+import { podeCriarPedido, podeAlterarStatusPedido, statusDisponiveisParaPerfil, podeRegistrarPagamentoPedido } from '../lib/pedidoPermissoes'
 
 const TABLE_HEADERS = ['ID', 'Cliente', 'Status', 'Valor Total', 'Frete', 'Retirada', 'Criado em', 'Entrega', 'Ações']
 
@@ -28,6 +31,8 @@ function formatDateTimeParts(dateStr: string | undefined) {
 
 export default function PedidoListPage() {
   const navigate = useNavigate()
+  const auth = useAuth()
+  const perfis = getRoles(auth.user)
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState(20)
   const [filters, setFilters] = useState({ clienteId: '', status: '' })
@@ -74,7 +79,7 @@ export default function PedidoListPage() {
       { id: pedidoId, status },
       {
         onSuccess: () => {
-          if (status in STATUS_QUE_SUGEREM_PAGAMENTO) {
+          if (status in STATUS_QUE_SUGEREM_PAGAMENTO && podeRegistrarPagamentoPedido(perfis)) {
             setPagamentoPrompt({ pedidoId, percentualSugerido: STATUS_QUE_SUGEREM_PAGAMENTO[status] })
           }
         },
@@ -121,13 +126,15 @@ export default function PedidoListPage() {
   return (
     <div>
       <PageHeader title="Pedidos" subtitle="Gerencie os pedidos da confeitaria">
-        <button
-          onClick={() => navigate('/vendas/pedidos/novo')}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 transition-colors"
-        >
-          <Plus size={16} />
-          Novo Pedido
-        </button>
+        {podeCriarPedido(perfis) && (
+          <button
+            onClick={() => navigate('/vendas/pedidos/novo')}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 transition-colors"
+          >
+            <Plus size={16} />
+            Novo Pedido
+          </button>
+        )}
       </PageHeader>
 
       <div className="mb-4">
@@ -208,32 +215,38 @@ export default function PedidoListPage() {
             <td className="px-4 py-3">
               <div className="flex items-center gap-1.5">
                 {p.status ? (
-                  (() => {
-                    const disponiveis = statusDisponiveisPara(p.status)
-                    return (
-                      <select
-                        value={p.status}
-                        onChange={(e) =>
-                          setStatusConfirmTarget({
-                            pedidoId: p.id,
-                            statusNovo: e.target.value,
-                            statusAtual: p.status,
-                          })
-                        }
-                        disabled={disponiveis.length === 0}
-                        className={`text-xs font-medium px-2 py-1 rounded-full border-0 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 ${STATUS_COLORS[p.status] ?? 'bg-gray-100 text-gray-700'}`}
-                      >
-                        <option value={p.status} disabled>
-                          {p.status.replace('_', ' ')} (atual)
-                        </option>
-                        {disponiveis.map((s) => (
-                          <option key={s} value={s}>
-                            {s.replace('_', ' ')}
+                  podeAlterarStatusPedido(perfis) ? (
+                    (() => {
+                      const disponiveis = statusDisponiveisParaPerfil(p.status, perfis)
+                      return (
+                        <select
+                          value={p.status}
+                          onChange={(e) =>
+                            setStatusConfirmTarget({
+                              pedidoId: p.id,
+                              statusNovo: e.target.value,
+                              statusAtual: p.status,
+                            })
+                          }
+                          disabled={disponiveis.length === 0}
+                          className={`text-xs font-medium px-2 py-1 rounded-full border-0 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 ${STATUS_COLORS[p.status] ?? 'bg-gray-100 text-gray-700'}`}
+                        >
+                          <option value={p.status} disabled>
+                            {p.status.replace('_', ' ')} (atual)
                           </option>
-                        ))}
-                      </select>
-                    )
-                  })()
+                          {disponiveis.map((s) => (
+                            <option key={s} value={s}>
+                              {s.replace('_', ' ')}
+                            </option>
+                          ))}
+                        </select>
+                      )
+                    })()
+                  ) : (
+                    <span className={`text-xs font-medium px-2 py-1 rounded-full ${STATUS_COLORS[p.status] ?? 'bg-gray-100 text-gray-700'}`}>
+                      {p.status.replace('_', ' ')}
+                    </span>
+                  )
                 ) : '—'}
                 {p.status === 'ENTREGUE' && pedidosNaoPagosIds.has(p.id) && (
                   <span title="Entregue mas ainda não pago" className="flex-shrink-0">
@@ -297,7 +310,7 @@ export default function PedidoListPage() {
                 >
                   <Eye size={15} />
                 </button>
-                {p.status && !STATUS_TERMINAIS.includes(p.status) && (
+                {p.status && statusDisponiveisParaPerfil(p.status, perfis).includes('CANCELADO') && (
                   <button
                     onClick={() => setCancelTarget({ id: p.id, nome: `Pedido #${p.id}` })}
                     className="p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"

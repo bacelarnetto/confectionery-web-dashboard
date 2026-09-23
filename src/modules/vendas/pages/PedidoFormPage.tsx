@@ -1,6 +1,7 @@
 import { useState, useEffect, FormEvent } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router'
-import { Plus, Trash2, AlertCircle } from 'lucide-react'
+import { useAuth } from 'react-oidc-context'
+import { Plus, Trash2, AlertCircle, Lock } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
 import Button from '../../../components/ui/Button'
 import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal'
@@ -17,7 +18,9 @@ import { useApoiosFesta } from '../../apoioFesta/hooks/useApoiosFesta'
 import { instantParaDatetimeLocal, datetimeLocalParaIso } from '../../apoioFesta/lib/horarioBrasilia'
 import { calcularResumo } from '../lib/resumoValores'
 import { formatEndereco } from '../lib/endereco'
-import { STATUS_COLORS, STATUS_QUE_SUGEREM_PAGAMENTO, PEDIDO_STATUS_ORDEM, statusDisponiveisPara, tituloStatusPill } from '../lib/pedidoStatus'
+import { STATUS_COLORS, STATUS_QUE_SUGEREM_PAGAMENTO, PEDIDO_STATUS_ORDEM } from '../lib/pedidoStatus'
+import { podeCriarPedido, podeEditarDadosPedido, podeAlterarStatusPedido, statusDisponiveisParaPerfil, tituloStatusPillPerfil, podeRegistrarPagamentoPedido } from '../lib/pedidoPermissoes'
+import { getRoles } from '../../../lib/auth'
 import ConfirmarMudancaStatusModal from '../components/ConfirmarMudancaStatusModal'
 import PedidoErroModal from '../components/PedidoErroModal'
 import { useProdutos } from '../../estoqueProdutos/hooks/useProdutos'
@@ -88,6 +91,8 @@ const inputClass =
 export default function PedidoFormPage() {
   const navigate = useNavigate()
   const location = useLocation()
+  const auth = useAuth()
+  const perfis = getRoles(auth.user)
   const returnTo = (location.state as { from?: string } | null)?.from || '/vendas/pedidos'
   const { id } = useParams<{ id: string }>()
   const isEditing = !!id
@@ -117,7 +122,7 @@ export default function PedidoFormPage() {
       {
         onSuccess: () => {
           setItemErroIndices(new Set())
-          if (status in STATUS_QUE_SUGEREM_PAGAMENTO) {
+          if (status in STATUS_QUE_SUGEREM_PAGAMENTO && podeRegistrarPagamentoPedido(perfis)) {
             setPercentualSugerido(STATUS_QUE_SUGEREM_PAGAMENTO[status])
             setShowPagamentoPrompt(true)
           }
@@ -357,9 +362,32 @@ export default function PedidoFormPage() {
     : apoiosLocais.reduce((acc, a) => acc + (a.valorTotal ?? 0), 0)
   const resumo = calcularResumo(itens, form.retirar ? 0 : Number(form.valorFrete) || 0, valorApoioFesta)
   const statusAtual = pedido?.status
+  const podeEditar = isEditing ? podeEditarDadosPedido(perfis, statusAtual) : podeCriarPedido(perfis)
 
   if (isEditing && isLoading) {
     return <div className="flex items-center justify-center h-48 text-gray-400 text-sm">Carregando...</div>
+  }
+
+  if (!isEditing && !podeCriarPedido(perfis)) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center px-4">
+        <div className="max-w-sm w-full text-center space-y-4">
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-50 flex items-center justify-center">
+            <Lock size={24} className="text-amber-600" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">Ação não permitida</h2>
+            <p className="mt-1 text-sm text-gray-500">
+              Seu perfil não tem permissão para criar pedidos. Se precisar, fale com o
+              responsável da administração.
+            </p>
+          </div>
+          <Button variant="secondary" onClick={() => navigate('/vendas/pedidos')}>
+            Voltar para Pedidos
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -380,56 +408,73 @@ export default function PedidoFormPage() {
       {isEditing && statusAtual && (
         <div className="mb-6 bg-white rounded-xl border border-gray-200 shadow-sm p-6">
           <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">Status do Pedido</h3>
-          <div className="flex flex-wrap items-center gap-2">
-            {PEDIDO_STATUS_ORDEM.map((s) => {
-              const isAtual = s === statusAtual
-              const disponivel = statusDisponiveisPara(statusAtual).includes(s)
+          {podeAlterarStatusPedido(perfis) ? (
+            (() => {
+              const disponiveis = statusDisponiveisParaPerfil(statusAtual, perfis)
               return (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => disponivel && setStatusConfirmTarget(s)}
-                  disabled={isAtual || !disponivel || statusMutation.isPending}
-                  title={isAtual ? 'Status atual' : disponivel ? undefined : tituloStatusPill(s, statusAtual)}
-                  className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors disabled:cursor-default ${
-                    isAtual
-                      ? `${STATUS_COLORS[s] ?? 'bg-gray-100 text-gray-700'} border-transparent ring-2 ring-offset-1 ring-gray-300`
-                      : disponivel
-                        ? 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100 hover:border-gray-400 cursor-pointer'
-                        : 'bg-white text-gray-400 border-gray-200 disabled:opacity-60'
-                  }`}
-                >
-                  {s.replace('_', ' ')}
-                </button>
+                <div className="flex flex-wrap items-center gap-2">
+                  {PEDIDO_STATUS_ORDEM.map((s) => {
+                    const isAtual = s === statusAtual
+                    const disponivel = disponiveis.includes(s)
+                    return (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => disponivel && setStatusConfirmTarget(s)}
+                        disabled={isAtual || !disponivel || statusMutation.isPending}
+                        title={isAtual ? 'Status atual' : tituloStatusPillPerfil(s, statusAtual, perfis)}
+                        className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors disabled:cursor-default ${
+                          isAtual
+                            ? `${STATUS_COLORS[s] ?? 'bg-gray-100 text-gray-700'} border-transparent ring-2 ring-offset-1 ring-gray-300`
+                            : disponivel
+                              ? 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100 hover:border-gray-400 cursor-pointer'
+                              : 'bg-white text-gray-400 border-gray-200 disabled:opacity-60'
+                        }`}
+                      >
+                        {s.replace('_', ' ')}
+                      </button>
+                    )
+                  })}
+                  <span className="mx-1 h-5 w-px bg-gray-200" aria-hidden />
+                  <button
+                    type="button"
+                    onClick={() => disponiveis.includes('CANCELADO') && setStatusConfirmTarget('CANCELADO')}
+                    disabled={statusAtual === 'CANCELADO' || !disponiveis.includes('CANCELADO') || statusMutation.isPending}
+                    title={
+                      statusAtual === 'CANCELADO'
+                        ? 'Status atual'
+                        : tituloStatusPillPerfil('CANCELADO', statusAtual, perfis)
+                    }
+                    className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors disabled:cursor-default ${
+                      statusAtual === 'CANCELADO'
+                        ? `${STATUS_COLORS.CANCELADO} border-transparent ring-2 ring-offset-1 ring-gray-300`
+                        : disponiveis.includes('CANCELADO')
+                          ? 'bg-white text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400 cursor-pointer'
+                          : 'bg-white text-gray-400 border-gray-200 disabled:opacity-60'
+                    }`}
+                  >
+                    Cancelado
+                  </button>
+                </div>
               )
-            })}
-            <span className="mx-1 h-5 w-px bg-gray-200" aria-hidden />
-            <button
-              type="button"
-              onClick={() => statusDisponiveisPara(statusAtual).includes('CANCELADO') && setStatusConfirmTarget('CANCELADO')}
-              disabled={statusAtual === 'CANCELADO' || !statusDisponiveisPara(statusAtual).includes('CANCELADO') || statusMutation.isPending}
-              title={
-                statusAtual === 'CANCELADO'
-                  ? 'Status atual'
-                  : statusDisponiveisPara(statusAtual).includes('CANCELADO')
-                    ? undefined
-                    : tituloStatusPill('CANCELADO', statusAtual)
-              }
-              className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors disabled:cursor-default ${
-                statusAtual === 'CANCELADO'
-                  ? `${STATUS_COLORS.CANCELADO} border-transparent ring-2 ring-offset-1 ring-gray-300`
-                  : statusDisponiveisPara(statusAtual).includes('CANCELADO')
-                    ? 'bg-white text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400 cursor-pointer'
-                    : 'bg-white text-gray-400 border-gray-200 disabled:opacity-60'
-              }`}
-            >
-              Cancelado
-            </button>
-          </div>
+            })()
+          ) : (
+            <span className={`inline-flex text-xs font-medium px-3 py-1.5 rounded-full ${STATUS_COLORS[statusAtual] ?? 'bg-gray-100 text-gray-700'}`}>
+              {statusAtual.replace('_', ' ')}
+            </span>
+          )}
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {!podeEditar && (
+          <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
+            <Lock size={16} className="flex-shrink-0 mt-0.5" />
+            <p>Seu perfil só tem acesso de leitura a este pedido — os campos abaixo estão desabilitados.</p>
+          </div>
+        )}
+
+        <fieldset disabled={!podeEditar} className="space-y-6 border-0 p-0 m-0 min-w-0">
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-5">
           <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Dados do Pedido</h3>
 
@@ -525,7 +570,7 @@ export default function PedidoFormPage() {
             <button
               type="button"
               onClick={addItem}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-amber-50"
             >
               <Plus size={16} />
               Adicionar item
@@ -580,7 +625,7 @@ export default function PedidoFormPage() {
                         <button
                           type="button"
                           onClick={() => setItemToDeleteIndex(index)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-gray-400"
                           title="Remover este item"
                         >
                           <Trash2 size={14} />
@@ -691,10 +736,11 @@ export default function PedidoFormPage() {
             </div>
           )}
         </div>
+        </fieldset>
 
         <ApoioFestaSection
           pedidoId={isEditing ? numericId : undefined}
-          podeAdicionar={buildItens().length > 0}
+          podeAdicionar={podeEditar && buildItens().length > 0}
           dataEntrega={form.dataEntrega}
           itensLocais={apoiosLocais}
           onAdicionarLocal={(novoApoio) => setApoiosLocais((prev) => [...prev, novoApoio])}
@@ -704,7 +750,11 @@ export default function PedidoFormPage() {
         <ResumoValoresCard resumo={resumo} />
 
         {isEditing && pedido && (
-          <PedidoPagamentoCard pedidoId={numericId} pedido={pedido} />
+          <PedidoPagamentoCard
+            pedidoId={numericId}
+            pedido={pedido}
+            valorTotalEmEdicao={podeEditar ? resumo.total : undefined}
+          />
         )}
 
         <div className="flex items-center justify-end gap-3">
@@ -713,11 +763,13 @@ export default function PedidoFormPage() {
             onClick={() => navigate('/vendas/pedidos')}
             className="px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
           >
-            Cancelar
+            {podeEditar ? 'Cancelar' : 'Voltar'}
           </button>
+          {podeEditar && (
           <Button type="submit" isLoading={isPending}>
             {isEditing ? 'Salvar alterações' : 'Registrar pedido'}
           </Button>
+          )}
         </div>
       </form>
 

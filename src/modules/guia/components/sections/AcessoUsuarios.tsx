@@ -49,10 +49,11 @@ export default function AcessoUsuarios() {
           <PerfilBadge color="bg-orange-100 text-orange-700" label="Produção" />
         </div>
         <p>
-          O perfil não esconde os módulos hoje — ele só libera o menu{' '}
-          <span className="font-medium text-gray-800">Administração</span>, visível apenas para quem é{' '}
-          <span className="font-medium text-gray-800">Admin</span>. Os demais perfis existem para organizar quem é quem na
-          equipe, e servem de base para o sistema restringir mais telas no futuro.
+          O perfil libera o menu <span className="font-medium text-gray-800">Administração</span>, visível apenas para
+          quem é <span className="font-medium text-gray-800">Admin</span>, e também controla o que você pode fazer na
+          tela de <span className="font-medium text-gray-800">Pedido</span> — veja o detalhe completo no passo 8 da
+          seção Vendas. Nos demais módulos, o perfil ainda serve só pra organizar quem é quem na equipe, sem restringir
+          telas.
         </p>
       </GuiaCard>
 

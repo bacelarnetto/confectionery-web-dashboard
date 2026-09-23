@@ -1,4 +1,5 @@
 import { ShoppingBag, DollarSign, Clock, Receipt, Plus, LayoutGrid } from 'lucide-react'
+import { useAuth } from 'react-oidc-context'
 import {
   BarChart,
   Bar,
@@ -12,6 +13,8 @@ import {
 import KpiCard from './KpiCard'
 import SectionHeader from './SectionHeader'
 import { VendasKpis, TopProduto, PedidoStatus } from '../services/dashboardService'
+import { getRoles } from '../../../lib/auth'
+import { podeCriarPedido } from '../../vendas/lib/pedidoPermissoes'
 
 interface VendasBlockProps {
   kpis?: VendasKpis
@@ -49,6 +52,9 @@ export default function VendasBlock({
   isLoadingStatus,
   formatCurrency,
 }: VendasBlockProps) {
+  const auth = useAuth()
+  const perfis = getRoles(auth.user)
+
   return (
     <section id="secao-vendas" className="space-y-4 pt-2">
       <SectionHeader
@@ -57,12 +63,16 @@ export default function VendasBlock({
         subtitle="Acompanhamento comercial, volume de pedidos e produtos mais procurados"
         icon={<ShoppingBag size={18} />}
         actions={[
-          {
-            label: 'Novo Pedido',
-            to: '/vendas/pedidos/novo',
-            primary: true,
-            icon: <Plus size={13} />,
-          },
+          ...(podeCriarPedido(perfis)
+            ? [
+                {
+                  label: 'Novo Pedido',
+                  to: '/vendas/pedidos/novo',
+                  primary: true,
+                  icon: <Plus size={13} />,
+                },
+              ]
+            : []),
           {
             label: 'Mural de Pedidos',
             to: '/vendas/mural',

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { X, ExternalLink, Printer } from 'lucide-react'
 import { useNavigate } from 'react-router'
+import { useAuth } from 'react-oidc-context'
 import { Pedido } from '../types/pedido'
 import { usePedido, useUpdatePedidoStatus } from '../hooks/usePedidos'
 import { useCliente } from '../hooks/useClientes'
@@ -10,7 +11,9 @@ import RegistrarPagamentoModal from './RegistrarPagamentoModal'
 import ComandaProducaoModal from './ComandaProducaoModal'
 import ConfirmarMudancaStatusModal from './ConfirmarMudancaStatusModal'
 import PedidoErroModal from './PedidoErroModal'
-import { STATUS_COLORS, STATUS_QUE_SUGEREM_PAGAMENTO, PEDIDO_STATUS_ORDEM, statusDisponiveisPara, tituloStatusPill } from '../lib/pedidoStatus'
+import { STATUS_COLORS, STATUS_QUE_SUGEREM_PAGAMENTO, PEDIDO_STATUS_ORDEM } from '../lib/pedidoStatus'
+import { podeAlterarStatusPedido, statusDisponiveisParaPerfil, tituloStatusPillPerfil, podeRegistrarPagamentoPedido } from '../lib/pedidoPermissoes'
+import { getRoles } from '../../../lib/auth'
 import { formatEndereco } from '../lib/endereco'
 
 
@@ -33,6 +36,8 @@ interface Props {
 
 export default function PedidoDetalheModal({ pedido, onClose, onUpdated }: Props) {
   const navigate = useNavigate()
+  const auth = useAuth()
+  const perfis = getRoles(auth.user)
   const statusMutation = useUpdatePedidoStatus()
   // Puxa a versão ao vivo do pedido -- o `pedido` recebido por prop é a foto de quando o Mural
   // buscou a lista; sem isso, mudar o status aqui deixaria o seletor mostrando o valor antigo até
@@ -60,7 +65,7 @@ export default function PedidoDetalheModal({ pedido, onClose, onUpdated }: Props
       {
         onSuccess: () => {
           onUpdated?.()
-          if (status in STATUS_QUE_SUGEREM_PAGAMENTO) {
+          if (status in STATUS_QUE_SUGEREM_PAGAMENTO && podeRegistrarPagamentoPedido(perfis)) {
             setPercentualSugerido(STATUS_QUE_SUGEREM_PAGAMENTO[status])
             setShowPagamentoPrompt(true)
           }
@@ -119,52 +124,61 @@ export default function PedidoDetalheModal({ pedido, onClose, onUpdated }: Props
           {statusAtual && (
             <div>
               <p className="text-gray-500 text-xs mb-2">Status</p>
-              <div className="flex flex-wrap items-center gap-2">
-                {PEDIDO_STATUS_ORDEM.map((s) => {
-                  const isAtual = s === statusAtual
-                  const disponivel = statusDisponiveisPara(statusAtual).includes(s)
+              {podeAlterarStatusPedido(perfis) ? (
+                (() => {
+                  const disponiveis = statusDisponiveisParaPerfil(statusAtual, perfis)
                   return (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => disponivel && setStatusConfirmTarget(s)}
-                      disabled={isAtual || !disponivel || statusMutation.isPending}
-                      title={isAtual ? 'Status atual' : disponivel ? undefined : tituloStatusPill(s, statusAtual)}
-                      className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors disabled:cursor-default ${
-                        isAtual
-                          ? `${STATUS_COLORS[s] ?? 'bg-gray-100 text-gray-700'} border-transparent ring-2 ring-offset-1 ring-gray-300`
-                          : disponivel
-                            ? 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100 hover:border-gray-400 cursor-pointer'
-                            : 'bg-white text-gray-400 border-gray-200 disabled:opacity-60'
-                      }`}
-                    >
-                      {s.replace('_', ' ')}
-                    </button>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {PEDIDO_STATUS_ORDEM.map((s) => {
+                        const isAtual = s === statusAtual
+                        const disponivel = disponiveis.includes(s)
+                        return (
+                          <button
+                            key={s}
+                            type="button"
+                            onClick={() => disponivel && setStatusConfirmTarget(s)}
+                            disabled={isAtual || !disponivel || statusMutation.isPending}
+                            title={isAtual ? 'Status atual' : tituloStatusPillPerfil(s, statusAtual, perfis)}
+                            className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors disabled:cursor-default ${
+                              isAtual
+                                ? `${STATUS_COLORS[s] ?? 'bg-gray-100 text-gray-700'} border-transparent ring-2 ring-offset-1 ring-gray-300`
+                                : disponivel
+                                  ? 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100 hover:border-gray-400 cursor-pointer'
+                                  : 'bg-white text-gray-400 border-gray-200 disabled:opacity-60'
+                            }`}
+                          >
+                            {s.replace('_', ' ')}
+                          </button>
+                        )
+                      })}
+                      <span className="mx-1 h-5 w-px bg-gray-200" aria-hidden />
+                      <button
+                        type="button"
+                        onClick={() => disponiveis.includes('CANCELADO') && setStatusConfirmTarget('CANCELADO')}
+                        disabled={statusAtual === 'CANCELADO' || !disponiveis.includes('CANCELADO') || statusMutation.isPending}
+                        title={
+                          statusAtual === 'CANCELADO'
+                            ? 'Status atual'
+                            : tituloStatusPillPerfil('CANCELADO', statusAtual, perfis)
+                        }
+                        className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors disabled:cursor-default ${
+                          statusAtual === 'CANCELADO'
+                            ? `${STATUS_COLORS.CANCELADO} border-transparent ring-2 ring-offset-1 ring-gray-300`
+                            : disponiveis.includes('CANCELADO')
+                              ? 'bg-white text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400 cursor-pointer'
+                              : 'bg-white text-gray-400 border-gray-200 disabled:opacity-60'
+                        }`}
+                      >
+                        Cancelado
+                      </button>
+                    </div>
                   )
-                })}
-                <span className="mx-1 h-5 w-px bg-gray-200" aria-hidden />
-                <button
-                  type="button"
-                  onClick={() => statusDisponiveisPara(statusAtual).includes('CANCELADO') && setStatusConfirmTarget('CANCELADO')}
-                  disabled={statusAtual === 'CANCELADO' || !statusDisponiveisPara(statusAtual).includes('CANCELADO') || statusMutation.isPending}
-                  title={
-                    statusAtual === 'CANCELADO'
-                      ? 'Status atual'
-                      : statusDisponiveisPara(statusAtual).includes('CANCELADO')
-                        ? undefined
-                        : tituloStatusPill('CANCELADO', statusAtual)
-                  }
-                  className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors disabled:cursor-default ${
-                    statusAtual === 'CANCELADO'
-                      ? `${STATUS_COLORS.CANCELADO} border-transparent ring-2 ring-offset-1 ring-gray-300`
-                      : statusDisponiveisPara(statusAtual).includes('CANCELADO')
-                        ? 'bg-white text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400 cursor-pointer'
-                        : 'bg-white text-gray-400 border-gray-200 disabled:opacity-60'
-                  }`}
-                >
-                  Cancelado
-                </button>
-              </div>
+                })()
+              ) : (
+                <span className={`inline-flex text-xs font-medium px-3 py-1.5 rounded-full ${STATUS_COLORS[statusAtual] ?? 'bg-gray-100 text-gray-700'}`}>
+                  {statusAtual.replace('_', ' ')}
+                </span>
+              )}
             </div>
           )}
 
