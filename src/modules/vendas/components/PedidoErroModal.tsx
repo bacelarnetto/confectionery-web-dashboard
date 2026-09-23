@@ -10,6 +10,13 @@ export interface ItemEstoqueInsuficiente {
 
 export interface PedidoErroDetalhes {
   isEstoqueInsuficiente: boolean
+  // Achado da homologação 2026-09-19: o modal era compartilhado entre falta de PRODUTO acabado
+  // e falta de INSUMO (reserva de complementos), mas o texto/ações eram fixos pro cenário de
+  // produto -- confundia o usuário no cenário de insumo (sugeria "Fabricar"/"Entrada de Produto"
+  // quando a ação certa é Entrada de Insumo). Distinguido pelo texto da mensagem do backend:
+  // EstoqueComplementoValidationService sempre menciona "insumo", EstoqueProdutoValidationService
+  // nunca menciona.
+  tipoEstoque: 'produto' | 'insumo'
   itensSemEstoque: ItemEstoqueInsuficiente[]
   mensagemOriginal: string
   requestId?: string
@@ -29,6 +36,7 @@ export function parsePedidoErro(erro: unknown): PedidoErroDetalhes {
     rawMsg.match(/\(ID:\s*([a-zA-Z0-9-]+)\)/i)?.[1]
 
   const isEstoque = /estoque insuficiente/i.test(rawMsg)
+  const tipoEstoque: 'produto' | 'insumo' = isEstoque && /insumo/i.test(rawMsg) ? 'insumo' : 'produto'
   const itensSemEstoque: ItemEstoqueInsuficiente[] = []
 
   if (isEstoque) {
@@ -60,6 +68,7 @@ export function parsePedidoErro(erro: unknown): PedidoErroDetalhes {
 
   return {
     isEstoqueInsuficiente: isEstoque,
+    tipoEstoque,
     itensSemEstoque,
     mensagemOriginal: rawMsg.replace(/\(ID:\s*[a-zA-Z0-9-]+\)/gi, '').trim(),
     requestId: reqId,
@@ -92,6 +101,10 @@ export default function PedidoErroModal({ open, onClose, erro, pedidoId }: Props
     window.open('/estoque-produtos/fabricacoes/nova', '_blank')
   }
 
+  function handleIrParaEntradaInsumo() {
+    window.open('/estoque-insumos/entradas/nova', '_blank')
+  }
+
   return (
     <div
       className="fixed inset-0 z-[60] flex items-center justify-center p-4"
@@ -120,7 +133,11 @@ export default function PedidoErroModal({ open, onClose, erro, pedidoId }: Props
             </div>
             <div>
               <h3 className="text-base font-bold text-gray-900">
-                {detalhes.isEstoqueInsuficiente ? 'Estoque Insuficiente' : 'Atenção ao Pedido'}
+                {detalhes.isEstoqueInsuficiente
+                  ? detalhes.tipoEstoque === 'insumo'
+                    ? 'Insumo Insuficiente'
+                    : 'Estoque Insuficiente'
+                  : 'Atenção ao Pedido'}
               </h3>
               <p className="text-xs text-gray-500">
                 {pedidoId ? `Pedido #${pedidoId}` : 'Validação de Pedido'}
@@ -142,7 +159,9 @@ export default function PedidoErroModal({ open, onClose, erro, pedidoId }: Props
           {detalhes.isEstoqueInsuficiente ? (
             <>
               <p className="text-sm text-gray-600">
-                Não foi possível colocar este pedido em produção porque o estoque atual de produtos acabados é insuficiente:
+                {detalhes.tipoEstoque === 'insumo'
+                  ? 'Não foi possível reservar os complementos deste pedido porque o estoque de insumo é insuficiente:'
+                  : 'Não foi possível colocar este pedido em produção porque o estoque atual de produtos acabados é insuficiente:'}
               </p>
 
               {/* Tabela / Cards de Itens em Falta */}
@@ -185,15 +204,31 @@ export default function PedidoErroModal({ open, onClose, erro, pedidoId }: Props
                   <span>💡</span> O que você pode fazer para prosseguir:
                 </p>
                 <ul className="list-disc pl-4 space-y-1 text-blue-800">
-                  <li>
-                    <strong>Fabricar o produto:</strong> Registre a fabricação deste item para debitar os insumos (FIFO) e alimentar o estoque do produto.
-                  </li>
-                  <li>
-                    <strong>Entrada manual:</strong> Se comprou o produto pronto ou terceirizou, faça uma entrada em <em>Estoque de Produtos → Entradas</em>.
-                  </li>
-                  <li>
-                    <strong>Ajustar quantidade:</strong> Modifique a quantidade de itens no pedido se houver acordo com o cliente.
-                  </li>
+                  {detalhes.tipoEstoque === 'insumo' ? (
+                    <>
+                      <li>
+                        <strong>Entrada de Insumo:</strong> Registre uma entrada do(s) insumo(s) em falta em <em>Estoque de Insumos → Entradas</em> para liberar a reserva dos complementos.
+                      </li>
+                      <li>
+                        <strong>Remover o complemento:</strong> Retire ou troque o complemento que depende desse insumo no item do pedido.
+                      </li>
+                      <li>
+                        <strong>Ajustar quantidade:</strong> Modifique a quantidade de itens no pedido se houver acordo com o cliente.
+                      </li>
+                    </>
+                  ) : (
+                    <>
+                      <li>
+                        <strong>Fabricar o produto:</strong> Registre a fabricação deste item para debitar os insumos (FIFO) e alimentar o estoque do produto.
+                      </li>
+                      <li>
+                        <strong>Entrada manual:</strong> Se comprou o produto pronto ou terceirizou, faça uma entrada em <em>Estoque de Produtos → Entradas</em>.
+                      </li>
+                      <li>
+                        <strong>Ajustar quantidade:</strong> Modifique a quantidade de itens no pedido se houver acordo com o cliente.
+                      </li>
+                    </>
+                  )}
                 </ul>
               </div>
             </>
@@ -233,11 +268,11 @@ export default function PedidoErroModal({ open, onClose, erro, pedidoId }: Props
           {detalhes.isEstoqueInsuficiente && (
             <button
               type="button"
-              onClick={handleIrParaFabricacao}
+              onClick={detalhes.tipoEstoque === 'insumo' ? handleIrParaEntradaInsumo : handleIrParaFabricacao}
               className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 rounded-lg transition-colors cursor-pointer shadow-2xs"
             >
               <Layers size={15} />
-              <span>Ir para Nova Fabricação</span>
+              <span>{detalhes.tipoEstoque === 'insumo' ? 'Ir para Nova Entrada de Insumo' : 'Ir para Nova Fabricação'}</span>
               <ExternalLink size={13} className="opacity-80" />
             </button>
           )}

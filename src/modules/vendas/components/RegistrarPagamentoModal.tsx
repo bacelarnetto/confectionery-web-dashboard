@@ -4,6 +4,7 @@ import Button from '../../../components/ui/Button'
 import { usePedido, usePagamentosPedido, useRegistrarPagamentoPedido } from '../hooks/usePedidos'
 import { useFormasPagamento } from '../hooks/useFormasPagamento'
 import { formatCurrency } from '../../../lib/format'
+import PedidoErroModal from './PedidoErroModal'
 
 const inputClass =
   'w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent placeholder:text-gray-400'
@@ -45,6 +46,7 @@ export default function RegistrarPagamentoModal({
   const [formaPagamentoId, setFormaPagamentoId] = useState('')
   const [observacao, setObservacao] = useState('')
   const [valorInicializado, setValorInicializado] = useState(false)
+  const [erro, setErro] = useState<unknown>(null)
 
   // Reseta tudo (menos o valor) já na abertura -- o valor sugerido depende de usePedido/
   // usePagamentosPedido, que ainda não voltaram nesse exato instante (é um fetch novo, o modal só
@@ -81,7 +83,13 @@ export default function RegistrarPagamentoModal({
           createdBy: '',
         },
       },
-      { onSuccess: onClose },
+      {
+        onSuccess: onClose,
+        // Achado C da homologação (2026-09-23): sem isso, um 403 (perfil sem permissão) deixava o
+        // modal aberto sem nenhum feedback -- o toast global do interceptor ainda dispara, mas o
+        // usuário fica sem explicação dentro do próprio modal, achando que o clique não funcionou.
+        onError: setErro,
+      },
     )
   }
 
@@ -160,6 +168,8 @@ export default function RegistrarPagamentoModal({
           </Button>
         </div>
       </form>
+
+      <PedidoErroModal open={!!erro} onClose={() => setErro(null)} erro={erro} pedidoId={pedidoId} />
     </Modal>
   )
 }

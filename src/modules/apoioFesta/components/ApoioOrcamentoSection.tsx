@@ -209,8 +209,8 @@ export default function ApoioOrcamentoSection({
           <Modal open={!!removeTarget} onClose={() => setRemoveTarget(null)} title="Remover apoio da proposta">
             <p className="text-sm text-gray-600 mb-5">
               Tem certeza que deseja remover o apoio{' '}
-              <span className="font-semibold text-gray-900">"{removeTarget?.itemApoioNome}"</span> da proposta? Isso não
-              afeta o valor do orçamento (apoio proposto não soma no total até o orçamento ser aprovado).
+              <span className="font-semibold text-gray-900">"{removeTarget?.itemApoioNome}"</span> da proposta? O valor
+              desse apoio será subtraído do total do orçamento.
             </p>
             <div className="flex justify-end gap-2">
               <button

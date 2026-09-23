@@ -13,6 +13,8 @@ import ComplementoPicker, { ComplementoResolvido } from '../components/Complemen
 import ResumoValoresCard from '../components/ResumoValoresCard'
 import ApoioOrcamentoSection, { ApoioOrcamentoLocal } from '../../apoioFesta/components/ApoioOrcamentoSection'
 import apoioOrcamentoService from '../../apoioFesta/services/apoioOrcamentoService'
+import { useApoiosOrcamento } from '../../apoioFesta/hooks/useApoiosOrcamento'
+import { instantParaDatetimeLocal, datetimeLocalParaIso } from '../../apoioFesta/lib/horarioBrasilia'
 import { calcularResumo } from '../lib/resumoValores'
 import { useProdutos } from '../../estoqueProdutos/hooks/useProdutos'
 import precificacaoProdutoService from '../../estoqueProdutos/services/precificacaoProdutoService'
@@ -115,7 +117,7 @@ export default function OrcamentoFormPage() {
         clienteId: String(orcamento.clienteId ?? ''),
         enderecoId: String(orcamento.enderecoId ?? ''),
         dataValidade: orcamento.dataValidade ? dateToLocalYMD(orcamento.dataValidade) : '',
-        dataEvento: orcamento.dataEvento ? new Date(orcamento.dataEvento).toISOString().slice(0, 16) : '',
+        dataEvento: orcamento.dataEvento ? instantParaDatetimeLocal(orcamento.dataEvento) : '',
         valorFrete: String(orcamento.valorFrete ?? ''),
         observacao: orcamento.observacao ?? '',
       })
@@ -217,8 +219,15 @@ export default function OrcamentoFormPage() {
     e.preventDefault()
     setErroGeral(null)
     setItemErroIndex(null)
-    const dataValidadeIso = form.dataValidade ? new Date(`${form.dataValidade}T23:59:59`).toISOString() : undefined
-    const dataEventoIso = form.dataEvento ? new Date(form.dataEvento).toISOString() : undefined
+    let dataValidadeIso: string | undefined
+    let dataEventoIso: string | undefined
+    try {
+      dataValidadeIso = form.dataValidade ? datetimeLocalParaIso(`${form.dataValidade}T23:59:59`) : undefined
+      dataEventoIso = form.dataEvento ? datetimeLocalParaIso(form.dataEvento) : undefined
+    } catch (err) {
+      setErroGeral(err instanceof Error ? err.message : 'Data/hora inválida.')
+      return
+    }
 
     if (isEditing) {
       updateMutation.mutate(
@@ -302,7 +311,14 @@ export default function OrcamentoFormPage() {
   }
 
   const isPending = createMutation.isPending || updateMutation.isPending || isSavingApoios
-  const resumo = calcularResumo(itens, Number(form.valorFrete) || 0)
+  // Achado do reteste (2026-09-22): o card RESUMO só somava itens+frete, mesmo depois do fix do
+  // valorTotal do Orçamento (que já soma o Apoio de Festa proposto) -- mesmo padrão de
+  // PedidoFormPage (busca os apoios salvos em edição, ou os configurados em memória na criação).
+  const { data: apoioOrcamentoData } = useApoiosOrcamento(isEditing ? numericId : 0)
+  const valorApoioFesta = isEditing
+    ? (apoioOrcamentoData ?? []).reduce((acc, a) => acc + (a.valorTotal ?? 0), 0)
+    : apoiosLocais.reduce((acc, a) => acc + (a.valorTotal ?? 0), 0)
+  const resumo = calcularResumo(itens, Number(form.valorFrete) || 0, valorApoioFesta)
 
   if (isEditing && isLoading) {
     return <div className="flex items-center justify-center h-48 text-gray-400 text-sm">Carregando...</div>

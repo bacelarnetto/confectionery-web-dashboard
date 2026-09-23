@@ -18,7 +18,7 @@ export default function Dashboard() {
         </p>
         <p>
           Logo abaixo, os <span className="font-medium text-gray-800">Destaques Executivos</span> mostram a foto geral do mês:
-          Receita, Lucro Real Estimado, Volume de Pedidos e Total do Inventário, junto a uma faixa de atenção operacional com links rápidos.
+          Receita Recebida (regime de caixa), Lucro Real Estimado, Volume de Pedidos e Total do Inventário, junto a uma faixa de atenção operacional com links rápidos.
         </p>
       </GuiaCard>
 
@@ -26,7 +26,7 @@ export default function Dashboard() {
         <p>
           Reúne tudo relacionado ao comercial em um só lugar: indicadores de{' '}
           <span className="font-medium text-gray-800">Pedidos no Mês</span>,{' '}
-          <span className="font-medium text-gray-800">Receita de Vendas</span>,{' '}
+          <span className="font-medium text-gray-800">Receita Faturada</span> (regime de competência),{' '}
           <span className="font-medium text-gray-800">Pedidos em Aberto</span> e{' '}
           <span className="font-medium text-gray-800">Ticket Médio</span>, posicionados junto aos gráficos de{' '}
           <span className="font-medium text-gray-800">Top 5 Produtos Mais Vendidos</span> e{' '}
@@ -53,7 +53,7 @@ export default function Dashboard() {
 
       <GuiaCard step={4} title="Bloco Financeiro & Compras">
         <p>
-          Traz o resultado do mês: Receita Realizada, Gastos Totais, Custo dos Doces (COGS) e Lucro Real.
+          Traz o resultado do mês: Receita Recebida (regime de caixa), Gastos Totais, Custo dos Doces (COGS) e Lucro Real.
         </p>
         <p>
           Exibe o gráfico de <span className="font-medium text-gray-800">Gastos por Categoria</span>, o cartão de destaque com o saldo{' '}

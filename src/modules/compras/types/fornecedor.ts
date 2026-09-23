@@ -1,6 +1,8 @@
 export interface Fornecedor {
   id: number
   nome: string
+  cidade?: string
+  estado?: string
   endereco?: string
   numero?: number
   bairro?: string
@@ -18,6 +20,8 @@ export interface Fornecedor {
 
 export interface FornecedorInsertForm {
   nome: string
+  cidade?: string
+  estado?: string
   endereco?: string
   numero?: number
   bairro?: string
@@ -32,6 +36,8 @@ export interface FornecedorInsertForm {
 
 export interface FornecedorUpdateForm {
   nome: string
+  cidade?: string
+  estado?: string
   endereco?: string
   numero?: number
   bairro?: string
@@ -43,3 +49,4 @@ export interface FornecedorUpdateForm {
   site?: string
   updatedBy: string
 }
+

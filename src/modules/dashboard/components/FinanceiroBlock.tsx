@@ -90,13 +90,13 @@ export default function FinanceiroBlock({
       {/* KPIs Financeiros */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard
-          title="Receita Realizada"
+          title="Receita Recebida"
           value={resumo ? formatCurrency.format(resumo.receita) : '—'}
           icon={<DollarSign size={20} />}
           variant="emerald"
           isLoading={isLoadingResumo}
           to="/financeiro/contas-receber"
-          subtitle="Entradas liquidadas no mês"
+          subtitle="Entradas liquidadas no mês (regime de caixa)"
         />
         <KpiCard
           title="Gastos Totais"

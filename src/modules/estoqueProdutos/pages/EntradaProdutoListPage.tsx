@@ -6,7 +6,7 @@ import PageableTable from '../../../components/ui/PageableTable'
 import { useEntradasProduto } from '../hooks/useEntradasProduto'
 import { formatCurrency } from '../../../lib/format'
 
-const TABLE_HEADERS = ['ID', 'Fornecedor ID', 'Itens', 'Valor Total', 'Recebido em', 'Criado por', 'Criado em']
+const TABLE_HEADERS = ['ID', 'Fornecedor ID', 'Produtos', 'Valor Total', 'Recebido em', 'Criado por', 'Criado em']
 
 function formatDate(dateStr: string | undefined): string {
   if (!dateStr) return '—'
@@ -55,7 +55,18 @@ export default function EntradaProdutoListPage() {
             <tr key={e.id} className="hover:bg-gray-50 transition-colors">
               <td className="px-4 py-3 text-gray-500 text-sm">{e.id}</td>
               <td className="px-4 py-3 text-gray-600">{e.fornecedorId ?? '—'}</td>
-              <td className="px-4 py-3 text-gray-600">{e.itens.length} {e.itens.length === 1 ? 'item' : 'itens'}</td>
+              <td className="px-4 py-3 text-gray-600">
+                <div className="flex flex-col gap-1">
+                  {e.itens.map((item, idx) => (
+                    <div key={idx} className="flex flex-wrap items-center gap-1.5 text-xs">
+                      <span className="text-gray-900 font-medium">
+                        {item.produtoNome ?? `#${item.produtoId}`}
+                      </span>
+                      <span className="text-gray-400 font-mono text-[11px]">(qtd: {item.quantidade})</span>
+                    </div>
+                  ))}
+                </div>
+              </td>
               <td className="px-4 py-3 font-medium text-gray-900">{formatCurrency(valorTotal)}</td>
               <td className="px-4 py-3 text-gray-600">{formatDate(e.dataRecebimento)}</td>
               <td className="px-4 py-3 text-gray-600">{e.createdBy}</td>

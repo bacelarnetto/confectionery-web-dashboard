@@ -157,6 +157,13 @@ export default function Vendas() {
           produto chegou).
         </p>
         <p>
+          Pedido marcado como <span className="font-medium text-gray-800">"Cliente retira no local"</span> pula o
+          <span className="font-medium text-gray-800"> A CAMINHO</span> — não existe trajeto pra acompanhar quando o
+          cliente busca pessoalmente. Nesse caso o próximo passo depois de <span className="font-medium text-gray-800">
+          PRONTO</span> já é direto <span className="font-medium text-gray-800">ENTREGUE</span>, e a etapa A CAMINHO nem
+          aparece como opção pra esse pedido.
+        </p>
+        <p>
           <span className="font-medium text-gray-800">CONCLUÍDO</span> é o status final de sucesso do pedido — só pode ser
           marcado depois que o pedido estiver <span className="font-medium text-gray-800">100% pago</span>; se ainda tiver
           saldo em aberto, o sistema recusa e avisa. Diferente de ENTREGUE, que só confirma a entrega física, CONCLUÍDO
@@ -237,6 +244,91 @@ export default function Vendas() {
           sem desfazer. Em <span className="font-medium text-gray-800">Vendas → Apoios de Festa</span> fica a lista geral
           de todos os aluguéis, de todos os pedidos, com filtro por item, pedido, status e dia — útil pra ver a agenda da
           frota sem abrir pedido por pedido.
+        </p>
+      </GuiaCard>
+
+      <GuiaCard
+        step={8}
+        title="Quem pode fazer o quê num Pedido"
+        dica="Isso vale só para a tela de Pedido — nos demais módulos (Orçamento, Apoio de Festa, Financeiro, cadastros em geral) o perfil ainda não limita as ações."
+      >
+        <p>
+          As ações de Pedido (criar, editar, mudar status, cancelar, pagar) passaram a respeitar o perfil de quem está
+          logado. O botão ou controle simplesmente não aparece — ou aparece desabilitado — quando seu perfil não pode
+          fazer aquela ação; se ainda assim a ação for tentada (ex: por uma aba antiga aberta), o sistema recusa e mostra
+          um aviso de acesso negado.
+        </p>
+        <div className="not-prose overflow-x-auto">
+          <table className="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+            <thead className="bg-gray-50 text-gray-600">
+              <tr>
+                <th className="text-left px-3 py-2 font-medium">Ação</th>
+                <th className="text-center px-3 py-2 font-medium">Admin</th>
+                <th className="text-center px-3 py-2 font-medium">Vendas</th>
+                <th className="text-center px-3 py-2 font-medium">Produção</th>
+                <th className="text-center px-3 py-2 font-medium">Estoque</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              <tr>
+                <td className="px-3 py-2 text-gray-700">Ver pedidos, PDFs e pagamentos</td>
+                <td className="text-center px-3 py-2">✅</td>
+                <td className="text-center px-3 py-2">✅</td>
+                <td className="text-center px-3 py-2">✅</td>
+                <td className="text-center px-3 py-2">✅</td>
+              </tr>
+              <tr>
+                <td className="px-3 py-2 text-gray-700">Criar pedido novo</td>
+                <td className="text-center px-3 py-2">✅</td>
+                <td className="text-center px-3 py-2">✅</td>
+                <td className="text-center px-3 py-2 text-gray-300">—</td>
+                <td className="text-center px-3 py-2 text-gray-300">—</td>
+              </tr>
+              <tr>
+                <td className="px-3 py-2 text-gray-700">Editar dados (cliente, itens, endereço...)</td>
+                <td className="text-center px-3 py-2">✅</td>
+                <td className="text-center px-3 py-2">Só em Rascunho/Confirmado</td>
+                <td className="text-center px-3 py-2 text-gray-300">—</td>
+                <td className="text-center px-3 py-2 text-gray-300">—</td>
+              </tr>
+              <tr>
+                <td className="px-3 py-2 text-gray-700">Confirmar pedido (Rascunho → Confirmado)</td>
+                <td className="text-center px-3 py-2">✅</td>
+                <td className="text-center px-3 py-2">✅</td>
+                <td className="text-center px-3 py-2 text-gray-300">—</td>
+                <td className="text-center px-3 py-2 text-gray-300">—</td>
+              </tr>
+              <tr>
+                <td className="px-3 py-2 text-gray-700">Avançar de Em Produção até Concluído</td>
+                <td className="text-center px-3 py-2">✅</td>
+                <td className="text-center px-3 py-2 text-gray-300">—</td>
+                <td className="text-center px-3 py-2">✅</td>
+                <td className="text-center px-3 py-2 text-gray-300">—</td>
+              </tr>
+              <tr>
+                <td className="px-3 py-2 text-gray-700">Cancelar pedido</td>
+                <td className="text-center px-3 py-2">✅</td>
+                <td className="text-center px-3 py-2">Só em Rascunho/Confirmado</td>
+                <td className="text-center px-3 py-2 text-gray-300">—</td>
+                <td className="text-center px-3 py-2 text-gray-300">—</td>
+              </tr>
+              <tr>
+                <td className="px-3 py-2 text-gray-700">Registrar pagamento</td>
+                <td className="text-center px-3 py-2">✅</td>
+                <td className="text-center px-3 py-2">✅</td>
+                <td className="text-center px-3 py-2 text-gray-300">—</td>
+                <td className="text-center px-3 py-2 text-gray-300">—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          <span className="font-medium text-gray-800">Produção</span> é quem confirma que o pedido entrou de fato em
+          fabricação — por isso é ela quem move <span className="font-medium text-gray-800">Confirmado → Em Produção</span>{' '}
+          e segue os status seguintes até <span className="font-medium text-gray-800">Concluído</span>.{' '}
+          <span className="font-medium text-gray-800">Vendas</span> cuida do início (até Confirmado) e do cancelamento
+          antes da produção começar — juntos, os dois perfis cobrem o fluxo inteiro sem se sobrepor.{' '}
+          <span className="font-medium text-gray-800">Estoque</span> tem acesso só de leitura à tela de Pedido.
         </p>
       </GuiaCard>
 

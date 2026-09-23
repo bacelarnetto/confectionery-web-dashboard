@@ -11,7 +11,14 @@ function instantBrasilia(diaYMD: string, hora: number): string {
 // Formata um Instant pro formato que <input type="datetime-local"> aceita, usando os getters
 // LOCAIS do navegador -- garante que, quando esse valor for reconvertido (new Date(valor)), o
 // Instant original seja reproduzido de volta, seja qual for o fuso do navegador de quem preencher.
-function instantParaDatetimeLocal(iso: string): string {
+// Exportada (achado da homologação 2026-09-19): "Data do Evento" (Orçamento) e "Data de Entrega"
+// (Pedido) populavam o <input type="datetime-local"> com `new Date(iso).toISOString().slice(0,16)`
+// -- sempre UTC, nunca reconvertido pro fuso local. Resultado: o campo mostrava a hora UTC crua
+// (ex.: 17:00 em vez de 14:00 BRT) e, ao salvar de novo sem tocar no campo, essa hora UTC era
+// reenviada como se já fosse local, ganhando +3h a cada ciclo (drift cumulativo). Esta função já
+// fazia a conversão certa pro atalho "dia inteiro" do Apoio de Festa -- só faltava reusá-la nos
+// dois formulários.
+export function instantParaDatetimeLocal(iso: string): string {
   const d = new Date(iso)
   const pad = (n: number) => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
@@ -44,4 +51,20 @@ function diaBrasiliaYMD(iso: string): string {
  */
 export function mesmoDiaBrasilia(isoA: string, isoB: string): boolean {
   return diaBrasiliaYMD(isoA) === diaBrasiliaYMD(isoB)
+}
+
+/**
+ * Converte um valor de <input type="datetime-local"> (ou qualquer string aceita por `new Date`)
+ * pra ISO (UTC), validando ANTES de chamar `.toISOString()`. Achado da homologação 2026-09-19:
+ * um valor malformado produz um `Date` inválido, e `.toISOString()` nesse caso lança
+ * `RangeError: Invalid time value` -- sem tratamento, isso derrubava a SPA inteira com tela
+ * branca. Diferente de um erro de render, esse throw acontece dentro do handler de submit (evento
+ * de clique), onde um Error Boundary do React NÃO pega -- só valdar antes evita o crash aqui.
+ */
+export function datetimeLocalParaIso(valor: string): string {
+  const data = new Date(valor)
+  if (Number.isNaN(data.getTime())) {
+    throw new Error('Data/hora inválida -- confira o valor preenchido.')
+  }
+  return data.toISOString()
 }

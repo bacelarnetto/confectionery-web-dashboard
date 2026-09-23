@@ -6,6 +6,7 @@ import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from 'react-oidc-context'
 import App from './App'
 import AuthGate from './components/auth/AuthGate'
+import ErrorBoundary from './components/ErrorBoundary'
 import SilentRenewPage from './pages/SilentRenewPage'
 import { oidcConfig } from './lib/auth'
 import { applyTheme, getStoredTheme } from './lib/theme'
@@ -41,9 +42,11 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       >
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
-            <AuthGate>
-              <App />
-            </AuthGate>
+            <ErrorBoundary>
+              <AuthGate>
+                <App />
+              </AuthGate>
+            </ErrorBoundary>
             <Toaster
               position="top-right"
               toastOptions={{
