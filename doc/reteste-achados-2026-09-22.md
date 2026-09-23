@@ -9,17 +9,20 @@
 - Docs: `45a5f64` — marca os achados como corrigidos em `PROJECT_CONTEXT.md` e no relatório.
 - Frontend (rodada 2, achados #5 e #6): `36ecac0` — texto do modal de remoção de Apoio de Festa; `7939391` — renomeação dos cards de receita do Dashboard.
 - Docs (rodada 2): `89d46df`, `18602a9` — registram e marcam #5/#6 como corrigidos e validam D3.
+- Backend/Frontend (rodada 4): `8c95d08` / `f8e50f6` — achado #69 (nome do produto na lista de Entrada de Produto).
+- Frontend (rodada 5): RESUMO do Orçamento passa a somar o Apoio de Festa proposto. Backend (rodada 5, teste): `EntradaProdutoIntegrationTest.EP7` fecha o caso de múltiplos produtos do achado #69.
 
 ## Resumo
 
 | # | Achado | Severidade | Resultado do reteste |
 |---|---|---|---|
-| 1 | Orçamento.valorTotal não somava Apoio de Festa proposto | CRÍTICO | ✅ Corrigido (com 1 ressalva — ver abaixo) |
+| 1 | Orçamento.valorTotal não somava Apoio de Festa proposto | CRÍTICO | ✅ Corrigido (ressalva do RESUMO client-side também fechada na rodada 5 — ver abaixo) |
 | 2 | Drift de +3h em "Data do Evento"/"Data de Entrega" | ALTO | ✅ Corrigido |
 | 3 | Crash de tela branca com data inválida | MÉDIO | ✅ Corrigido |
 | 4 | Modal "Estoque Insuficiente" com copy errado para insumo | BAIXO | ✅ Corrigido |
 | 5 | Modal de remoção de Apoio de Festa com texto desatualizado (novo, achado nesta rodada) | BAIXO | ✅ Corrigido — confirmado ao vivo (rodada 3) |
 | 6 | Ambiguidade entre "Lucro Real Estimado" (caixa) e "Receita de Vendas" (competência) no Dashboard (novo, achado nesta rodada) | BAIXO/UX | ✅ Corrigido (renomeação de cards) — confirmado ao vivo (rodada 3) |
+| 69 | Lista de Entradas de Produto sem nome do produto (achado do dono, fora do fluxo desta homologação) | BAIXO | ✅ Corrigido — caso de múltiplos produtos fechado por teste automatizado (rodada 5) |
 
 ---
 
@@ -42,9 +45,11 @@ O modal de confirmação ao remover um Apoio de Festa proposto de um Orçamento 
 
 Esse texto tinha ficado **desatualizado pela própria correção**: antes do fix, era verdade (o apoio proposto realmente não entrava no total). Depois do fix, ele passou a entrar imediatamente (confirmado acima: 130 → 30 ao remover). O texto do modal precisava ser atualizado para refletir o novo comportamento — ver correção e reteste independente na seção dedicada, mais abaixo.
 
-### Observação (não é bug, é UX menor — ainda não corrigida, fora do escopo desta rodada)
+### ✅ CORRIGIDO (2026-09-22, rodada 5) — RESUMO do Orçamento não somava o Apoio de Festa
 
-O card "RESUMO" nas telas de criação/edição de Orçamento continua mostrando apenas itens + frete (sem o apoio), tanto na criação quanto na edição — ex.: total exibido "R$ 30,00" enquanto o valor persistido/lista mostra corretamente "R$ 430,00" (com apoio proposto somado). Isso é puramente client-side (não afeta o dado persistido, que está correto), mas pode confundir o usuário durante o preenchimento. Diferente do Pedido, cujo RESUMO já soma o Apoio de Festa corretamente. **Reconfirmado ao vivo em 2026-09-22 (rodada 3)** durante a verificação do achado #5 (ver abaixo) — continua presente, sem alteração de comportamento. Já está registrado em `doc/homologacao-2026-09-19-frontend.md` como observação separada, fora do escopo dos achados #5/#6.
+O card "RESUMO" nas telas de criação/edição de Orçamento mostrava apenas itens + frete (sem o apoio), tanto na criação quanto na edição — ex.: total exibido "R$ 30,00" enquanto o valor persistido/lista mostrava corretamente "R$ 430,00" (com apoio proposto somado). Era puramente client-side (nunca afetou o dado persistido, que já estava correto desde a correção do achado #1), mas confundia o usuário durante o preenchimento — ficou mais visível ainda depois do achado #5 (o modal de remoção passou a falar explicitamente em "o total do orçamento", numa tela cujo campo Total nunca refletia esse valor subindo).
+
+**Fix:** `OrcamentoFormPage.tsx` — `calcularResumo()` já aceitava um terceiro parâmetro `valorApoioFesta` (usado corretamente há tempos por `PedidoFormPage.tsx`), só não estava sendo passado. Mesmo padrão do Pedido: em modo edição busca os `ApoioOrcamento` salvos via `useApoiosOrcamento(orcamentoId)` e soma `valorTotal`; em modo criação soma os apoios ainda em memória (`apoiosLocais`). Comentário desatualizado em `resumoValores.ts` (dizia que só o Pedido somava apoio) também corrigido. `npx tsc --noEmit` limpo.
 
 ---
 
@@ -135,7 +140,7 @@ Fluxo reproduzido do zero na aplicação viva, usando o Orçamento #4 (`ABERTO`,
 
 **Achado #5: confirmado corrigido**, com o texto do modal agora consistente com o comportamento real do backend.
 
-**Nota lateral (não é regressão do #5, é a observação de UX já registrada acima):** durante o passo 1, o card "RESUMO" da própria tela de edição do Orçamento #4 permaneceu mostrando "Total: R$ 30,00" o tempo todo (antes e depois de propor o apoio de R$ 400,00), mesmo após reload da página — só a lista de Orçamentos (`/vendas/orcamentos`) mostrou o valor correto (R$ 430,00). Isso significa que, na mesma tela onde o novo modal do achado #5 avisa que "o valor desse apoio será subtraído do total", o campo "Total" visível nessa tela nunca chegou a mostrar esse valor somado em primeiro lugar — o aviso do modal é correto sobre o dado real (persistido/listado), mas continua desconectado do que a tela de edição exibe. Já estava registrado como observação de UX antes desta rodada; não é um achado novo, só uma reconfirmação de que segue sem correção (fora do escopo dos achados #5/#6).
+**Nota lateral (não é regressão do #5, é a observação de UX já registrada acima):** durante o passo 1, o card "RESUMO" da própria tela de edição do Orçamento #4 permaneceu mostrando "Total: R$ 30,00" o tempo todo (antes e depois de propor o apoio de R$ 400,00), mesmo após reload da página — só a lista de Orçamentos (`/vendas/orcamentos`) mostrou o valor correto (R$ 430,00). Isso significava que, na mesma tela onde o novo modal do achado #5 avisa que "o valor desse apoio será subtraído do total", o campo "Total" visível nessa tela nunca chegava a mostrar esse valor somado em primeiro lugar. **Corrigido na rodada 5** — ver seção dedicada acima.
 
 ### Achado #6 — nomenclatura dos cards de receita no Dashboard
 
@@ -149,6 +154,25 @@ Reteste ao vivo na tela inicial (`/`), recarregada do zero:
 
 ---
 
+## Verificação da correção — Entrada de Produto sem nome do produto na lista (achado #69, encontrado pelo dono na tela ao vivo — 2026-09-22, rodada 4)
+
+**Commits:** Backend `8c95d08` — `ItemEntradaProdutoViewDTO`/domain `ItemEntradaProduto` ganharam `produtoNome`, propagado via `EntradaProdutoRepositoryAdapter`, com `LEFT JOIN FETCH i.produto` adicionado em `EntradaProdutoJpaRepository` (evita `LazyInitializationException` com `open-in-view: false`). Frontend `f8e50f6` — coluna "Itens" (só contagem) da lista `/estoque-produtos/entradas` virou "Produtos", listando nome + quantidade de cada item, no mesmo padrão visual já usado na lista de Entrada de Insumo.
+
+Este achado não veio do reteste desta sessão — foi encontrado pelo dono do produto usando a tela ao vivo, fora do fluxo dos achados #1–#6 acima.
+
+**Reteste ao vivo:**
+- `GET /api/entrada-produto` confirmado retornando `"produtoNome":"Bolo QA PG"` no item da Entrada #1 (antes, o DTO não tinha esse campo). ✅ Sem erro 500/`LazyInitializationException` na chamada. ✅
+- Tela `/estoque-produtos/entradas` recarregada do zero: cabeçalho da coluna agora é **"PRODUTOS"** (antes "ITENS") e a célula mostra **"Bolo QA PG (qtd: 5)"** em vez do texto genérico "1 item". ✅ conforme diff do commit `f8e50f6`.
+- Console do navegador sem novos erros ao carregar a tela (a única entrada no console é uma exceção antiga, de timestamp anterior, remanescente do teste de reprodução do achado #3 nesta mesma sessão de navegador — não relacionada a esta tela).
+
+**Limitação do reteste (rodada 4):** a base de teste daquela sessão tinha apenas 1 produto cadastrado ("Bolo QA PG") e 1 Entrada de Produto com 1 único item, então não foi possível testar ao vivo o caso de uma Entrada com **múltiplos produtos diferentes** na mesma lista.
+
+**✅ Lacuna fechada (2026-09-22, rodada 5)** — em vez de depender de cadastrar dado extra manualmente, o caso de múltiplos produtos foi coberto por teste automatizado novo: `EntradaProdutoIntegrationTest.EP7` cria uma Entrada com 2 produtos diferentes ("Produto Teste" e "Brigadeiro Gourmet") e confirma `produtoNome` correto por item tanto via `buscarPorIdUseCase` (GET por id) quanto via `listarUseCase` (paginação) — os **mesmos dois caminhos** que `EntradaProdutoListPage.tsx` usa de fato. Suite completa: 8/8 verde.
+
+**Achado #69: confirmado corrigido**, incluindo o caso de múltiplos produtos por Entrada (via teste automatizado, não reprodução manual na UI).
+
+---
+
 ## Conclusão
 
 Os 4 achados da rodada de homologação 2026-09-19 foram corrigidos e verificados com sucesso, incluindo reprodução end-to-end do crash original (não apenas revisão de código) e testes de ciclo completo (criar → editar → remover apoio → converter em pedido) para o achado crítico do `valorTotal`.
@@ -157,6 +181,10 @@ Os 2 achados novos identificados durante o reteste (efeitos colaterais/observaç
 - **Achado #5:** texto do modal de confirmação de remoção de Apoio de Festa agora reflete o comportamento real (subtração imediata do total), confirmado por reprodução completa do fluxo (propor → conferir total via API → remover → conferir total via API).
 - **Achado #6:** cards de receita do Dashboard renomeados nos 3 pontos onde apareciam (Destaques, Vendas & Pedidos, Financeiro & Compras), com subtítulo explicitando o regime contábil (caixa vs. competência) em cada um.
 
-Permanece **não corrigida** (fora do escopo destas correções, já registrada como observação de UX menor, sem risco ao dado persistido): o card "RESUMO" da tela de criação/edição de Orçamento não reflete o valor do Apoio de Festa proposto no "Total" exibido, mesmo quando o backend já soma esse valor (visível corretamente na lista de Orçamentos). Recomenda-se considerar essa correção numa próxima rodada, já que agora o modal do achado #5 faz referência explícita a "o total do orçamento" numa tela cujo próprio campo "Total" não reflete esse valor.
+**Rodada 5 (2026-09-22) fechou as duas pendências que restavam:**
+- O card "RESUMO" da tela de criação/edição de Orçamento agora soma o Apoio de Festa proposto no "Total" exibido (antes só somava itens+frete, mesmo já persistido corretamente desde o achado #1) — consistente com o texto do modal do achado #5.
+- O achado #69 (lista de Entradas de Produto sem nome do produto) teve o caso de múltiplos produtos fechado por teste automatizado (`EP7`), não apenas o caso de item único confirmado na rodada 4.
 
-**Ambiente de teste usado:** Orçamentos #3 e #4 e Pedido #3, criados na rodada 2 especificamente para o reteste, permanecem na base como evidência. Na rodada 3 (verificação independente), o Orçamento #4 foi reutilizado para o teste do achado #5 (uma proposta de apoio foi adicionada e depois removida — o orçamento voltou ao estado original, `valorTotal = 30`, sem apoio ativo).
+Não há, neste momento, nenhuma pendência de correção em aberto entre os achados #1–#6 e #69.
+
+**Ambiente de teste usado:** Orçamentos #3 e #4 e Pedido #3, criados na rodada 2 especificamente para o reteste, permanecem na base como evidência. Na rodada 3 (verificação independente), o Orçamento #4 foi reutilizado para o teste do achado #5 (uma proposta de apoio foi adicionada e depois removida — o orçamento voltou ao estado original, `valorTotal = 30`, sem apoio ativo). Na rodada 4, nenhum dado novo foi criado — reteste feito sobre a Entrada de Produto #1 já existente.

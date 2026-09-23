@@ -12,8 +12,9 @@ export interface ResumoValores {
   totalDesconto: number
   totalComplementos: number
   valorFrete: number
-  /** Soma dos Apoios de Festa ATIVOS do pedido (locação de carrinho/tacho/decoração) -- só o
-   * Pedido soma isso no total; o Orçamento não (apoio proposto não altera o total até aprovar). */
+  /** Soma dos Apoios de Festa (locação de carrinho/tacho/decoração): ATIVOS no Pedido, ou
+   * propostos (ApoioOrcamento) no Orçamento -- desde a correção de 2026-09-22, os dois somam no
+   * total (Pedido.valorTotal / Orcamento.valorTotal via OrcamentoValorTotalAjustePort). */
   valorApoioFesta: number
   total: number
 }

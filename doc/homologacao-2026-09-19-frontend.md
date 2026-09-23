@@ -348,12 +348,18 @@ explicitamente. Nenhuma lógica de cálculo alterada. `npx tsc --noEmit` limpo.
 
 **Verificação independente ao vivo (2026-09-22, rodada 3):** recarregada a tela inicial (`/`) do zero e confirmados os 3 pontos renomeados pelo commit `7939391`: "Receita Recebida" (Destaques Executivos, subtítulo "regime de caixa"), "Receita Faturada" (Vendas & Pedidos, subtítulo "regime de competência") e "Receita Recebida" (Financeiro & Compras, subtítulo "regime de caixa"). Nenhum valor mudou, apenas título/subtítulo, como esperado. Ver `doc/reteste-achados-2026-09-22.md` → seção "Verificação independente das correções dos achados #5 e #6".
 
-### Observação (não é achado) — RESUMO do Orçamento na tela não soma o Apoio de Festa
+### ✅ [BAIXO/UX — CORRIGIDO 2026-09-22] RESUMO do Orçamento na tela não somava o Apoio de Festa
 Registrado no reteste (`doc/reteste-achados-2026-09-22.md` → seção do achado 1): o card "RESUMO"
-nas telas de criação/edição de Orçamento mostra só itens+frete (client-side), enquanto o valor
-persistido/listado já está correto (com apoio somado) desde a correção acima. Não afeta o dado
-salvo, só a exibição durante o preenchimento — diferente do Pedido, cujo RESUMO já soma o apoio
-corretamente. Não corrigido nesta rodada (fora do escopo dos achados originais).
+nas telas de criação/edição de Orçamento mostrava só itens+frete (client-side), enquanto o valor
+persistido/listado já estava correto (com apoio somado) desde a correção do achado crítico acima.
+Não afetava o dado salvo, só a exibição durante o preenchimento — ficou mais visível depois do
+achado #5, cujo modal passou a falar explicitamente em "o total do orçamento" numa tela cujo
+próprio campo Total nunca refletia esse valor.
+
+**✅ CORRIGIDO.** `OrcamentoFormPage.tsx`: `calcularResumo()` já aceitava `valorApoioFesta` como
+terceiro parâmetro (usado corretamente pelo `PedidoFormPage.tsx`), só faltava passá-lo — mesmo
+padrão do Pedido: soma os `ApoioOrcamento` salvos (`useApoiosOrcamento`) em edição, ou os apoios
+em memória (`apoiosLocais`) em criação. `npx tsc --noEmit` limpo.
 
 ---
 
