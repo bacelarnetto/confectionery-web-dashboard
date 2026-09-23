@@ -34,9 +34,12 @@ function podeTransicionarPara(destino: string, statusAtual: string | undefined, 
 }
 
 // Mesma lista de `statusDisponiveisPara`, filtrada pelo que o perfil do usuário pode de fato
-// executar. ADMIN nunca filtra (vê tudo que a ordem canônica permite).
-export function statusDisponiveisParaPerfil(atual: string | undefined, perfis: string[]): string[] {
-  const disponiveis = statusDisponiveisPara(atual)
+// executar. ADMIN nunca filtra (vê tudo que a ordem canônica permite). `retirar` propaga a
+// exceção de retirada no local (pula A_CAMINHO, achado #71) -- não muda a matriz por perfil em
+// si, já que ENTREGUE já é um destino válido pra PRODUCAO independente de vir de A_CAMINHO ou
+// direto de PRONTO.
+export function statusDisponiveisParaPerfil(atual: string | undefined, perfis: string[], retirar?: boolean): string[] {
+  const disponiveis = statusDisponiveisPara(atual, retirar)
   if (perfis.includes('ADMIN')) return disponiveis
   return disponiveis.filter((destino) => podeTransicionarPara(destino, atual, perfis))
 }
@@ -44,10 +47,10 @@ export function statusDisponiveisParaPerfil(atual: string | undefined, perfis: s
 // Tooltip pra um status desabilitado: prioriza a explicação de ordem já existente
 // (`tituloStatusPill`) e só usa a explicação de perfil quando a transição seria válida pela
 // ordem canônica mas o perfil não tem permissão pra ela.
-export function tituloStatusPillPerfil(status: string, atual: string | undefined, perfis: string[]): string | undefined {
+export function tituloStatusPillPerfil(status: string, atual: string | undefined, perfis: string[], retirar?: boolean): string | undefined {
   if (!atual || status === atual) return undefined
-  if (!statusDisponiveisPara(atual).includes(status)) return tituloStatusPill(status, atual)
-  if (!statusDisponiveisParaPerfil(atual, perfis).includes(status)) {
+  if (!statusDisponiveisPara(atual, retirar).includes(status)) return tituloStatusPill(status, atual, retirar)
+  if (!statusDisponiveisParaPerfil(atual, perfis, retirar).includes(status)) {
     return 'Seu perfil não tem permissão para fazer essa mudança de status.'
   }
   return undefined

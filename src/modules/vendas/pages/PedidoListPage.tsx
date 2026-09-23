@@ -219,7 +219,7 @@ export default function PedidoListPage() {
                     // Por pedido, não por perfil: PRODUCAO pode alterar status em geral, mas não
                     // necessariamente ESTE pedido (ex: ainda em RASCUNHO, fora da faixa dele) --
                     // achado D2 do reteste (2026-09-23). Mesmo critério vale pra qualquer perfil.
-                    const disponiveis = statusDisponiveisParaPerfil(p.status, perfis)
+                    const disponiveis = statusDisponiveisParaPerfil(p.status, perfis, p.retirar)
                     if (disponiveis.length === 0) {
                       return (
                         <span className={`text-xs font-medium px-2 py-1 rounded-full ${STATUS_COLORS[p.status] ?? 'bg-gray-100 text-gray-700'}`}>
@@ -313,7 +313,7 @@ export default function PedidoListPage() {
                 >
                   <Eye size={15} />
                 </button>
-                {p.status && statusDisponiveisParaPerfil(p.status, perfis).includes('CANCELADO') && (
+                {p.status && statusDisponiveisParaPerfil(p.status, perfis, p.retirar).includes('CANCELADO') && (
                   <button
                     onClick={() => setCancelTarget({ id: p.id, nome: `Pedido #${p.id}` })}
                     className="p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"

@@ -157,6 +157,13 @@ export default function Vendas() {
           produto chegou).
         </p>
         <p>
+          Pedido marcado como <span className="font-medium text-gray-800">"Cliente retira no local"</span> pula o
+          <span className="font-medium text-gray-800"> A CAMINHO</span> — não existe trajeto pra acompanhar quando o
+          cliente busca pessoalmente. Nesse caso o próximo passo depois de <span className="font-medium text-gray-800">
+          PRONTO</span> já é direto <span className="font-medium text-gray-800">ENTREGUE</span>, e a etapa A CAMINHO nem
+          aparece como opção pra esse pedido.
+        </p>
+        <p>
           <span className="font-medium text-gray-800">CONCLUÍDO</span> é o status final de sucesso do pedido — só pode ser
           marcado depois que o pedido estiver <span className="font-medium text-gray-800">100% pago</span>; se ainda tiver
           saldo em aberto, o sistema recusa e avisa. Diferente de ENTREGUE, que só confirma a entrega física, CONCLUÍDO

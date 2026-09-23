@@ -8,12 +8,24 @@ export const PEDIDO_STATUS_ORDEM: string[] = [
   'CONCLUIDO',
 ]
 
+// Pedido de retirada no local (`retirar=true`) não passa por A_CAMINHO -- de PRONTO vai direto
+// pra ENTREGUE (achado #71, decisão do dono, backend já implementado). Sem backfill: um pedido
+// de retirada que já esteja gravado em A_CAMINHO (dado legado) segue o fluxo normal a partir daí --
+// por isso o pill de A_CAMINHO só some quando NÃO é o status atual; se for, precisa continuar
+// aparecendo (senão a pill do status atual do pedido desaparece da tela, e os índices usados por
+// `tituloStatusPill` pra calcular "status já avançado" quebram).
+export function statusOrdemVisivel(retirar?: boolean, atual?: string): string[] {
+  if (!retirar) return PEDIDO_STATUS_ORDEM
+  return PEDIDO_STATUS_ORDEM.filter((s) => s !== 'A_CAMINHO' || s === atual)
+}
+
 // Status para os quais dá pra migrar a partir de `atual`: o PRÓXIMO passo da ordem canônica
 // (evolução natural, sem pular) + CANCELADO (regra de negócio: cancelável de qualquer status,
 // exceto CONCLUIDO e já CANCELADO). Nunca inclui o próprio status atual.
-export function statusDisponiveisPara(atual: string | undefined): string[] {
+export function statusDisponiveisPara(atual: string | undefined, retirar?: boolean): string[] {
   if (!atual) return ['RASCUNHO', 'CANCELADO']
   if (atual === 'CONCLUIDO' || atual === 'CANCELADO') return []
+  if (retirar && atual === 'PRONTO') return ['ENTREGUE', 'CANCELADO']
   const idx = PEDIDO_STATUS_ORDEM.indexOf(atual)
   if (idx >= 0 && idx < PEDIDO_STATUS_ORDEM.length - 1) {
     return [PEDIDO_STATUS_ORDEM[idx + 1], 'CANCELADO']
@@ -21,15 +33,16 @@ export function statusDisponiveisPara(atual: string | undefined): string[] {
   return ['CANCELADO']
 }
 
-export function tituloStatusPill(status: string, atual?: string): string | undefined {
+export function tituloStatusPill(status: string, atual?: string, retirar?: boolean): string | undefined {
   if (!atual) return undefined
   if (atual === 'CANCELADO') return 'Pedido cancelado — não é possível alterar'
   if (atual === 'CONCLUIDO') return 'Pedido concluído — não é possível alterar'
-  const i = PEDIDO_STATUS_ORDEM.indexOf(status)
-  const j = PEDIDO_STATUS_ORDEM.indexOf(atual)
+  const ordem = statusOrdemVisivel(retirar, atual)
+  const i = ordem.indexOf(status)
+  const j = ordem.indexOf(atual)
   if (j >= 0 && i >= 0 && i < j) return 'Status já avançado'
   if (i > j + 1) {
-    const anterior = PEDIDO_STATUS_ORDEM[i - 1]
+    const anterior = ordem[i - 1]
     return `Para mudar para ${status.replace('_', ' ')}, o pedido precisa estar em ${anterior.replace('_', ' ')}`
   }
   return undefined

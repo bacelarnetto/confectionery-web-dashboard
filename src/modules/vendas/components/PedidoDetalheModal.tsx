@@ -11,7 +11,7 @@ import RegistrarPagamentoModal from './RegistrarPagamentoModal'
 import ComandaProducaoModal from './ComandaProducaoModal'
 import ConfirmarMudancaStatusModal from './ConfirmarMudancaStatusModal'
 import PedidoErroModal from './PedidoErroModal'
-import { STATUS_COLORS, STATUS_QUE_SUGEREM_PAGAMENTO, PEDIDO_STATUS_ORDEM } from '../lib/pedidoStatus'
+import { STATUS_COLORS, STATUS_QUE_SUGEREM_PAGAMENTO, statusOrdemVisivel } from '../lib/pedidoStatus'
 import { statusDisponiveisParaPerfil, tituloStatusPillPerfil, podeRegistrarPagamentoPedido } from '../lib/pedidoPermissoes'
 import { getRoles } from '../../../lib/auth'
 import { formatEndereco } from '../lib/endereco'
@@ -125,13 +125,13 @@ export default function PedidoDetalheModal({ pedido, onClose, onUpdated }: Props
             // Por pedido, não por perfil: PRODUCAO pode alterar status em geral, mas não
             // necessariamente ESTE pedido (ex: ainda em RASCUNHO, fora da faixa dele) -- achado D2
             // do reteste (2026-09-23). Mesmo critério da lista de Pedidos.
-            const disponiveis = statusDisponiveisParaPerfil(statusAtual, perfis)
+            const disponiveis = statusDisponiveisParaPerfil(statusAtual, perfis, atual.retirar)
             return (
             <div>
               <p className="text-gray-500 text-xs mb-2">Status</p>
               {disponiveis.length > 0 ? (
                   <div className="flex flex-wrap items-center gap-2">
-                      {PEDIDO_STATUS_ORDEM.map((s) => {
+                      {statusOrdemVisivel(atual.retirar, statusAtual).map((s) => {
                         const isAtual = s === statusAtual
                         const disponivel = disponiveis.includes(s)
                         return (
@@ -140,7 +140,7 @@ export default function PedidoDetalheModal({ pedido, onClose, onUpdated }: Props
                             type="button"
                             onClick={() => disponivel && setStatusConfirmTarget(s)}
                             disabled={isAtual || !disponivel || statusMutation.isPending}
-                            title={isAtual ? 'Status atual' : tituloStatusPillPerfil(s, statusAtual, perfis)}
+                            title={isAtual ? 'Status atual' : tituloStatusPillPerfil(s, statusAtual, perfis, atual.retirar)}
                             className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors disabled:cursor-default ${
                               isAtual
                                 ? `${STATUS_COLORS[s] ?? 'bg-gray-100 text-gray-700'} border-transparent ring-2 ring-offset-1 ring-gray-300`
@@ -161,7 +161,7 @@ export default function PedidoDetalheModal({ pedido, onClose, onUpdated }: Props
                         title={
                           statusAtual === 'CANCELADO'
                             ? 'Status atual'
-                            : tituloStatusPillPerfil('CANCELADO', statusAtual, perfis)
+                            : tituloStatusPillPerfil('CANCELADO', statusAtual, perfis, atual.retirar)
                         }
                         className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors disabled:cursor-default ${
                           statusAtual === 'CANCELADO'
