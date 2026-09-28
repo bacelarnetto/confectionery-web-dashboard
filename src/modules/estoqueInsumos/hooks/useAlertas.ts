@@ -15,12 +15,28 @@ export function useAlertas(
   })
 }
 
+// Sino do header (reteste 2026-09-28, F4): o header fica montado a sessão inteira, então sem
+// polling a lista do dropdown só era buscada no boot -- a contagem tinha refetchInterval, a
+// lista não. As duas agora atualizam por polling, ao voltar o foco da janela e ao abrir o
+// dropdown (refetch no Header); depois de qualquer mutation, o MutationCache (main.tsx) invalida.
 export function useAlertasCountAtivos() {
   return useQuery({
     queryKey: [...QUERY_KEY, 'count-ativos'],
-    queryFn: () => alertaService.countAtivos(),
-    staleTime: 60_000,
+    // Polling em background (sino e menu lateral): sem toast; a falha aparece no dropdown do sino.
+    queryFn: () => alertaService.countAtivos({ silentError: true }),
+    staleTime: 30_000,
     refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
+  })
+}
+
+export function useAlertasRecentes(size = 5) {
+  return useQuery({
+    queryKey: [...QUERY_KEY, 'recentes', size],
+    queryFn: () => alertaService.getAll(0, size, { ativo: true }, { silentError: true }),
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
   })
 }
 

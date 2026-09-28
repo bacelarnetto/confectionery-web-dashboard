@@ -24,7 +24,12 @@ export const oidcConfig = {
 // e pelo handler de 401. Compartilha o mesmo storage (sessionStorage, chave derivada de
 // authority+client_id) que a instância interna do <AuthProvider>, então os dois leem/escrevem
 // o mesmo usuário sem precisar da mesma referência de objeto.
-export const userManager = new UserManager(oidcConfig)
+//
+// automaticSilentRenew DESLIGADO aqui (reteste 2026-09-28, F1): quem renova é só o <AuthProvider>.
+// Com ele ligado, cada `getUser()` do interceptor armava nesta instância um segundo timer de
+// "token expirando", e as duas instâncias disparavam `signinSilent` em paralelo (dois iframes,
+// dois states) sobre o mesmo sessionStorage -- quanto mais velha a aba, mais corrida.
+export const userManager = new UserManager({ ...oidcConfig, automaticSilentRenew: false })
 
 export function getUsername(user: User | null | undefined): string {
   const profile = user?.profile

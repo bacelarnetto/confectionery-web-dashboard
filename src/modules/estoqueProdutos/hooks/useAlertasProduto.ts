@@ -15,12 +15,26 @@ export function useAlertasProduto(
   })
 }
 
+// Sino do header (mesma política do F4, reteste 2026-09-28): polling, foco da janela, refetch
+// ao abrir o dropdown e invalidação pelo MutationCache (main.tsx).
 export function useAlertasProdutoCountAtivos() {
   return useQuery({
     queryKey: [...QUERY_KEY, 'count-ativos'],
-    queryFn: () => alertaProdutoService.countAtivos(),
-    staleTime: 60_000,
+    // Polling em background (sino e menu lateral): sem toast; a falha aparece no dropdown do sino.
+    queryFn: () => alertaProdutoService.countAtivos({ silentError: true }),
+    staleTime: 30_000,
     refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
+  })
+}
+
+export function useAlertasProdutoRecentes(size = 5) {
+  return useQuery({
+    queryKey: [...QUERY_KEY, 'recentes', size],
+    queryFn: () => alertaProdutoService.getAll(0, size, { ativo: true }, { silentError: true }),
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
   })
 }
 

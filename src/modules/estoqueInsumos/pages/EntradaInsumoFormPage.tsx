@@ -11,7 +11,7 @@ import { ItemEntradaInsumo } from '../types/entradaInsumo'
 import { Insumo } from '../types/insumo'
 import { parseApiError } from '../../../lib/apiError'
 import { hasRole } from '../../../lib/auth'
-import { formatCurrency } from '../../../lib/format'
+import { formatCurrency, isoOuUndefined } from '../../../lib/format'
 
 type CampoItem = 'quantidade' | 'dataValidade' | 'dataFabricacao' | 'lote'
 
@@ -41,7 +41,7 @@ function formatData(dateStr?: string): string {
 function toInstantDeData(valor?: string): string | undefined {
   if (!valor) return undefined
   if (/^\d{4}-\d{2}-\d{2}$/.test(valor)) {
-    return new Date(`${valor}T00:00:00`).toISOString()
+    return isoOuUndefined(`${valor}T00:00:00`)
   }
   return valor
 }
@@ -206,6 +206,26 @@ export default function EntradaInsumoFormPage() {
     if (isReadOnly) return
     setErroGeral(null)
     setItemErros({})
+
+    // Regra do dono (2026-09-16), reforçada no reteste 2026-09-28 (F3): em entrada MANUAL, Custo
+    // Unitário, Data Fabricação e Data Vencimento são obrigatórios. O `required` dos inputs já
+    // barra no navegador; esta checagem garante o mesmo mesmo se a validação nativa for contornada
+    // (ou a data digitada for inválida), antes de o backend recusar com 400. Entrada via Compra
+    // não passa por aqui.
+    if (isManual) {
+      const pendentes = itens.flatMap((it, index) => {
+        const faltando = [
+          !(Number(it.valorCustoUnitario) > 0) && 'Custo Unitário',
+          !toInstantDeData(it.dataFabricacao?.trim()) && 'Data Fabricação',
+          !toInstantDeData(it.dataValidade?.trim()) && 'Data Vencimento',
+        ].filter(Boolean)
+        return faltando.length ? [`Item ${index + 1}: ${faltando.join(', ')}`] : []
+      })
+      if (pendentes.length) {
+        setErroGeral(`Entrada manual exige Custo Unitário, Data Fabricação e Data Vencimento válidos. ${pendentes.join('; ')}.`)
+        return
+      }
+    }
 
     const optional = {
       valorFrete: form.valorFrete ? Number(form.valorFrete) : undefined,

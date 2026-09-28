@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { MutationCache, QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from 'react-oidc-context'
 import App from './App'
@@ -15,7 +15,18 @@ import './index.css'
 // Aplicado antes do primeiro render pra não piscar o tema errado (flash of default theme).
 applyTheme(getStoredTheme())
 
-const queryClient = new QueryClient({
+// Qualquer ação que grava no backend pode criar ou resolver alerta (entrada/saída de estoque,
+// pedido, fabricação...). Em vez de caçar cada mutation, invalida as queries de alerta depois de
+// toda mutation bem-sucedida -- são poucas e leves, e só as montadas (sinos/banner) rebuscam.
+// Reteste 2026-09-28, F4.
+const ALERTA_QUERY_KEYS = [['alertas'], ['alertas-pedido'], ['alertas-produto']]
+
+const queryClient: QueryClient = new QueryClient({
+  mutationCache: new MutationCache({
+    onSuccess: () => {
+      for (const queryKey of ALERTA_QUERY_KEYS) queryClient.invalidateQueries({ queryKey })
+    },
+  }),
   defaultOptions: {
     queries: {
       retry: 1,
@@ -30,36 +41,36 @@ const isSilentRenew = window.location.pathname === '/silent-renew'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    {isSilentRenew ? (
-      <SilentRenewPage />
-    ) : (
-      <AuthProvider
-        {...oidcConfig}
-        onSigninCallback={() => {
-          // Remove ?code=&state= da URL depois do redirect de volta do Keycloak
-          window.history.replaceState({}, document.title, window.location.pathname)
-        }}
-      >
-        <QueryClientProvider client={queryClient}>
-          <BrowserRouter>
-            <ErrorBoundary>
+    <ErrorBoundary>
+      {isSilentRenew ? (
+        <SilentRenewPage />
+      ) : (
+        <AuthProvider
+          {...oidcConfig}
+          onSigninCallback={() => {
+            // Remove ?code=&state= da URL depois do redirect de volta do Keycloak
+            window.history.replaceState({}, document.title, window.location.pathname)
+          }}
+        >
+          <QueryClientProvider client={queryClient}>
+            <BrowserRouter>
               <AuthGate>
                 <App />
               </AuthGate>
-            </ErrorBoundary>
-            <Toaster
-              position="top-right"
-              toastOptions={{
-                duration: 4000,
-                style: {
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                },
-              }}
-            />
-          </BrowserRouter>
-        </QueryClientProvider>
-      </AuthProvider>
-    )}
+              <Toaster
+                position="top-right"
+                toastOptions={{
+                  duration: 4000,
+                  style: {
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                  },
+                }}
+              />
+            </BrowserRouter>
+          </QueryClientProvider>
+        </AuthProvider>
+      )}
+    </ErrorBoundary>
   </React.StrictMode>,
 )

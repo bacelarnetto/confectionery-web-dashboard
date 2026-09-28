@@ -9,6 +9,7 @@ import {
   useBaixarMovimentacaoEstoqueCsv,
   useBaixarMovimentacaoEstoquePdf,
 } from '../hooks/useRelatorios'
+import { isoOuUndefined } from '../../../lib/format'
 import { TipoMovimentacao } from '../types/relatorio'
 
 const TABLE_HEADERS = ['Data', 'Tipo', 'Insumo', 'Quantidade']
@@ -19,7 +20,7 @@ function formatDate(iso: string) {
 
 function toInstant(dateStr: string, endOfDay: boolean): string | undefined {
   if (!dateStr) return undefined
-  return new Date(`${dateStr}T${endOfDay ? '23:59:59' : '00:00:00'}`).toISOString()
+  return isoOuUndefined(`${dateStr}T${endOfDay ? '23:59:59' : '00:00:00'}`)
 }
 
 export default function MovimentacaoEstoquePage() {

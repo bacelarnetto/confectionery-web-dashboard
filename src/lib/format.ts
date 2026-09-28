@@ -38,3 +38,28 @@ export function maskPhone(raw: string | null | undefined): string {
   if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`
   return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`
 }
+
+// Reteste 2026-09-28 (F1): `.toISOString()` num Date inválido lança RangeError. Quando isso roda
+// durante o render (filtros de data que viram parâmetro de query), um valor digitado fora do
+// formato (ex.: ano com 6 dígitos num <input type="date">) derrubava a tela inteira. Versão que
+// não lança: devolve undefined e quem chama trata como "filtro ainda não preenchido".
+export function isoOuUndefined(valor: string | Date | null | undefined): string | undefined {
+  if (valor == null || valor === '') return undefined
+  const d = valor instanceof Date ? valor : new Date(valor)
+  return Number.isNaN(d.getTime()) ? undefined : d.toISOString()
+}
+
+// Instant ISO -> "dd/mm/aaaa hh:mm" sempre no horário de Brasília, independente do fuso do navegador.
+export function formatDateTimeBR(iso: string | null | undefined): string {
+  if (!iso) return '—'
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return iso
+  return d.toLocaleString('pt-BR', {
+    timeZone: 'America/Sao_Paulo',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}

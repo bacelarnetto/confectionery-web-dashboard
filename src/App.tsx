@@ -19,6 +19,7 @@ import MovimentacaoListPage from './modules/estoqueInsumos/pages/MovimentacaoLis
 import UsuarioListPage from './modules/shared/pages/UsuarioListPage'
 import UsuarioFormPage from './modules/shared/pages/UsuarioFormPage'
 import DadosEmissorFormPage from './modules/shared/pages/DadosEmissorFormPage'
+import NotificacaoOutboxListPage from './modules/notificacao/pages/NotificacaoOutboxListPage'
 import AlertaListPage from './modules/estoqueInsumos/pages/AlertaListPage'
 import ParametrizacaoAlertaListPage from './modules/estoqueInsumos/pages/ParametrizacaoAlertaListPage'
 import ParametrizacaoAlertaFormPage from './modules/estoqueInsumos/pages/ParametrizacaoAlertaFormPage'
@@ -178,6 +179,14 @@ export default function App() {
           element={
             <RequireRole role="ADMIN">
               <DadosEmissorFormPage />
+            </RequireRole>
+          }
+        />
+        <Route
+          path="/notificacoes-enviadas"
+          element={
+            <RequireRole role="ADMIN">
+              <NotificacaoOutboxListPage />
             </RequireRole>
           }
         />

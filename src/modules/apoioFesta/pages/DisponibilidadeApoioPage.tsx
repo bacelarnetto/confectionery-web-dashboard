@@ -18,7 +18,7 @@ import { useDisponibilidadeApoio } from '../hooks/useDisponibilidadeApoio'
 import { useApoiosFesta } from '../hooks/useApoiosFesta'
 import { DisponibilidadeDia } from '../types/itemApoio'
 import Modal from '../../../components/ui/Modal'
-import { formatCurrency } from '../../../lib/format'
+import { formatCurrency, isoOuUndefined } from '../../../lib/format'
 
 function formatHora(iso?: string) {
   if (!iso) return '—'
@@ -134,14 +134,15 @@ export default function DisponibilidadeApoioPage() {
   }, [mesAtual, diasDisponibilidade, hojeStr])
 
   // Consulta das locações do dia selecionado para o Modal
-  const podeBuscarLocacoesDia = !!diaSelecionado && !!activeItemId
+  const diaLocacoes = diaSelecionado ? isoOuUndefined(`${diaSelecionado.dia}T12:00:00Z`) : undefined
+  const podeBuscarLocacoesDia = !!diaLocacoes && !!activeItemId
   const { data: reservasDiaData, isLoading: isLoadingReservas } = useApoiosFesta(
     0,
     50,
     podeBuscarLocacoesDia
       ? {
           itemApoioId: activeItemId,
-          dia: new Date(`${diaSelecionado!.dia}T12:00:00Z`).toISOString(),
+          dia: diaLocacoes,
           status: 'ATIVO',
         }
       : undefined,
