@@ -3,6 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- PWA instalável (doc/requisito-instalabilidade-pwa.md). theme-color = preto (#000000), decisão do
+         dono em 2026-10-01: barra superior do app instalado preta; o navegador põe o texto em branco
+         automaticamente pelo contraste. Igual ao "theme_color" do manifest.json. -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#000000" />
+    <!-- iOS: o Safari ainda usa estas metas/ícone para "Adicionar à Tela de Início" (e só entrega
+         Web Push a PWA instalada, iOS 16.4+). -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Confectionery" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Confectionery · Admin</title>
   </head>

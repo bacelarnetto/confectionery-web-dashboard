@@ -9,11 +9,11 @@ import { NotificacaoOutbox, NotificacaoOutboxStatus } from '../types/notificacao
 const TABLE_HEADERS = ['Criada em', 'Título', 'Canal', 'Destinatário', 'Status', 'Tentativas', 'Último erro', 'Enviada em']
 
 const STATUS_OPCOES: { value: NotificacaoOutboxStatus | ''; label: string }[] = [
+  { value: '', label: 'Todos' },
   { value: 'FALHOU', label: 'Falhou' },
   { value: 'PENDENTE', label: 'Pendente' },
   { value: 'EM_ENVIO', label: 'Em envio' },
   { value: 'ENVIADO', label: 'Enviado' },
-  { value: '', label: 'Todos' },
 ]
 
 const EMPTY_MESSAGES: Record<NotificacaoOutboxStatus | '', string> = {
@@ -47,8 +47,9 @@ function ModoEnvioSelo({ modo, status }: { modo: NotificacaoOutbox['modoEnvio'];
 export default function NotificacaoOutboxListPage() {
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState(20)
-  // Padrão FALHOU: a tela existe pra ver o que não chegou.
-  const [status, setStatus] = useState<NotificacaoOutboxStatus | ''>('FALHOU')
+  // Padrão Todos (''): decisão do dono em 2026-09-29 -- a tela abre com o histórico completo.
+  // Antes abria em FALHOU e, como quase nada falha, parecia vazia até mexer no filtro.
+  const [status, setStatus] = useState<NotificacaoOutboxStatus | ''>('')
   const { data, isLoading } = useNotificacaoOutbox(page, pageSize, status || undefined)
 
   const notificacoes = data?.content ?? []

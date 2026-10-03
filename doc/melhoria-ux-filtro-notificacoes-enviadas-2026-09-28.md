@@ -1,5 +1,10 @@
 # Solicitação de melhoria (UX) — filtro padrão em "Notificações enviadas"
 
+> **RESOLVIDO em 2026-09-29.** Decisão do dono: a tela abre SEMPRE com o filtro **Todos** (opção 3,
+> mas sem restringir à primeira visita). "Todos" passou a ser a primeira opção do select, e a chamada
+> sai sem o parâmetro `status`. O contador por status (opção 2) ficou de fora: exigiria uma chamada
+> extra por status, porque o backend não tem endpoint de contagem.
+
 **Data:** 2026-09-28
 **Origem:** dúvida do usuário ao abrir `http://localhost/notificacoes-enviadas` — "não tem nada?"
 **Tipo:** melhoria de UX, não é bug — comportamento atual é intencional (ver código)

@@ -28,8 +28,9 @@ export default function Notificacoes() {
           foram feitas, o último erro (passe o mouse pra ler inteiro) e quando foi entregue.
         </p>
         <p>
-          A tela abre filtrada em <span className="font-medium text-gray-800">Falhou</span>, porque ela serve principalmente
-          pra achar o que não chegou. Troque o filtro pra ver os pendentes, os em envio, os enviados ou todos. Por enquanto
+          A tela abre mostrando <span className="font-medium text-gray-800">todas</span> as notificações. Pra achar só o que não chegou, troque o filtro para{' '}
+          <span className="font-medium text-gray-800">Falhou</span>; também dá pra ver só as pendentes, em envio ou
+          enviadas. Por enquanto
           não há botão de reenviar: o sistema já tenta de novo sozinho algumas vezes antes de marcar como falha.
         </p>
       </GuiaCard>
@@ -45,6 +46,26 @@ export default function Notificacoes() {
           Enquanto o recurso não estiver configurado no sistema, a chave aparece desligada com o texto{' '}
           <span className="font-medium text-gray-800">"Notificações no navegador em breve"</span>. Em navegadores que não
           suportam esse tipo de aviso, a opção nem aparece.
+        </p>
+      </GuiaCard>
+
+      <GuiaCard
+        step={3}
+        title="Instalar o sistema como app"
+        dica="No iPhone, os avisos no navegador só chegam com o sistema instalado na Tela de Início — numa aba comum do Safari eles não aparecem."
+      >
+        <p>
+          O sistema pode ser instalado como um app, com ícone próprio e janela sem as abas e a barra de endereço do
+          navegador. No Chrome do computador, use o ícone de instalar que aparece na barra de endereço. No Android,
+          “Instalar app” / “Adicionar à tela inicial”; no iPhone, pelo Safari, em Compartilhar → “Adicionar à Tela de
+          Início”.
+        </p>
+        <p>
+          Importante: instalar como app só funciona em endereço seguro (<span className="font-medium text-gray-800">https</span>)
+          ou quando o sistema é aberto como <span className="font-medium text-gray-800">localhost</span> no próprio
+          computador. Pelo celular, acessando o endereço de rede do computador (http://192.168…), o celular não oferece a
+          instalação e o iPhone não recebe os avisos — isso não é defeito, só passa a funcionar quando o sistema tiver
+          https.
         </p>
       </GuiaCard>
     </GuiaSection>

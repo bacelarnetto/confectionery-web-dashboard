@@ -1,16 +1,19 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { Plus } from 'lucide-react'
+import { Plus, Trash2 } from 'lucide-react'
 import PageHeader from '../../../components/ui/PageHeader'
 import PageableTable from '../../../components/ui/PageableTable'
-import { useEntradasProduto } from '../hooks/useEntradasProduto'
+import DeleteConfirmModal from '../../../components/ui/DeleteConfirmModal'
+import { useEntradasProduto, useDeleteEntradaProduto } from '../hooks/useEntradasProduto'
 import { formatCurrency } from '../../../lib/format'
 
-const TABLE_HEADERS = ['ID', 'Fornecedor ID', 'Produtos', 'Valor Total', 'Recebido em', 'Criado por', 'Criado em']
+const TABLE_HEADERS = ['ID', 'Fornecedor ID', 'Produtos', 'Valor Total', 'Recebido em', 'Criado por', 'Criado em', 'Ações']
 
 function formatDate(dateStr: string | undefined): string {
   if (!dateStr) return '—'
-  return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(dateStr))
+  const d = new Date(dateStr)
+  if (Number.isNaN(d.getTime())) return dateStr
+  return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(d)
 }
 
 export default function EntradaProdutoListPage() {
@@ -19,6 +22,15 @@ export default function EntradaProdutoListPage() {
   const [pageSize, setPageSize] = useState(20)
 
   const { data, isLoading } = useEntradasProduto(page, pageSize)
+  const deleteMutation = useDeleteEntradaProduto()
+  const [deleteTarget, setDeleteTarget] = useState<{ id: number } | null>(null)
+
+  function handleDeleteConfirm() {
+    if (!deleteTarget) return
+    deleteMutation.mutate(deleteTarget.id, {
+      onSettled: () => setDeleteTarget(null),
+    })
+  }
 
   const entradas = data?.content ?? []
   const totalPages = data?.totalPages ?? 0
@@ -71,10 +83,28 @@ export default function EntradaProdutoListPage() {
               <td className="px-4 py-3 text-gray-600">{formatDate(e.dataRecebimento)}</td>
               <td className="px-4 py-3 text-gray-600">{e.createdBy}</td>
               <td className="px-4 py-3 text-gray-600">{formatDate(e.createdOn)}</td>
+              <td className="px-4 py-3">
+                <button
+                  onClick={() => setDeleteTarget({ id: e.id })}
+                  className="p-1.5 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                  title="Excluir entrada"
+                >
+                  <Trash2 size={15} />
+                </button>
+              </td>
             </tr>
           )
         })}
       </PageableTable>
+
+      <DeleteConfirmModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDeleteConfirm}
+        itemName={`Entrada #${deleteTarget?.id}`}
+        isPending={deleteMutation.isPending}
+        aviso="O estoque criado por esta entrada também será removido. Só é possível excluir se nada dela foi vendido ou usado ainda."
+      />
     </div>
   )
 }

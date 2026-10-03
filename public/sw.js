@@ -2,8 +2,9 @@
 // navegador" (e só se o backend tiver chave VAPID configurada). Sem handler de fetch de propósito: não
 // intercepta nem faz cache de nada da aplicação.
 //
-// PENDÊNCIA: o formato do payload ({title, body}) é PROVISÓRIO -- o contrato real será definido
-// pela app confectionery-notificacoes (quem envia o push via VAPID), em implementação.
+// Payload: JSON {title, body}, montado pelo PushEnvioAdapter do monólito (quem envia o push via
+// VAPID). A app separada confectionery-notificacoes foi abandonada; o contrato é o do monólito.
+// Instalabilidade (PWA) não depende deste arquivo ter handler de fetch -- ver public/manifest.json.
 
 self.addEventListener('push', (event) => {
   let data = {}

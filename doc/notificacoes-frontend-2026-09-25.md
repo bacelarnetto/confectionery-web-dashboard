@@ -15,9 +15,12 @@ Endpoints, payloads, códigos de resposta e regras de permissão estão no guia 
   tooltip "O canal está em modo de teste: nada foi entregue de verdade", quando o canal está em mock;
   nada quando o envio foi real; "—" discreto quando o modo é desconhecido e o status é Enviado. Assim,
   Enviado + Simulado nunca parece entrega real.
-- Filtro de status com padrão **Falhou**. As opções são Falhou, Pendente, Em envio, Enviado e Todos.
+- Filtro de status com padrão **Todos** (sem parâmetro `status` na chamada): decisão do dono em
+  2026-09-29, a tela abre com o histórico completo. As opções são Todos, Falhou, Pendente, Em envio e
+  Enviado. Antes o padrão era Falhou, o que fazia a tela parecer vazia
+  (`doc/melhoria-ux-filtro-notificacoes-enviadas-2026-09-28.md`).
 - Datas em `America/Sao_Paulo`, formatadas por `formatDateTimeBR` (`src/lib/format.ts`).
-- Estado vazio: "Nenhuma notificação com falha" (há uma mensagem própria para cada filtro).
+- Estado vazio: "Nenhuma notificação registrada" em Todos (há uma mensagem própria para cada filtro).
 - Ainda não tem ação de reenviar (não existe endpoint para isso).
 
 Código: `src/modules/notificacao/` (types, services, hooks, pages).
