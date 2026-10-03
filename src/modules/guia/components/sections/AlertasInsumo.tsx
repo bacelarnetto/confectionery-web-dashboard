@@ -39,8 +39,13 @@ export default function AlertasInsumo() {
         dica="Não precisa esperar o horário automático: o botão “Verificar Agora”, na tela de Alertas, dispara a checagem na hora."
       >
         <p>
-          O sino no cabeçalho do sistema mostra a contagem de alertas ativos e se atualiza sozinho a cada minuto — dá pra
-          perceber um alerta novo sem nem estar na tela de Alertas.
+          O sino no cabeçalho do sistema reúne os alertas de estoque — de insumo e de produto — com a contagem somada.
+          Passar o mouse abre os mais recentes, cada um com uma etiqueta{' '}
+          <span className="font-medium text-gray-800">Insumo</span> ou <span className="font-medium text-gray-800">Produto</span>;
+          clicar num alerta leva à tela de alertas daquele tipo. Ele se atualiza sozinho a cada minuto, ao abrir o resumo,
+          ao voltar para a aba do sistema e logo depois de qualquer lançamento que você fizer — dá pra perceber um alerta
+          novo sem nem estar na tela de Alertas. Os alertas de pedido não entram no sino: eles ficam no ícone de
+          calendário, ao lado.
         </p>
       </GuiaCard>
 

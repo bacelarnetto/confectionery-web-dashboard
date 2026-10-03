@@ -1,3 +1,4 @@
+import { AxiosRequestConfig } from 'axios'
 import api from '../../../lib/axios'
 import { AlertaProduto } from '../types/alertaProduto'
 import { normalizePage, RawPage, PageResponse } from '../../../lib/pagination'
@@ -6,10 +7,11 @@ const alertaProdutoService = {
   getAll(
     page = 0,
     size = 20,
-    filters?: { ativo?: boolean; tipoId?: number }
+    filters?: { ativo?: boolean; tipoId?: number },
+    config?: Pick<AxiosRequestConfig, 'silentError'>
   ): Promise<PageResponse<AlertaProduto>> {
     return api
-      .get<RawPage<AlertaProduto>>('/alerta-produto', { params: { page, size, ...filters } })
+      .get<RawPage<AlertaProduto>>('/alerta-produto', { params: { page, size, ...filters }, ...config })
       .then((res) => normalizePage(res.data))
   },
 
@@ -17,8 +19,8 @@ const alertaProdutoService = {
     return api.get<AlertaProduto>(`/alerta-produto/${id}`).then((res) => res.data)
   },
 
-  countAtivos(): Promise<number> {
-    return api.get<number>('/alerta-produto/count-ativos').then((res) => res.data)
+  countAtivos(config?: Pick<AxiosRequestConfig, 'silentError'>): Promise<number> {
+    return api.get<number>('/alerta-produto/count-ativos', config).then((res) => res.data)
   },
 
   resolver(id: number): Promise<AlertaProduto> {

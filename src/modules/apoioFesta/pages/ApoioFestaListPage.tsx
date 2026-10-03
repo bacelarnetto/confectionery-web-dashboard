@@ -8,7 +8,7 @@ import Button from '../../../components/ui/Button'
 import { useApoiosFesta, useCancelarApoioFesta } from '../hooks/useApoiosFesta'
 import { useItensApoio } from '../hooks/useItensApoio'
 import { ApoioFesta, ApoioFestaStatus } from '../types/apoioFesta'
-import { formatCurrency } from '../../../lib/format'
+import { formatCurrency, isoOuUndefined } from '../../../lib/format'
 
 const TABLE_HEADERS = ['ID', 'Item', 'Colaborador', 'Pedido', 'Início', 'Fim', 'Valor', 'Status', 'Ações']
 
@@ -32,11 +32,13 @@ export default function ApoioFestaListPage() {
   const { data: itensData } = useItensApoio(0, 100)
   const itensApoio = itensData?.content ?? []
 
+  // Dia digitado fora do formato = filtro ignorado (não lança no render).
+  const diaFiltro = filters.dia ? isoOuUndefined(`${filters.dia}T12:00:00`) : undefined
   const filterParams = {
     ...(filters.itemApoioId ? { itemApoioId: Number(filters.itemApoioId) } : {}),
     ...(filters.pedidoId ? { pedidoId: Number(filters.pedidoId) } : {}),
     ...(filters.status ? { status: filters.status } : {}),
-    ...(filters.dia ? { dia: new Date(`${filters.dia}T12:00:00`).toISOString() } : {}),
+    ...(diaFiltro ? { dia: diaFiltro } : {}),
   }
 
   const { data, isLoading } = useApoiosFesta(page, pageSize, Object.keys(filterParams).length > 0 ? filterParams : undefined)

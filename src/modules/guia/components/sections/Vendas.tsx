@@ -151,6 +151,11 @@ export default function Vendas() {
           dele também é descontado ali, na hora, já que complemento não passa pela Fabricação.
         </p>
         <p>
+          Uma Entrada de Produto lançada por engano pode ser excluída na lista de Entradas de Produto — o estoque que ela
+          criou sai junto. Só dá para excluir uma entrada se nada dela foi vendido ou usado ainda; se já houve saída, o
+          sistema avisa e mantém a entrada.
+        </p>
+        <p>
           <span className="font-medium text-gray-800">A CAMINHO</span> é o intervalo entre sair pra entrega e o cliente
           confirmar o recebimento — separado de <span className="font-medium text-gray-800">PRONTO</span> (que só diz que
           a produção terminou) e de <span className="font-medium text-gray-800">ENTREGUE</span> (que confirma que o

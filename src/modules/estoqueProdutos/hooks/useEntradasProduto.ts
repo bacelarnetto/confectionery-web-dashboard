@@ -33,3 +33,17 @@ export function useCreateEntradaProduto() {
     },
   })
 }
+
+// Quem decide se pode excluir é o backend (nenhuma unidade do lote pode ter tido saída).
+export function useDeleteEntradaProduto() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => entradaProdutoService.remove(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY })
+      // o estoque criado pela entrada sai junto
+      queryClient.invalidateQueries({ queryKey: ESTOQUE_PRODUTO_QUERY_KEY })
+      toast.success('Entrada de produto excluída!')
+    },
+  })
+}

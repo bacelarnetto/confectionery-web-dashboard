@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { NavLink, useLocation } from 'react-router'
 import { useAuth } from 'react-oidc-context'
-import { Truck, ShoppingCart, Cookie, Package, PackagePlus, ArrowDownToLine, ArrowUpFromLine, Archive, Activity, LayoutDashboard, Users, Bell, Settings, ChevronDown, Store, UtensilsCrossed, FlaskConical, Layers, KanbanSquare, CalendarClock, CalendarDays, BookOpen, TrendingUp, PiggyBank, FileText, Tags, Receipt, Banknote, Building2, CreditCard, Boxes, PartyPopper, HardHat, X } from 'lucide-react'
+import { Truck, ShoppingCart, Cookie, Package, PackagePlus, ArrowDownToLine, ArrowUpFromLine, Archive, Activity, LayoutDashboard, Users, Bell, Settings, ChevronDown, Store, UtensilsCrossed, FlaskConical, Layers, KanbanSquare, CalendarClock, CalendarDays, BookOpen, TrendingUp, PiggyBank, FileText, Tags, Receipt, Banknote, Building2, CreditCard, Boxes, PartyPopper, HardHat, Send, X } from 'lucide-react'
 import { useAlertasCountAtivos } from '../../modules/estoqueInsumos/hooks/useAlertas'
 import { useCountAlertasPedidoAtivos } from '../../modules/vendas/hooks/useAlertasPedido'
 import { useAlertasProdutoCountAtivos } from '../../modules/estoqueProdutos/hooks/useAlertasProduto'
@@ -140,6 +140,7 @@ const navigation: NavSection[] = [
     items: [
       { label: 'Usuários', to: '/usuarios', icon: <Users size={18} /> },
       { label: 'Dados da Empresa', to: '/dados-emissor', icon: <Building2 size={18} /> },
+      { label: 'Notificações enviadas', to: '/notificacoes-enviadas', icon: <Send size={18} /> },
     ],
   },
   {

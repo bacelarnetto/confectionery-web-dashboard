@@ -1,3 +1,4 @@
+import { ReactNode } from 'react'
 import Modal from './Modal'
 
 interface DeleteConfirmModalProps {
@@ -6,6 +7,8 @@ interface DeleteConfirmModalProps {
   onConfirm: () => void
   itemName?: string
   isPending?: boolean
+  // Consequência extra da exclusão, mostrada abaixo da pergunta (ex.: estoque removido junto).
+  aviso?: ReactNode
 }
 
 export default function DeleteConfirmModal({
@@ -14,6 +17,7 @@ export default function DeleteConfirmModal({
   onConfirm,
   itemName = 'este item',
   isPending = false,
+  aviso,
 }: DeleteConfirmModalProps) {
   return (
     <Modal open={isOpen} onClose={onClose} title="Confirmar exclusão">
@@ -22,6 +26,9 @@ export default function DeleteConfirmModal({
         <span className="font-semibold text-gray-900">"{itemName}"</span>? Esta ação não pode ser
         desfeita.
       </p>
+      {aviso && (
+        <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 -mt-2 mb-5">{aviso}</p>
+      )}
       <div className="flex justify-end gap-2">
         <button
           onClick={onClose}

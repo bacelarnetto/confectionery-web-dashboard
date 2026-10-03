@@ -6,6 +6,7 @@ import { useColaboradores } from '../hooks/useColaboradores'
 import { useApoiosFesta } from '../hooks/useApoiosFesta'
 import { mesmoDiaBrasilia } from '../lib/horarioBrasilia'
 import { parseApiError } from '../../../lib/apiError'
+import { isoOuUndefined } from '../../../lib/format'
 
 import { calcularValorApoio } from '../lib/calculoApoio'
 
@@ -105,12 +106,14 @@ export default function AdicionarApoioModal<TInsert>({
   // usa pra recusar (dia inteiro, não por horário), só que consultada antes do usuário tentar
   // salvar, em vez de só descobrir no erro do submit. Vale tanto pra Apoio de Festa real quanto
   // pra proposta de Orçamento -- as duas checam contra as mesmas reservas reais (ApoioFesta).
-  const podeChecarOcupacao = !!itemApoioId && !!horaInicio
+  // horaInicio inválida (digitada fora do formato) = ainda não dá pra checar; nunca lança no render.
+  const diaOcupacao = isoOuUndefined(horaInicio)
+  const podeChecarOcupacao = !!itemApoioId && !!diaOcupacao
   const { data: ocupacaoData } = useApoiosFesta(
     0,
     100,
     podeChecarOcupacao
-      ? { itemApoioId: Number(itemApoioId), status: 'ATIVO', dia: new Date(horaInicio).toISOString() }
+      ? { itemApoioId: Number(itemApoioId), status: 'ATIVO', dia: diaOcupacao }
       : undefined,
     podeChecarOcupacao,
   )
@@ -121,8 +124,12 @@ export default function AdicionarApoioModal<TInsert>({
     e.preventDefault()
     e.stopPropagation()
     setErro(null)
-    const horaInicioIso = new Date(horaInicio).toISOString()
-    const horaFimIso = new Date(horaFim).toISOString()
+    const horaInicioIso = isoOuUndefined(horaInicio)
+    const horaFimIso = isoOuUndefined(horaFim)
+    if (!horaInicioIso || !horaFimIso) {
+      setErro('Data/hora inválida -- confira o valor preenchido.')
+      return
+    }
     if (!mesmoDiaBrasilia(horaInicioIso, horaFimIso)) {
       setErro('Hora de início e hora de fim precisam ser no mesmo dia (horário de Brasília) — locação de Apoio de Festa não passa de um dia.')
       return

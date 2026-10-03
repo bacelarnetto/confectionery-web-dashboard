@@ -76,8 +76,8 @@ export default function AlertasPedido() {
         </p>
         <ul className="pl-5 space-y-2 list-none">
           <li>
-            <span className="inline-flex items-center gap-1 text-xs font-medium text-gray-700 bg-gray-100 rounded px-2 py-0.5 mr-2">Sino no topo</span>
-            mostra a contagem de alertas ativos num badge — vermelho se houver atrasado, laranja caso contrário. Passar o
+            <span className="inline-flex items-center gap-1 text-xs font-medium text-gray-700 bg-gray-100 rounded px-2 py-0.5 mr-2">Calendário no topo</span>
+            o ícone de calendário, ao lado do sino (que é só de estoque), mostra a contagem de alertas ativos num badge — vermelho se houver atrasado, laranja caso contrário. Passar o
             mouse abre um resumo com os 5 mais urgentes; clicar leva pra lista completa.
           </li>
           <li>
@@ -87,7 +87,7 @@ export default function AlertasPedido() {
           </li>
           <li>
             <span className="inline-flex items-center gap-1 text-xs font-medium text-gray-700 bg-gray-100 rounded px-2 py-0.5 mr-2">Menu lateral</span>
-            o item “Alertas de Pedidos” carrega o mesmo contador do sino.
+            o item “Alertas de Pedidos” carrega o mesmo contador do calendário do topo.
           </li>
           <li>
             <span className="inline-flex items-center gap-1 text-xs font-medium text-gray-700 bg-gray-100 rounded px-2 py-0.5 mr-2">Tela dedicada</span>
@@ -110,7 +110,7 @@ export default function AlertasPedido() {
         <p className="font-medium">Uma cor, um significado, em qualquer lugar</p>
         <p className="mt-1">
           Vermelho é atrasado, laranja é hoje/urgente, amarelo ainda dá tempo, azul é a visão da semana. Essa mesma lógica
-          de cor vale na faixa do topo, no sino, na lista e nos cards do mural — você entende a urgência num relance.
+          de cor vale na faixa do topo, no calendário do topo, na lista e nos cards do mural — você entende a urgência num relance.
         </p>
       </div>
     </GuiaSection>

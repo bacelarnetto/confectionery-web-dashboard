@@ -1,5 +1,5 @@
 import type { ComponentType, ReactNode } from 'react'
-import { LogIn, LayoutDashboard, Sprout, ShoppingCart, Bell, Wallet, Sparkles, Store, Landmark, KanbanSquare, CalendarClock, History, BarChart3 } from 'lucide-react'
+import { LogIn, LayoutDashboard, Sprout, ShoppingCart, Bell, Wallet, Sparkles, Store, Landmark, KanbanSquare, CalendarClock, History, BarChart3, Send } from 'lucide-react'
 import AcessoUsuarios from './components/sections/AcessoUsuarios'
 import Dashboard from './components/sections/Dashboard'
 import PrimeirosPassos from './components/sections/PrimeirosPassos'
@@ -13,6 +13,7 @@ import Mural from './components/sections/Mural'
 import AlertasPedido from './components/sections/AlertasPedido'
 import Relatorios from './components/sections/Relatorios'
 import Historico from './components/sections/Historico'
+import Notificacoes from './components/sections/Notificacoes'
 
 export interface GuiaSecao {
   id: string
@@ -106,6 +107,13 @@ export const guiaSections: GuiaSecao[] = [
     descricao: 'Faturamento, custo e estoque prontos pra exportar',
     icone: <BarChart3 size={16} />,
     Component: Relatorios,
+  },
+  {
+    id: 'notificacoes',
+    titulo: 'Notificações',
+    descricao: 'Avisos enviados e notificações no navegador',
+    icone: <Send size={16} />,
+    Component: Notificacoes,
   },
   {
     id: 'historico',

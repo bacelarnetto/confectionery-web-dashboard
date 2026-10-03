@@ -8,6 +8,7 @@ interface PageableTableProps {
   headers: string[]
   isLoading: boolean
   isEmpty: boolean
+  emptyMessage?: string
   page: number
   totalPages: number
   onPageChange: (page: number) => void
@@ -37,6 +38,7 @@ export default function PageableTable({
   headers,
   isLoading,
   isEmpty,
+  emptyMessage,
   page,
   totalPages,
   onPageChange,
@@ -49,7 +51,7 @@ export default function PageableTable({
 
   return (
     <div>
-      <Table headers={headers} isEmpty={isEmpty}>
+      <Table headers={headers} isEmpty={isEmpty} emptyMessage={emptyMessage}>
         {isLoading ? <SkeletonRows columnsCount={headers.length} /> : children}
       </Table>
 

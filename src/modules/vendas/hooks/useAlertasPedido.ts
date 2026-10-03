@@ -7,6 +7,9 @@ export function useAlertasPedidoAtivos() {
     queryKey: ['alertas-pedido', 'ativos'],
     queryFn: () => alertaPedidoService.getAtivos(),
     staleTime: 30_000,
+    // Sino/banner do header (F4, reteste 2026-09-28): polling + foco, igual ao sino de estoque.
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
   })
 }
 
@@ -15,6 +18,8 @@ export function useCountAlertasPedidoAtivos() {
     queryKey: ['alertas-pedido', 'count'],
     queryFn: () => alertaPedidoService.countAtivos(),
     staleTime: 30_000,
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
   })
 }
 

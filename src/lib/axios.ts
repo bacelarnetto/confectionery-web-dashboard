@@ -8,6 +8,10 @@ import { userManager, getUsername } from './auth'
 declare module 'axios' {
   export interface AxiosRequestConfig {
     skipErrorToast?: boolean
+    // Nenhum toast de erro, qualquer status (4xx, 5xx, rede). Para polling em background (sino e
+    // contadores do menu): quem chama mostra a falha no próprio componente. 401 continua indo
+    // para o login -- sessão expirada não é ruído de polling.
+    silentError?: boolean
   }
 }
 
@@ -99,7 +103,7 @@ api.interceptors.response.use(
     // skipErrorToast só vale para erros 4xx (o formulário se responsabiliza por explicar a
     // regra de negócio inline); falhas de rede ou 5xx sempre caem no toast genérico, porque
     // não há campo nenhum pra "explicar" — o usuário só precisa saber que algo quebrou.
-    const podeSuprimir = error.config?.skipErrorToast && status >= 400 && status < 500
+    const podeSuprimir = error.config?.silentError || (error.config?.skipErrorToast && status >= 400 && status < 500)
     if (!podeSuprimir) {
       let mensagem: string
       if (status === 500) {
