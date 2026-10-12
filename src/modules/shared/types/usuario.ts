@@ -6,6 +6,7 @@ export interface Usuario {
   senha?: string
   email?: string
   perfil?: PerfilUsuario
+  aviso?: string | null
 }
 
 export interface UsuarioInsertForm {

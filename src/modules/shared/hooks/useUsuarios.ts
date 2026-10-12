@@ -38,9 +38,12 @@ export function useUpdateUsuario() {
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: UsuarioUpdateForm }) =>
       usuarioService.update(id, data),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY })
       toast.success('Usuário atualizado com sucesso!')
+      if (data?.aviso) {
+        toast(data.aviso, { icon: '⚠️', duration: 8000 })
+      }
     },
   })
 }

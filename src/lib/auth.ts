@@ -4,7 +4,9 @@ import { UserManager, WebStorageStateStore, User } from 'oidc-client-ts'
 // doc/defesa-arquitetura-autenticacao.md, D1/D2: SPA pública + PKCE, sem client secret.
 // Porta 8081 do host colide com um processo de outro projeto na máquina (não relacionado) --
 // Keycloak deste projeto sobe em 8180 no docker-compose (ver ~/work/confectionery/docker-compose.yaml).
-const KEYCLOAK_URL = 'http://localhost:8180'
+// Na nuvem o endereço vem do build (VITE_KEYCLOAK_URL, ver Dockerfile e confectionery-infra/nuvem/).
+// Sem a variável, mantém o comportamento local.
+const KEYCLOAK_URL: string = import.meta.env.VITE_KEYCLOAK_URL || 'http://localhost:8180'
 const REALM = 'confectionery'
 const CLIENT_ID = 'confectionery-web'
 
